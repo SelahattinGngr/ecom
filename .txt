@@ -1,0 +1,48 @@
+src/main/java/selahattin/dev/ecom
+│
+├── shared                   <-- [ORTAK ALTYAPI] (Bütün modüller burayı kullanır)
+│   ├── config               (Security, Swagger, Redis vb. genel ayarlar)
+│   ├── exception            (GlobalExceptionHandler, BaseException)
+│   ├── response             (ApiResponse, PagedResponse gibi wrapperlar)
+│   └── utils                (DateUtil, SecurityUtil vb.)
+│
+├── product                  <-- [ÖRNEK MODÜL] (Diğerleri de aynısı olacak)
+│   ├── domain               <-- (CORE: Framework bağımsız, saf Java)
+│   │   ├── model            (Product.java - Annotation YOK)
+│   │   ├── repository       (ProductRepositoryPort.java - Interface)
+│   │   └── service          (ProductDomainService.java - İş kuralları)
+│   │
+│   ├── application          <-- (USE CASE: Senaryolar)
+│   │   ├── dto              (ProductDto.java)
+│   │   ├── mapper           (Domain <-> DTO çeviriciler)
+│   │   └── usecase          (CreateProductUseCase.java, GetProductUseCase.java)
+│   │
+│   ├── infrastructure       <-- (DIŞ DÜNYA: DB, Config, Adapters)
+│   │   ├── config           (Bu modüle özel Bean tanımları)
+│   │   └── persistence      (Veritabanı işleri)
+│   │       ├── entity       (ProductEntity.java - @Entity, @Table burada!)
+│   │       ├── mapper       (Entity <-> Domain Model çeviriciler)
+│   │       └── repository   (Spring Data JPA Repository ve Adapter Impl)
+│   │
+│   └── web                  <-- (SUNUM KATMANI: REST API)
+│       ├── controller       (ProductController.java)
+│       ├── request          (CreateProductRequest.java)
+│       └── response         (ProductResponse.java)
+│
+├── order                    <-- (Product ile aynı iç yapıya sahip)
+│   ├── domain
+│   ├── application
+│   ├── infrastructure
+│   └── web
+│
+├── cart                     <-- (Product ile aynı iç yapıya sahip)
+│   └── ...
+│
+├── user                     <-- (Product ile aynı iç yapıya sahip)
+│   └── ...
+│
+├── auth                     <-- (Product ile aynı iç yapıya sahip)
+│   └── ...
+│
+└── payment                  <-- (Product ile aynı iç yapıya sahip)
+    └── ...
