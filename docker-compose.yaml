@@ -1,0 +1,61 @@
+services:
+  app:
+    build: .
+    container_name: ecom-app
+    ports:
+      - "5353:5353"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB_NAME=${POSTGRES_DB_NAME}
+      - POSTGRES_DB_USER=${POSTGRES_DB_USER}
+      - POSTGRES_DB_PASSWORD=${POSTGRES_DB_PASSWORD}
+      - SPRING_SECURITY_USER_NAME=${SPRING_SECURITY_USER_NAME}
+      - SPRING_SECURITY_USER_PASSWORD=${SPRING_SECURITY_USER_PASSWORD}
+      - JWT_ACCESS_SECRET_KEY=${JWT_ACCESS_SECRET_KEY}
+      - JWT_REFRESH_SECRET_KEY=${JWT_REFRESH_SECRET_KEY}
+      - JWT_ACCESS_TOKEN_EXPIRATION_MS=${JWT_ACCESS_TOKEN_EXPIRATION_MS}
+      - JWT_REFRESH_TOKEN_EXPIRATION_MS=${JWT_REFRESH_TOKEN_EXPIRATION_MS}
+      - GMAIL_USERNAME=${GMAIL_USERNAME}
+      - GMAIL_PASSWORD=${GMAIL_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT}
+      - SERVER_PORT=${SERVER_PORT}
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: "postgres:latest"
+    container_name: ecom-postgres
+    environment:
+      - "POSTGRES_DB=${POSTGRES_DB_NAME}"
+      - "POSTGRES_PASSWORD=${POSTGRES_DB_PASSWORD}"
+      - "POSTGRES_USER=${POSTGRES_DB_USER}"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+
+  pgadmin:
+    image: "dpage/pgadmin4:latest"
+    container_name: ecom-pgadmin
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+    environment:
+      - "PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}"
+      - "PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}"
+
+  redis:
+    image: redis:latest
+    container_name: ecom-redis-cache
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
+  postgres-data:
