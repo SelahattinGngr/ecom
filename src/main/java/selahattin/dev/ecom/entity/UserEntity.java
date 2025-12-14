@@ -36,6 +36,6 @@ public class UserEntity extends BaseEntity {
     private Role role = Role.USER;
 
     @Builder.Default
-    private boolean isActivated = false;
+    private boolean activated = false;
 
 }

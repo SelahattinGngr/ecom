@@ -1,9 +1,11 @@
 package selahattin.dev.ecom.utils.cookie;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
-import selahattin.dev.ecom.config.JwtProperties;
+import selahattin.dev.ecom.config.properties.JwtProperties; // İsmi düzeltmiştik
 import selahattin.dev.ecom.dto.infra.CookieDto;
 import selahattin.dev.ecom.security.CustomUserDetails;
 import selahattin.dev.ecom.security.jwt.JwtTokenProvider;
@@ -12,10 +14,29 @@ import selahattin.dev.ecom.security.jwt.JwtTokenProvider;
 @RequiredArgsConstructor
 public class CookieFactory {
 
-    private final JwtTokenProvider jwtService;
-    private final JwtProperties jwtDto;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtProperties jwtProperties;
 
     public CookieDto create(CustomUserDetails user) {
-        return new CookieDto(user, jwtService, jwtDto);
+        String newDeviceId = UUID.randomUUID().toString();
+        return createDto(user, newDeviceId);
+    }
+
+    public CookieDto create(CustomUserDetails user, String existingDeviceId) {
+        return createDto(user, existingDeviceId);
+    }
+
+    private CookieDto createDto(CustomUserDetails user, String deviceId) {
+        String accessToken = jwtTokenProvider.generateAccessToken(user);
+
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user, deviceId);
+
+        return CookieDto.builder()
+                .deviceId(deviceId)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .accessTokenExpiry((int) (jwtProperties.getAccessTokenExpirationMs() / 1000))
+                .refreshTokenExpiry((int) (jwtProperties.getRefreshTokenExpirationMs() / 1000))
+                .build();
     }
 }

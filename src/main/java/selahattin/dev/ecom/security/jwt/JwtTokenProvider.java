@@ -14,7 +14,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import selahattin.dev.ecom.config.JwtProperties;
+import selahattin.dev.ecom.config.properties.JwtProperties;
 
 @Slf4j
 @Component
@@ -44,13 +44,18 @@ public class JwtTokenProvider {
         return generateToken(userDetails.getUsername(), role, expiration, getAccessSigningKey());
     }
 
-    public String generateRefreshToken(UserDetails userDetails) {
+    public String generateRefreshToken(UserDetails userDetails, String deviceId) {
         long expiration = jwtProperties.getRefreshTokenExpirationMs();
-        // Refresh token'da rol claim'ine gerek yok, null geçiyoruz
-        return generateToken(userDetails.getUsername(), null, expiration, getRefreshSigningKey());
+
+        return Jwts.builder()
+                .subject(userDetails.getUsername())
+                .claim("did", deviceId)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getRefreshSigningKey(), Jwts.SIG.HS256)
+                .compact();
     }
 
-    // Ortak private metot (Kod tekrarını önler)
     private String generateToken(String subject, String role, long expirationMillis, SecretKey key) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMillis);
@@ -114,5 +119,14 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public String extractDeviceId(String token) {
+        try {
+            Claims claims = extractAllClaims(token, getRefreshSigningKey());
+            return claims.get("did", String.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

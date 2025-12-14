@@ -21,6 +21,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.config.properties.ClientProperties;
+import selahattin.dev.ecom.config.properties.JwtProperties;
 import selahattin.dev.ecom.security.jwt.JwtAuthenticationFilter;
 
 @Configuration
@@ -30,6 +32,7 @@ import selahattin.dev.ecom.security.jwt.JwtAuthenticationFilter;
 @EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
 
+    private final ClientProperties clientProperties;
     private final JwtAuthenticationFilter jwtAuthFilter;
 
     @Bean
@@ -63,7 +66,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOrigins(clientProperties.getCorsAllowedOrigins());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

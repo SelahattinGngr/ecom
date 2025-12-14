@@ -15,17 +15,22 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    public void signup(SignupRequest signupRequest) {
+    public UserEntity signup(SignupRequest signupRequest) {
         if (userRepository.existsByEmail(signupRequest.getEmail())) {
             throw new UserAlreadyExistsException(signupRequest.getEmail());
         }
 
-        System.out.println("Signing up user: " + signupRequest.getEmail());
         UserEntity user = UserEntity.builder()
                 .email(signupRequest.getEmail())
                 .firstName(signupRequest.getFirstName())
                 .lastName(signupRequest.getLastName())
                 .build();
+        return userRepository.save(user);
+    }
+
+    public void activateUser(String email) {
+        UserEntity user = findByEmail(email);
+        user.setActivated(true);
         userRepository.save(user);
     }
 

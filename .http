@@ -14,7 +14,7 @@ Content-Type: application/json
 
 {
   "email": "selahattin_gungor53@hotmail.com",
-  "password": "237706"
+  "password": "084372"
 }
 
 ### signup
@@ -26,3 +26,17 @@ Content-Type: application/json
   "firstName": "selahattin",
   "lastName": "gungor"
 }
+
+### verify-signup
+POST {{url}}/public/signup-verify HTTP/1.1
+Content-Type: application/json
+
+{
+  "token": "9dc53933-6e60-4bac-b3f8-44bad511aa2e"
+}
+
+### signout
+POST {{url}}/signout HTTP/1.1
+
+### refresh-token
+POST {{url}}/refresh-token HTTP/1.1
