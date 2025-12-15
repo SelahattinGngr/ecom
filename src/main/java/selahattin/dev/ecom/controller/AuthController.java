@@ -19,8 +19,8 @@ import selahattin.dev.ecom.response.ApiResponse;
 import selahattin.dev.ecom.service.domain.AuthService;
 
 @RestController
-@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
+@RequestMapping("/api/v1/auth")
 public class AuthController {
 
 	private final AuthService authService;
@@ -62,10 +62,18 @@ public class AuthController {
 				.ok(ApiResponse.success("E-posta doğrulama başarılı, giriş yapabilirsiniz.", "SIGNUP_VERIFIED"));
 	}
 
+	@PostMapping("/public/resend-verification-email")
+	public ResponseEntity<ApiResponse<String>> resendVerificationEmail(
+			@Valid @RequestBody SigninRequest signinRequest) {
+		authService.resendVerificationEmail(signinRequest);
+		return ResponseEntity
+				.ok(ApiResponse.success("Doğrulama e-postası tekrar gönderildi.", "VERIFICATION_EMAIL_RESENT"));
+	}
+
 	@PostMapping("/refresh-token")
 	public ResponseEntity<ApiResponse<String>> refreshToken(
-			@CookieValue(name = "refreshToken", required = false) String refreshToken,
-			@CookieValue(name = "deviceId", required = false) String deviceId,
+			@CookieValue(required = false) String refreshToken,
+			@CookieValue(required = false) String deviceId,
 			HttpServletResponse response) {
 
 		authService.refreshToken(refreshToken, response);
@@ -74,8 +82,8 @@ public class AuthController {
 
 	@PostMapping("/signout")
 	public ResponseEntity<ApiResponse<String>> signOut(
-			@CookieValue(name = "deviceId", required = false) String deviceId,
-			@CookieValue(name = "refreshToken", required = false) String refreshToken,
+			@CookieValue(required = false) String deviceId,
+			@CookieValue(required = false) String refreshToken,
 			HttpServletResponse response) {
 
 		authService.signOut(deviceId, refreshToken, response);

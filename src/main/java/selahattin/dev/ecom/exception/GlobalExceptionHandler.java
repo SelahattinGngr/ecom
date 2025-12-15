@@ -76,6 +76,31 @@ public class GlobalExceptionHandler {
                                 .body(ApiResponse.error(ex.getMessage(), "INVALID_SIGNUP_VERIFICATION_TOKEN"));
         }
 
+        @ExceptionHandler(SessionExpiredException.class)
+        public ResponseEntity<ApiResponse<Object>> handleSessionExpired(SessionExpiredException ex) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                .body(ApiResponse.error(ex.getMessage(), "SESSION_EXPIRED"));
+        }
+
+        @ExceptionHandler(NotfoundDeviceException.class)
+        public ResponseEntity<ApiResponse<Object>> handleInvalidDevice(NotfoundDeviceException ex) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                .body(ApiResponse.error(ex.getMessage(), "DEVICE_NOT_FOUND"));
+        }
+
+        @ExceptionHandler(InvalidRefreshTokenException.class)
+        public ResponseEntity<ApiResponse<Object>> handleInvalidDevice(InvalidRefreshTokenException ex) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                .body(ApiResponse.error(ex.getMessage(), "INVALID_DEVICE"));
+        }
+
+        @ExceptionHandler(AuthenticationContextException.class)
+        public ResponseEntity<ApiResponse<Object>> handleAuthenticationContextException(
+                        AuthenticationContextException ex) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                                .body(ApiResponse.error(ex.getMessage(), "AUTHENTICATION_CONTEXT_ERROR"));
+        }
+
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiResponse<Object>> handleGeneric(Exception ex) {
                 log.error("Beklenmeyen Hata: ", ex);

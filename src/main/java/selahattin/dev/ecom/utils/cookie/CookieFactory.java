@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
-import selahattin.dev.ecom.config.properties.JwtProperties; // İsmi düzeltmiştik
+import selahattin.dev.ecom.config.properties.JwtProperties;
 import selahattin.dev.ecom.dto.infra.CookieDto;
 import selahattin.dev.ecom.security.CustomUserDetails;
 import selahattin.dev.ecom.security.jwt.JwtTokenProvider;

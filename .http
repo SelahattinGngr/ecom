@@ -14,7 +14,7 @@ Content-Type: application/json
 
 {
   "email": "selahattin_gungor53@hotmail.com",
-  "password": "084372"
+  "password": "940064"
 }
 
 ### signup
@@ -40,3 +40,6 @@ POST {{url}}/signout HTTP/1.1
 
 ### refresh-token
 POST {{url}}/refresh-token HTTP/1.1
+
+### get-current-user
+GET http://localhost:5353/api/v1/users/me HTTP/1.1

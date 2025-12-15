@@ -24,7 +24,10 @@ import selahattin.dev.ecom.dto.request.VerifyEmailRequest;
 import selahattin.dev.ecom.dto.response.SigninResponse;
 import selahattin.dev.ecom.entity.UserEntity;
 import selahattin.dev.ecom.exception.InvalidOtpException;
+import selahattin.dev.ecom.exception.InvalidRefreshTokenException;
 import selahattin.dev.ecom.exception.InvalidSignupVerificationTokenException;
+import selahattin.dev.ecom.exception.NotfoundDeviceException;
+import selahattin.dev.ecom.exception.SessionExpiredException;
 import selahattin.dev.ecom.security.CustomUserDetails;
 import selahattin.dev.ecom.security.jwt.JwtTokenProvider;
 import selahattin.dev.ecom.service.infra.CookieService;
@@ -45,6 +48,7 @@ public class AuthService {
 	private final CookieService cookieService;
 	private final ClientProperties clientProperties;
 
+	/* --- Signin --- */
 	public void sendLoginOtp(SigninRequest signinRequest) {
 		String otp = generateOtp();
 		UserEntity user = userService.findByEmail(signinRequest.getEmail());
@@ -70,28 +74,9 @@ public class AuthService {
 
 		return generateTokensAndReturnResponse(user, response);
 	}
+	/* --- --- */
 
-	public void refreshToken(String refreshToken, HttpServletResponse response) {
-		if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
-			throw new RuntimeException("Geçersiz Refresh Token.");
-		}
-
-		String email = jwtTokenProvider.extractUsername(refreshToken, false);
-		String deviceId = jwtTokenProvider.extractDeviceId(refreshToken);
-
-		if (deviceId == null) {
-			throw new RuntimeException("Token içinde Cihaz bilgisi bulunamadı.");
-		}
-
-		if (!tokenService.validateToken(email, deviceId, refreshToken)) {
-			throw new RuntimeException("Oturum sonlandırılmış.");
-		}
-
-		UserEntity user = userService.findByEmail(email);
-
-		generateTokensAndReturnResponse(user, deviceId, response);
-	}
-
+	/* --- Signup --- */
 	public void signup(SignupRequest signupRequest) {
 		UserEntity user = userService.signup(signupRequest);
 		String token = UUID.randomUUID().toString();
@@ -104,6 +89,28 @@ public class AuthService {
 		EmailMessageDto emailMessage = createEmailMessage(
 				user.getEmail(),
 				"E-posta Doğrulama",
+				"Kayıt işleminizi tamamlamak için lütfen aşağıdaki linke tıklayın: \n" + verificationLink);
+
+		redisQueueService.enqueueEmail(emailMessage);
+	}
+
+	public void resendVerificationEmail(SigninRequest signinRequest) {
+		UserEntity user = userService.findByEmail(signinRequest.getEmail());
+
+		if (user.isActivated()) {
+			throw new InvalidSignupVerificationTokenException("Kullanıcı zaten aktif.");
+		}
+
+		String token = UUID.randomUUID().toString();
+
+		saveToRedis(SIGNUP_KEY_TEMPLATE + token, user.getEmail(), SIGNUP_TOKEN_DURATION_HOURS, TimeUnit.HOURS);
+
+		String verificationLink = clientProperties.getFrontendUrl()
+				+ clientProperties.getEmailVerificationPath() + token;
+
+		EmailMessageDto emailMessage = createEmailMessage(
+				user.getEmail(),
+				"E-posta Doğrulama - Tekrar Gönderildi",
 				"Kayıt işleminizi tamamlamak için lütfen aşağıdaki linke tıklayın: \n" + verificationLink);
 
 		redisQueueService.enqueueEmail(emailMessage);
@@ -122,7 +129,9 @@ public class AuthService {
 		userService.activateUser(email);
 		deleteFromRedis(redisKey);
 	}
+	/* --- --- */
 
+	/* --- Signout --- */
 	public void signOut(String deviceId, String refreshToken, HttpServletResponse response) {
 		try {
 			String email = jwtTokenProvider.extractUsername(refreshToken, false);
@@ -132,6 +141,30 @@ public class AuthService {
 		}
 		cookieService.clearCookies(response);
 	}
+	/* --- --- */
+
+	/* --- Token Operations --- */
+	public void refreshToken(String refreshToken, HttpServletResponse response) {
+		if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+			throw new InvalidRefreshTokenException("Geçersiz Refresh Token.");
+		}
+
+		String email = jwtTokenProvider.extractUsername(refreshToken, false);
+		String deviceId = jwtTokenProvider.extractDeviceId(refreshToken);
+
+		if (deviceId == null) {
+			throw new NotfoundDeviceException("Token içinde Cihaz bilgisi bulunamadı.");
+		}
+
+		if (!tokenService.validateToken(email, deviceId, refreshToken)) {
+			throw new SessionExpiredException("Oturum sonlandırılmış.");
+		}
+
+		UserEntity user = userService.findByEmail(email);
+
+		generateTokensAndReturnResponse(user, deviceId, response);
+	}
+	/* --- --- */
 
 	/**
 	 * Helper Methods
