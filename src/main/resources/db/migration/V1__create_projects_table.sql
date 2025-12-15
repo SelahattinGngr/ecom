@@ -1,5 +1,5 @@
 CREATE TABLE users (
-    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY, 
     email VARCHAR(100) NOT NULL UNIQUE,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,

@@ -14,7 +14,7 @@ Content-Type: application/json
 
 {
   "email": "selahattin_gungor53@hotmail.com",
-  "password": "940064"
+  "password": "567254"
 }
 
 ### signup
@@ -32,7 +32,15 @@ POST {{url}}/public/signup-verify HTTP/1.1
 Content-Type: application/json
 
 {
-  "token": "9dc53933-6e60-4bac-b3f8-44bad511aa2e"
+  "token": "c637f20e-fdf7-43d0-9b87-167c5a75fc4a"
+}
+
+### /public/resend-verification-email
+POST {{url}}/public/resend-verification-email HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "selahattin_gungor53@hotmail.com"
 }
 
 ### signout

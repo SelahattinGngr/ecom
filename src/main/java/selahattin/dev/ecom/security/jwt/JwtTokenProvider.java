@@ -15,6 +15,8 @@ import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.config.properties.JwtProperties;
+import selahattin.dev.ecom.entity.UserEntity;
+import selahattin.dev.ecom.security.CustomUserDetails;
 
 @Slf4j
 @Component
@@ -34,14 +36,26 @@ public class JwtTokenProvider {
 
     // --- Generate Token ---
 
-    public String generateAccessToken(UserDetails userDetails) {
+    public String generateAccessToken(CustomUserDetails userDetails) {
         long expiration = jwtProperties.getAccessTokenExpirationMs();
+        UserEntity user = userDetails.getUser();
 
         String role = userDetails.getAuthorities().isEmpty()
                 ? "USER"
                 : userDetails.getAuthorities().iterator().next().getAuthority();
 
-        return generateToken(userDetails.getUsername(), role, expiration, getAccessSigningKey());
+        String uid = user.getId().toString();
+        String firstName = user.getFirstName();
+        String lastName = user.getLastName();
+
+        return generateToken(
+                userDetails.getUsername(),
+                role,
+                uid,
+                firstName,
+                lastName,
+                expiration,
+                getAccessSigningKey());
     }
 
     public String generateRefreshToken(UserDetails userDetails, String deviceId) {
@@ -56,7 +70,9 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    private String generateToken(String subject, String role, long expirationMillis, SecretKey key) {
+    // Helper Metot (Payload Zenginleştirme)
+    private String generateToken(String subject, String role, String uid, String firstName, String lastName,
+            long expirationMillis, SecretKey key) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expirationMillis);
 
@@ -64,11 +80,14 @@ public class JwtTokenProvider {
                 .subject(subject)
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(key, Jwts.SIG.HS256);
+                .signWith(key, Jwts.SIG.HS256)
+                .claim("role", role)
+                .claim("uid", uid);
 
-        if (role != null) {
-            builder.claim("role", role);
-        }
+        if (firstName != null)
+            builder.claim("fn", firstName);
+        if (lastName != null)
+            builder.claim("ln", lastName);
 
         return builder.compact();
     }
@@ -113,12 +132,16 @@ public class JwtTokenProvider {
         }
     }
 
-    private Claims extractAllClaims(String token, SecretKey key) {
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+    public String extractFirstName(String token) {
+        return extractClaim(token, "fn");
+    }
+
+    public String extractLastName(String token) {
+        return extractClaim(token, "ln");
+    }
+
+    public String extractUserId(String jwt) {
+        return extractClaim(jwt, "uid");
     }
 
     public String extractDeviceId(String token) {
@@ -128,5 +151,22 @@ public class JwtTokenProvider {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private String extractClaim(String token, String key) {
+        try {
+            Claims claims = extractAllClaims(token, getAccessSigningKey());
+            return claims.get(key, String.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private Claims extractAllClaims(String token, SecretKey key) {
+        return Jwts.parser()
+                .verifyWith(key)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }
