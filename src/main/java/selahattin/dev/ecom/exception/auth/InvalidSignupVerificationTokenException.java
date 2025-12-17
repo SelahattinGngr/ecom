@@ -1,4 +1,4 @@
-package selahattin.dev.ecom.exception;
+package selahattin.dev.ecom.exception.auth;
 
 public class InvalidSignupVerificationTokenException extends RuntimeException {
     public InvalidSignupVerificationTokenException(String message) {

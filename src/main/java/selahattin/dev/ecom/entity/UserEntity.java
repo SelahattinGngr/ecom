@@ -31,6 +31,9 @@ public class UserEntity extends BaseEntity {
     @Column(nullable = false)
     private String lastName;
 
+    @Column(nullable = false, unique = true, length = 15)
+    private String phoneNumber;
+
     @Builder.Default
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

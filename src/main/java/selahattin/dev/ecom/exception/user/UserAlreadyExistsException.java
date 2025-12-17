@@ -1,4 +1,4 @@
-package selahattin.dev.ecom.exception;
+package selahattin.dev.ecom.exception.user;
 
 public class UserAlreadyExistsException extends RuntimeException {
     public UserAlreadyExistsException(String email) {

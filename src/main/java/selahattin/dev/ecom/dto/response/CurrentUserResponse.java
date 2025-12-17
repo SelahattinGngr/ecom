@@ -14,6 +14,7 @@ import lombok.experimental.Accessors;
 public class CurrentUserResponse {
     private String firstName;
     private String lastName;
+    private String phoneNumber;
     private String email;
     private String role;
     // İleride buraya avatarUrl, phone number vs. eklenir.

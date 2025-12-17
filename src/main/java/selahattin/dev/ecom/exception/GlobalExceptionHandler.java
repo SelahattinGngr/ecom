@@ -12,6 +12,15 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import lombok.extern.slf4j.Slf4j;
+import selahattin.dev.ecom.exception.auth.AuthenticationContextException;
+import selahattin.dev.ecom.exception.auth.InvalidOtpException;
+import selahattin.dev.ecom.exception.auth.InvalidRefreshTokenException;
+import selahattin.dev.ecom.exception.auth.InvalidSignupVerificationTokenException;
+import selahattin.dev.ecom.exception.auth.NotfoundDeviceException;
+import selahattin.dev.ecom.exception.auth.SessionExpiredException;
+import selahattin.dev.ecom.exception.auth.UnauthorizedException;
+import selahattin.dev.ecom.exception.user.ResourceNotFoundException;
+import selahattin.dev.ecom.exception.user.UserAlreadyExistsException;
 import selahattin.dev.ecom.response.ApiResponse;
 
 @Slf4j
