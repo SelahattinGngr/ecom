@@ -1,5 +1,3 @@
--- Districts tablosuna toplu veri girişi
--- 900+ insert komutunu tek seferde gönderiyoruz.
 INSERT INTO districts (id, name, city_id)
 VALUES 
 (1, '19 MAYIS', 67),

@@ -1,10 +1,7 @@
--- Önce Türkiye'yi ekleyelim (Eğer yoksa)
 INSERT INTO countries (id, name)
 VALUES (1, 'Türkiye')
 ON CONFLICT (id) DO NOTHING;
 
--- Şehirleri ekleyelim (country_id = 1 olarak belirtiyoruz)
--- Tek bir INSERT bloğu kullanmak veritabanı performansı açısından 81 ayrı insert'ten daha iyidir.
 INSERT INTO cities (id, country_id, name)
 VALUES (1, 1, 'ADANA'),
        (2, 1, 'ADIYAMAN'),
