@@ -1,5 +1,6 @@
 package selahattin.dev.ecom.dto.response;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,5 +14,5 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class SigninResponse {
     private String email;
-    private String role;
+    private List<String> roles;
 }

@@ -1,81 +1,95 @@
-INSERT INTO cities (id, name) VALUES (1, 'ADANA');
-INSERT INTO cities (id, name) VALUES (2, 'ADIYAMAN');
-INSERT INTO cities (id, name) VALUES (3, 'AFYONKARAHİSAR');
-INSERT INTO cities (id, name) VALUES (4, 'AĞRI');
-INSERT INTO cities (id, name) VALUES (5, 'AKSARAY');
-INSERT INTO cities (id, name) VALUES (6, 'AMASYA');
-INSERT INTO cities (id, name) VALUES (7, 'ANKARA');
-INSERT INTO cities (id, name) VALUES (8, 'ANTALYA');
-INSERT INTO cities (id, name) VALUES (9, 'ARDAHAN');
-INSERT INTO cities (id, name) VALUES (10, 'ARTVİN');
-INSERT INTO cities (id, name) VALUES (11, 'AYDIN');
-INSERT INTO cities (id, name) VALUES (12, 'BALIKESİR');
-INSERT INTO cities (id, name) VALUES (13, 'BARTIN');
-INSERT INTO cities (id, name) VALUES (14, 'BATMAN');
-INSERT INTO cities (id, name) VALUES (15, 'BAYBURT');
-INSERT INTO cities (id, name) VALUES (16, 'BİLECİK');
-INSERT INTO cities (id, name) VALUES (17, 'BİNGÖL');
-INSERT INTO cities (id, name) VALUES (18, 'BİTLİS');
-INSERT INTO cities (id, name) VALUES (19, 'BOLU');
-INSERT INTO cities (id, name) VALUES (20, 'BURDUR');
-INSERT INTO cities (id, name) VALUES (21, 'BURSA');
-INSERT INTO cities (id, name) VALUES (22, 'ÇANAKKALE');
-INSERT INTO cities (id, name) VALUES (23, 'ÇANKIRI');
-INSERT INTO cities (id, name) VALUES (24, 'ÇORUM');
-INSERT INTO cities (id, name) VALUES (25, 'DENİZLİ');
-INSERT INTO cities (id, name) VALUES (26, 'DİYARBAKIR');
-INSERT INTO cities (id, name) VALUES (27, 'DÜZCE');
-INSERT INTO cities (id, name) VALUES (28, 'EDİRNE');
-INSERT INTO cities (id, name) VALUES (29, 'ELAZIĞ');
-INSERT INTO cities (id, name) VALUES (30, 'ERZİNCAN');
-INSERT INTO cities (id, name) VALUES (31, 'ERZURUM');
-INSERT INTO cities (id, name) VALUES (32, 'ESKİŞEHİR');
-INSERT INTO cities (id, name) VALUES (33, 'GAZİANTEP');
-INSERT INTO cities (id, name) VALUES (34, 'GİRESUN');
-INSERT INTO cities (id, name) VALUES (35, 'GÜMÜŞHANE');
-INSERT INTO cities (id, name) VALUES (36, 'HAKKARİ');
-INSERT INTO cities (id, name) VALUES (37, 'HATAY');
-INSERT INTO cities (id, name) VALUES (38, 'IĞDIR');
-INSERT INTO cities (id, name) VALUES (39, 'ISPARTA');
-INSERT INTO cities (id, name) VALUES (40, 'İSTANBUL');
-INSERT INTO cities (id, name) VALUES (41, 'İZMİR');
-INSERT INTO cities (id, name) VALUES (42, 'KAHRAMANMARAŞ');
-INSERT INTO cities (id, name) VALUES (43, 'KARABÜK');
-INSERT INTO cities (id, name) VALUES (44, 'KARAMAN');
-INSERT INTO cities (id, name) VALUES (45, 'KARS');
-INSERT INTO cities (id, name) VALUES (46, 'KASTAMONU');
-INSERT INTO cities (id, name) VALUES (47, 'KAYSERİ');
-INSERT INTO cities (id, name) VALUES (48, 'KIRIKKALE');
-INSERT INTO cities (id, name) VALUES (49, 'KIRKLARELİ');
-INSERT INTO cities (id, name) VALUES (50, 'KIRŞEHİR');
-INSERT INTO cities (id, name) VALUES (51, 'KİLİS');
-INSERT INTO cities (id, name) VALUES (52, 'KOCAELİ');
-INSERT INTO cities (id, name) VALUES (53, 'KONYA');
-INSERT INTO cities (id, name) VALUES (54, 'KÜTAHYA');
-INSERT INTO cities (id, name) VALUES (55, 'MALATYA');
-INSERT INTO cities (id, name) VALUES (56, 'MANİSA');
-INSERT INTO cities (id, name) VALUES (57, 'MARDİN');
-INSERT INTO cities (id, name) VALUES (58, 'MERSİN');
-INSERT INTO cities (id, name) VALUES (59, 'MUĞLA');
-INSERT INTO cities (id, name) VALUES (60, 'MUŞ');
-INSERT INTO cities (id, name) VALUES (61, 'NEVŞEHİR');
-INSERT INTO cities (id, name) VALUES (62, 'NİĞDE');
-INSERT INTO cities (id, name) VALUES (63, 'ORDU');
-INSERT INTO cities (id, name) VALUES (64, 'OSMANİYE');
-INSERT INTO cities (id, name) VALUES (65, 'RİZE');
-INSERT INTO cities (id, name) VALUES (66, 'SAKARYA');
-INSERT INTO cities (id, name) VALUES (67, 'SAMSUN');
-INSERT INTO cities (id, name) VALUES (68, 'SİİRT');
-INSERT INTO cities (id, name) VALUES (69, 'SİNOP');
-INSERT INTO cities (id, name) VALUES (70, 'SİVAS');
-INSERT INTO cities (id, name) VALUES (71, 'ŞANLIURFA');
-INSERT INTO cities (id, name) VALUES (72, 'ŞIRNAK');
-INSERT INTO cities (id, name) VALUES (73, 'TEKİRDAĞ');
-INSERT INTO cities (id, name) VALUES (74, 'TOKAT');
-INSERT INTO cities (id, name) VALUES (75, 'TRABZON');
-INSERT INTO cities (id, name) VALUES (76, 'TUNCELİ');
-INSERT INTO cities (id, name) VALUES (77, 'UŞAK');
-INSERT INTO cities (id, name) VALUES (78, 'VAN');
-INSERT INTO cities (id, name) VALUES (79, 'YALOVA');
-INSERT INTO cities (id, name) VALUES (80, 'YOZGAT');
-INSERT INTO cities (id, name) VALUES (81, 'ZONGULDAK');
+-- Önce Türkiye'yi ekleyelim (Eğer yoksa)
+INSERT INTO countries (id, name)
+VALUES (1, 'Türkiye')
+ON CONFLICT (id) DO NOTHING;
+
+-- Şehirleri ekleyelim (country_id = 1 olarak belirtiyoruz)
+-- Tek bir INSERT bloğu kullanmak veritabanı performansı açısından 81 ayrı insert'ten daha iyidir.
+INSERT INTO cities (id, country_id, name)
+VALUES (1, 1, 'ADANA'),
+       (2, 1, 'ADIYAMAN'),
+       (3, 1, 'AFYONKARAHİSAR'),
+       (4, 1, 'AĞRI'),
+       (5, 1, 'AKSARAY'),
+       (6, 1, 'AMASYA'),
+       (7, 1, 'ANKARA'),
+       (8, 1, 'ANTALYA'),
+       (9, 1, 'ARDAHAN'),
+       (10, 1, 'ARTVİN'),
+       (11, 1, 'AYDIN'),
+       (12, 1, 'BALIKESİR'),
+       (13, 1, 'BARTIN'),
+       (14, 1, 'BATMAN'),
+       (15, 1, 'BAYBURT'),
+       (16, 1, 'BİLECİK'),
+       (17, 1, 'BİNGÖL'),
+       (18, 1, 'BİTLİS'),
+       (19, 1, 'BOLU'),
+       (20, 1, 'BURDUR'),
+       (21, 1, 'BURSA'),
+       (22, 1, 'ÇANAKKALE'),
+       (23, 1, 'ÇANKIRI'),
+       (24, 1, 'ÇORUM'),
+       (25, 1, 'DENİZLİ'),
+       (26, 1, 'DİYARBAKIR'),
+       (27, 1, 'DÜZCE'),
+       (28, 1, 'EDİRNE'),
+       (29, 1, 'ELAZIĞ'),
+       (30, 1, 'ERZİNCAN'),
+       (31, 1, 'ERZURUM'),
+       (32, 1, 'ESKİŞEHİR'),
+       (33, 1, 'GAZİANTEP'),
+       (34, 1, 'GİRESUN'),
+       (35, 1, 'GÜMÜŞHANE'),
+       (36, 1, 'HAKKARİ'),
+       (37, 1, 'HATAY'),
+       (38, 1, 'IĞDIR'),
+       (39, 1, 'ISPARTA'),
+       (40, 1, 'İSTANBUL'),
+       (41, 1, 'İZMİR'),
+       (42, 1, 'KAHRAMANMARAŞ'),
+       (43, 1, 'KARABÜK'),
+       (44, 1, 'KARAMAN'),
+       (45, 1, 'KARS'),
+       (46, 1, 'KASTAMONU'),
+       (47, 1, 'KAYSERİ'),
+       (48, 1, 'KIRIKKALE'),
+       (49, 1, 'KIRKLARELİ'),
+       (50, 1, 'KIRŞEHİR'),
+       (51, 1, 'KİLİS'),
+       (52, 1, 'KOCAELİ'),
+       (53, 1, 'KONYA'),
+       (54, 1, 'KÜTAHYA'),
+       (55, 1, 'MALATYA'),
+       (56, 1, 'MANİSA'),
+       (57, 1, 'MARDİN'),
+       (58, 1, 'MERSİN'),
+       (59, 1, 'MUĞLA'),
+       (60, 1, 'MUŞ'),
+       (61, 1, 'NEVŞEHİR'),
+       (62, 1, 'NİĞDE'),
+       (63, 1, 'ORDU'),
+       (64, 1, 'OSMANİYE'),
+       (65, 1, 'RİZE'),
+       (66, 1, 'SAKARYA'),
+       (67, 1, 'SAMSUN'),
+       (68, 1, 'SİİRT'),
+       (69, 1, 'SİNOP'),
+       (70, 1, 'SİVAS'),
+       (71, 1, 'ŞANLIURFA'),
+       (72, 1, 'ŞIRNAK'),
+       (73, 1, 'TEKİRDAĞ'),
+       (74, 1, 'TOKAT'),
+       (75, 1, 'TRABZON'),
+       (76, 1, 'TUNCELİ'),
+       (77, 1, 'UŞAK'),
+       (78, 1, 'VAN'),
+       (79, 1, 'YALOVA'),
+       (80, 1, 'YOZGAT'),
+       (81, 1, 'ZONGULDAK')
+ON CONFLICT (id) DO NOTHING;
+
+-- Manuel ID girdiğimiz için sequence'i son ID'ye "81" eşitliyoruz.
+-- Bunu yapılmazsa, bir sonraki insert işleminde ID 1 vermeye çalışır ve patlar.
+SELECT setval('cities_id_seq', (SELECT MAX(id) FROM cities));
+SELECT setval('countries_id_seq', (SELECT MAX(id) FROM countries));

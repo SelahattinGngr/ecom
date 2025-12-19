@@ -1,903 +1,908 @@
-INSERT INTO districts (id, name, city_id) VALUES (1, '19 MAYIS', 67);
-INSERT INTO districts (id, name, city_id) VALUES (2, 'ABANA', 46);
-INSERT INTO districts (id, name, city_id) VALUES (3, 'ACIGÖL', 61);
-INSERT INTO districts (id, name, city_id) VALUES (4, 'ACIPAYAM', 25);
-INSERT INTO districts (id, name, city_id) VALUES (5, 'ADAKLI', 17);
-INSERT INTO districts (id, name, city_id) VALUES (6, 'ADALAR', 40);
-INSERT INTO districts (id, name, city_id) VALUES (7, 'ADAPAZARI', 66);
-INSERT INTO districts (id, name, city_id) VALUES (8, 'ADİLCEVAZ', 18);
-INSERT INTO districts (id, name, city_id) VALUES (9, 'AFŞİN', 42);
-INSERT INTO districts (id, name, city_id) VALUES (10, 'AĞAÇÖREN', 5);
-INSERT INTO districts (id, name, city_id) VALUES (11, 'AĞIN', 29);
-INSERT INTO districts (id, name, city_id) VALUES (12, 'AĞLASUN', 20);
-INSERT INTO districts (id, name, city_id) VALUES (13, 'AĞLI', 46);
-INSERT INTO districts (id, name, city_id) VALUES (14, 'AHIRLI', 53);
-INSERT INTO districts (id, name, city_id) VALUES (15, 'AHLAT', 18);
-INSERT INTO districts (id, name, city_id) VALUES (16, 'AHMETLİ', 56);
-INSERT INTO districts (id, name, city_id) VALUES (17, 'AKÇAABAT', 75);
-INSERT INTO districts (id, name, city_id) VALUES (18, 'AKÇADAĞ', 55);
-INSERT INTO districts (id, name, city_id) VALUES (19, 'AKÇAKALE', 71);
-INSERT INTO districts (id, name, city_id) VALUES (20, 'AKÇAKENT', 50);
-INSERT INTO districts (id, name, city_id) VALUES (21, 'AKÇAKOCA', 27);
-INSERT INTO districts (id, name, city_id) VALUES (22, 'AKDAĞMADENİ', 80);
-INSERT INTO districts (id, name, city_id) VALUES (23, 'AKDENİZ', 58);
-INSERT INTO districts (id, name, city_id) VALUES (24, 'AKHİSAR', 56);
-INSERT INTO districts (id, name, city_id) VALUES (25, 'AKINCILAR', 70);
-INSERT INTO districts (id, name, city_id) VALUES (26, 'AKKIŞLA', 47);
-INSERT INTO districts (id, name, city_id) VALUES (27, 'AKKUŞ', 63);
-INSERT INTO districts (id, name, city_id) VALUES (28, 'AKÖREN', 53);
-INSERT INTO districts (id, name, city_id) VALUES (29, 'AKPINAR', 50);
-INSERT INTO districts (id, name, city_id) VALUES (30, 'AKSEKİ', 8);
-INSERT INTO districts (id, name, city_id) VALUES (31, 'AKSU', 8);
-INSERT INTO districts (id, name, city_id) VALUES (32, 'AKŞEHİR', 53);
-INSERT INTO districts (id, name, city_id) VALUES (33, 'AKYAKA', 45);
-INSERT INTO districts (id, name, city_id) VALUES (34, 'AKYAZI', 66);
-INSERT INTO districts (id, name, city_id) VALUES (35, 'AKYURT', 7);
-INSERT INTO districts (id, name, city_id) VALUES (36, 'ALACA', 24);
-INSERT INTO districts (id, name, city_id) VALUES (37, 'ALACAKAYA', 29);
-INSERT INTO districts (id, name, city_id) VALUES (38, 'ALAÇAM', 67);
-INSERT INTO districts (id, name, city_id) VALUES (39, 'ALADAĞ', 1);
-INSERT INTO districts (id, name, city_id) VALUES (40, 'ALANYA', 8);
-INSERT INTO districts (id, name, city_id) VALUES (41, 'ALAPLI', 81);
-INSERT INTO districts (id, name, city_id) VALUES (42, 'ALAŞEHİR', 56);
-INSERT INTO districts (id, name, city_id) VALUES (43, 'ALİAĞA', 41);
-INSERT INTO districts (id, name, city_id) VALUES (44, 'ALMUS', 74);
-INSERT INTO districts (id, name, city_id) VALUES (45, 'ALPU', 32);
-INSERT INTO districts (id, name, city_id) VALUES (46, 'ALTIEYLÜL', 12);
-INSERT INTO districts (id, name, city_id) VALUES (47, 'ALTINDAĞ', 7);
-INSERT INTO districts (id, name, city_id) VALUES (48, 'ALTINEKİN', 53);
-INSERT INTO districts (id, name, city_id) VALUES (49, 'ALTINORDU', 63);
-INSERT INTO districts (id, name, city_id) VALUES (50, 'ALTINOVA', 79);
-INSERT INTO districts (id, name, city_id) VALUES (51, 'ALTINÖZÜ', 37);
-INSERT INTO districts (id, name, city_id) VALUES (52, 'ALTINTAŞ', 54);
-INSERT INTO districts (id, name, city_id) VALUES (53, 'ALTINYAYLA', 20);
-INSERT INTO districts (id, name, city_id) VALUES (54, 'ALTUNHİSAR', 62);
-INSERT INTO districts (id, name, city_id) VALUES (55, 'ALUCRA', 34);
-INSERT INTO districts (id, name, city_id) VALUES (56, 'AMASRA', 13);
-INSERT INTO districts (id, name, city_id) VALUES (57, 'ANAMUR', 58);
-INSERT INTO districts (id, name, city_id) VALUES (58, 'ANDIRIN', 42);
-INSERT INTO districts (id, name, city_id) VALUES (59, 'ANTAKYA', 37);
-INSERT INTO districts (id, name, city_id) VALUES (60, 'ARABAN', 33);
-INSERT INTO districts (id, name, city_id) VALUES (61, 'ARAÇ', 46);
-INSERT INTO districts (id, name, city_id) VALUES (62, 'ARAKLI', 75);
-INSERT INTO districts (id, name, city_id) VALUES (63, 'ARALIK', 38);
-INSERT INTO districts (id, name, city_id) VALUES (64, 'ARAPGİR', 55);
-INSERT INTO districts (id, name, city_id) VALUES (65, 'ARDANUÇ', 10);
-INSERT INTO districts (id, name, city_id) VALUES (66, 'ARDEŞEN', 65);
-INSERT INTO districts (id, name, city_id) VALUES (67, 'ARGUVAN', 55);
-INSERT INTO districts (id, name, city_id) VALUES (68, 'ARHAVİ', 10);
-INSERT INTO districts (id, name, city_id) VALUES (69, 'ARICAK', 29);
-INSERT INTO districts (id, name, city_id) VALUES (70, 'ARİFİYE', 66);
-INSERT INTO districts (id, name, city_id) VALUES (71, 'ARMUTLU', 79);
-INSERT INTO districts (id, name, city_id) VALUES (72, 'ARNAVUTKÖY', 40);
-INSERT INTO districts (id, name, city_id) VALUES (73, 'ARPAÇAY', 45);
-INSERT INTO districts (id, name, city_id) VALUES (74, 'ARSİN', 75);
-INSERT INTO districts (id, name, city_id) VALUES (75, 'ARSUZ', 37);
-INSERT INTO districts (id, name, city_id) VALUES (76, 'ARTOVA', 74);
-INSERT INTO districts (id, name, city_id) VALUES (77, 'ARTUKLU', 57);
-INSERT INTO districts (id, name, city_id) VALUES (78, 'ASARCIK', 67);
-INSERT INTO districts (id, name, city_id) VALUES (79, 'ASLANAPA', 54);
-INSERT INTO districts (id, name, city_id) VALUES (80, 'AŞKALE', 31);
-INSERT INTO districts (id, name, city_id) VALUES (81, 'ATABEY', 39);
-INSERT INTO districts (id, name, city_id) VALUES (82, 'ATAKUM', 67);
-INSERT INTO districts (id, name, city_id) VALUES (83, 'ATAŞEHİR', 40);
-INSERT INTO districts (id, name, city_id) VALUES (84, 'ATKARACALAR', 23);
-INSERT INTO districts (id, name, city_id) VALUES (85, 'AVANOS', 61);
-INSERT INTO districts (id, name, city_id) VALUES (86, 'AVCILAR', 40);
-INSERT INTO districts (id, name, city_id) VALUES (87, 'AYANCIK', 69);
-INSERT INTO districts (id, name, city_id) VALUES (88, 'AYAŞ', 7);
-INSERT INTO districts (id, name, city_id) VALUES (89, 'AYBASTI', 63);
-INSERT INTO districts (id, name, city_id) VALUES (90, 'AYDINCIK', 58);
-INSERT INTO districts (id, name, city_id) VALUES (91, 'AYDINTEPE', 15);
-INSERT INTO districts (id, name, city_id) VALUES (92, 'AYRANCI', 44);
-INSERT INTO districts (id, name, city_id) VALUES (93, 'AYVACIK', 22);
-INSERT INTO districts (id, name, city_id) VALUES (94, 'AYVALIK', 12);
-INSERT INTO districts (id, name, city_id) VALUES (95, 'AZDAVAY', 46);
-INSERT INTO districts (id, name, city_id) VALUES (96, 'AZİZİYE', 31);
-INSERT INTO districts (id, name, city_id) VALUES (97, 'BABADAĞ', 25);
-INSERT INTO districts (id, name, city_id) VALUES (98, 'BABAESKİ', 49);
-INSERT INTO districts (id, name, city_id) VALUES (99, 'BAFRA', 67);
-INSERT INTO districts (id, name, city_id) VALUES (100, 'BAĞCILAR', 40);
-INSERT INTO districts (id, name, city_id) VALUES (101, 'BAĞLAR', 26);
-INSERT INTO districts (id, name, city_id) VALUES (102, 'BAHÇE', 64);
-INSERT INTO districts (id, name, city_id) VALUES (103, 'BAHÇELİEVLER', 40);
-INSERT INTO districts (id, name, city_id) VALUES (104, 'BAHÇESARAY', 78);
-INSERT INTO districts (id, name, city_id) VALUES (105, 'BAHŞILI', 48);
-INSERT INTO districts (id, name, city_id) VALUES (106, 'BAKIRKÖY', 40);
-INSERT INTO districts (id, name, city_id) VALUES (107, 'BAKLAN', 25);
-INSERT INTO districts (id, name, city_id) VALUES (108, 'BALA', 7);
-INSERT INTO districts (id, name, city_id) VALUES (109, 'BALÇOVA', 41);
-INSERT INTO districts (id, name, city_id) VALUES (110, 'BALIŞEYH', 48);
-INSERT INTO districts (id, name, city_id) VALUES (111, 'BALYA', 12);
-INSERT INTO districts (id, name, city_id) VALUES (112, 'BANAZ', 77);
-INSERT INTO districts (id, name, city_id) VALUES (113, 'BANDIRMA', 12);
-INSERT INTO districts (id, name, city_id) VALUES (114, 'BASKİL', 29);
-INSERT INTO districts (id, name, city_id) VALUES (115, 'BAŞAKŞEHİR', 40);
-INSERT INTO districts (id, name, city_id) VALUES (116, 'BAŞÇİFTLİK', 74);
-INSERT INTO districts (id, name, city_id) VALUES (117, 'BAŞİSKELE', 52);
-INSERT INTO districts (id, name, city_id) VALUES (118, 'BAŞKALE', 78);
-INSERT INTO districts (id, name, city_id) VALUES (119, 'BAŞMAKÇI', 3);
-INSERT INTO districts (id, name, city_id) VALUES (120, 'BAŞYAYLA', 44);
-INSERT INTO districts (id, name, city_id) VALUES (121, 'BATTALGAZİ', 55);
-INSERT INTO districts (id, name, city_id) VALUES (122, 'BAYAT', 3);
-INSERT INTO districts (id, name, city_id) VALUES (123, 'BAYINDIR', 41);
-INSERT INTO districts (id, name, city_id) VALUES (124, 'BAYKAN', 68);
-INSERT INTO districts (id, name, city_id) VALUES (125, 'BAYRAKLI', 41);
-INSERT INTO districts (id, name, city_id) VALUES (126, 'BAYRAMİÇ', 22);
-INSERT INTO districts (id, name, city_id) VALUES (127, 'BAYRAMÖREN', 23);
-INSERT INTO districts (id, name, city_id) VALUES (128, 'BAYRAMPAŞA', 40);
-INSERT INTO districts (id, name, city_id) VALUES (129, 'BEKİLLİ', 25);
-INSERT INTO districts (id, name, city_id) VALUES (130, 'BELEN', 37);
-INSERT INTO districts (id, name, city_id) VALUES (131, 'BERGAMA', 41);
-INSERT INTO districts (id, name, city_id) VALUES (132, 'BESNİ', 2);
-INSERT INTO districts (id, name, city_id) VALUES (133, 'BEŞİKDÜZÜ', 75);
-INSERT INTO districts (id, name, city_id) VALUES (134, 'BEŞİKTAŞ', 40);
-INSERT INTO districts (id, name, city_id) VALUES (135, 'BEŞİRİ', 14);
-INSERT INTO districts (id, name, city_id) VALUES (136, 'BEYAĞAÇ', 25);
-INSERT INTO districts (id, name, city_id) VALUES (137, 'BEYDAĞ', 41);
-INSERT INTO districts (id, name, city_id) VALUES (138, 'BEYKOZ', 40);
-INSERT INTO districts (id, name, city_id) VALUES (139, 'BEYLİKDÜZÜ', 40);
-INSERT INTO districts (id, name, city_id) VALUES (140, 'BEYLİKOVA', 32);
-INSERT INTO districts (id, name, city_id) VALUES (141, 'BEYOĞLU', 40);
-INSERT INTO districts (id, name, city_id) VALUES (142, 'BEYPAZARI', 7);
-INSERT INTO districts (id, name, city_id) VALUES (143, 'BEYŞEHİR', 53);
-INSERT INTO districts (id, name, city_id) VALUES (144, 'BEYTÜŞŞEBAP', 72);
-INSERT INTO districts (id, name, city_id) VALUES (145, 'BİGA', 22);
-INSERT INTO districts (id, name, city_id) VALUES (146, 'BİGADİÇ', 12);
-INSERT INTO districts (id, name, city_id) VALUES (147, 'BİRECİK', 71);
-INSERT INTO districts (id, name, city_id) VALUES (148, 'BİSMİL', 26);
-INSERT INTO districts (id, name, city_id) VALUES (149, 'BODRUM', 59);
-INSERT INTO districts (id, name, city_id) VALUES (150, 'BOĞAZKALE', 24);
-INSERT INTO districts (id, name, city_id) VALUES (151, 'BOĞAZLIYAN', 80);
-INSERT INTO districts (id, name, city_id) VALUES (152, 'BOLVADİN', 3);
-INSERT INTO districts (id, name, city_id) VALUES (153, 'BOR', 62);
-INSERT INTO districts (id, name, city_id) VALUES (154, 'BORÇKA', 10);
-INSERT INTO districts (id, name, city_id) VALUES (155, 'BORNOVA', 41);
-INSERT INTO districts (id, name, city_id) VALUES (156, 'BOYABAT', 69);
-INSERT INTO districts (id, name, city_id) VALUES (157, 'BOZCAADA', 22);
-INSERT INTO districts (id, name, city_id) VALUES (158, 'BOZDOĞAN', 11);
-INSERT INTO districts (id, name, city_id) VALUES (159, 'BOZKIR', 53);
-INSERT INTO districts (id, name, city_id) VALUES (160, 'BOZKURT', 25);
-INSERT INTO districts (id, name, city_id) VALUES (161, 'BOZOVA', 71);
-INSERT INTO districts (id, name, city_id) VALUES (162, 'BOZTEPE', 50);
-INSERT INTO districts (id, name, city_id) VALUES (163, 'BOZÜYÜK', 16);
-INSERT INTO districts (id, name, city_id) VALUES (164, 'BOZYAZI', 58);
-INSERT INTO districts (id, name, city_id) VALUES (165, 'BUCA', 41);
-INSERT INTO districts (id, name, city_id) VALUES (166, 'BUCAK', 20);
-INSERT INTO districts (id, name, city_id) VALUES (167, 'BUHARKENT', 11);
-INSERT INTO districts (id, name, city_id) VALUES (168, 'BULANCAK', 34);
-INSERT INTO districts (id, name, city_id) VALUES (169, 'BULANIK', 60);
-INSERT INTO districts (id, name, city_id) VALUES (170, 'BULDAN', 25);
-INSERT INTO districts (id, name, city_id) VALUES (171, 'BURHANİYE', 12);
-INSERT INTO districts (id, name, city_id) VALUES (172, 'BÜNYAN', 47);
-INSERT INTO districts (id, name, city_id) VALUES (173, 'BÜYÜKÇEKMECE', 40);
-INSERT INTO districts (id, name, city_id) VALUES (174, 'BÜYÜKORHAN', 21);
-INSERT INTO districts (id, name, city_id) VALUES (175, 'CANİK', 67);
-INSERT INTO districts (id, name, city_id) VALUES (176, 'CEYHAN', 1);
-INSERT INTO districts (id, name, city_id) VALUES (177, 'CEYLANPINAR', 71);
-INSERT INTO districts (id, name, city_id) VALUES (178, 'CİDE', 46);
-INSERT INTO districts (id, name, city_id) VALUES (179, 'CİHANBEYLİ', 53);
-INSERT INTO districts (id, name, city_id) VALUES (180, 'CİZRE', 72);
-INSERT INTO districts (id, name, city_id) VALUES (181, 'CUMAYERİ', 27);
-INSERT INTO districts (id, name, city_id) VALUES (182, 'ÇAĞLAYANCERİT', 42);
-INSERT INTO districts (id, name, city_id) VALUES (183, 'ÇAL', 25);
-INSERT INTO districts (id, name, city_id) VALUES (184, 'ÇALDIRAN', 78);
-INSERT INTO districts (id, name, city_id) VALUES (185, 'ÇAMARDI', 62);
-INSERT INTO districts (id, name, city_id) VALUES (186, 'ÇAMAŞ', 63);
-INSERT INTO districts (id, name, city_id) VALUES (187, 'ÇAMELİ', 25);
-INSERT INTO districts (id, name, city_id) VALUES (188, 'ÇAMLIDERE', 7);
-INSERT INTO districts (id, name, city_id) VALUES (189, 'ÇAMLIHEMŞİN', 65);
-INSERT INTO districts (id, name, city_id) VALUES (190, 'ÇAMLIYAYLA', 58);
-INSERT INTO districts (id, name, city_id) VALUES (191, 'ÇAMOLUK', 34);
-INSERT INTO districts (id, name, city_id) VALUES (192, 'ÇAN', 22);
-INSERT INTO districts (id, name, city_id) VALUES (193, 'ÇANAKÇI', 34);
-INSERT INTO districts (id, name, city_id) VALUES (194, 'ÇANDIR', 80);
-INSERT INTO districts (id, name, city_id) VALUES (195, 'ÇANKAYA', 7);
-INSERT INTO districts (id, name, city_id) VALUES (196, 'ÇARDAK', 25);
-INSERT INTO districts (id, name, city_id) VALUES (197, 'ÇARŞAMBA', 67);
-INSERT INTO districts (id, name, city_id) VALUES (198, 'ÇARŞIBAŞI', 75);
-INSERT INTO districts (id, name, city_id) VALUES (199, 'ÇAT', 31);
-INSERT INTO districts (id, name, city_id) VALUES (200, 'ÇATAK', 78);
-INSERT INTO districts (id, name, city_id) VALUES (201, 'ÇATALCA', 40);
-INSERT INTO districts (id, name, city_id) VALUES (202, 'ÇATALPINAR', 63);
-INSERT INTO districts (id, name, city_id) VALUES (203, 'ÇATALZEYTİN', 46);
-INSERT INTO districts (id, name, city_id) VALUES (204, 'ÇAVDARHİSAR', 54);
-INSERT INTO districts (id, name, city_id) VALUES (205, 'ÇAVDIR', 20);
-INSERT INTO districts (id, name, city_id) VALUES (206, 'ÇAY', 3);
-INSERT INTO districts (id, name, city_id) VALUES (207, 'ÇAYBAŞI', 63);
-INSERT INTO districts (id, name, city_id) VALUES (208, 'ÇAYCUMA', 81);
-INSERT INTO districts (id, name, city_id) VALUES (209, 'ÇAYELİ', 65);
-INSERT INTO districts (id, name, city_id) VALUES (210, 'ÇAYIRALAN', 80);
-INSERT INTO districts (id, name, city_id) VALUES (211, 'ÇAYIRLI', 30);
-INSERT INTO districts (id, name, city_id) VALUES (212, 'ÇAYIROVA', 52);
-INSERT INTO districts (id, name, city_id) VALUES (213, 'ÇAYKARA', 75);
-INSERT INTO districts (id, name, city_id) VALUES (214, 'ÇEKEREK', 80);
-INSERT INTO districts (id, name, city_id) VALUES (215, 'ÇEKMEKÖY', 40);
-INSERT INTO districts (id, name, city_id) VALUES (216, 'ÇELEBİ', 48);
-INSERT INTO districts (id, name, city_id) VALUES (217, 'ÇELİKHAN', 2);
-INSERT INTO districts (id, name, city_id) VALUES (218, 'ÇELTİK', 53);
-INSERT INTO districts (id, name, city_id) VALUES (219, 'ÇELTİKÇİ', 20);
-INSERT INTO districts (id, name, city_id) VALUES (220, 'ÇEMİŞGEZEK', 76);
-INSERT INTO districts (id, name, city_id) VALUES (221, 'ÇERKEŞ', 23);
-INSERT INTO districts (id, name, city_id) VALUES (222, 'ÇERKEZKÖY', 73);
-INSERT INTO districts (id, name, city_id) VALUES (223, 'ÇERMİK', 26);
-INSERT INTO districts (id, name, city_id) VALUES (224, 'ÇEŞME', 41);
-INSERT INTO districts (id, name, city_id) VALUES (225, 'ÇILDIR', 9);
-INSERT INTO districts (id, name, city_id) VALUES (226, 'ÇINAR', 26);
-INSERT INTO districts (id, name, city_id) VALUES (227, 'ÇINARCIK', 79);
-INSERT INTO districts (id, name, city_id) VALUES (228, 'ÇİÇEKDAĞI', 50);
-INSERT INTO districts (id, name, city_id) VALUES (229, 'ÇİFTELER', 32);
-INSERT INTO districts (id, name, city_id) VALUES (230, 'ÇİFTLİK', 62);
-INSERT INTO districts (id, name, city_id) VALUES (231, 'ÇİFTLİKKÖY', 79);
-INSERT INTO districts (id, name, city_id) VALUES (232, 'ÇİĞLİ', 41);
-INSERT INTO districts (id, name, city_id) VALUES (233, 'ÇİLİMLİ', 27);
-INSERT INTO districts (id, name, city_id) VALUES (234, 'ÇİNE', 11);
-INSERT INTO districts (id, name, city_id) VALUES (235, 'ÇİVRİL', 25);
-INSERT INTO districts (id, name, city_id) VALUES (236, 'ÇOBANLAR', 3);
-INSERT INTO districts (id, name, city_id) VALUES (237, 'ÇORLU', 73);
-INSERT INTO districts (id, name, city_id) VALUES (238, 'ÇUBUK', 7);
-INSERT INTO districts (id, name, city_id) VALUES (239, 'ÇUKURCA', 36);
-INSERT INTO districts (id, name, city_id) VALUES (240, 'ÇUKUROVA', 1);
-INSERT INTO districts (id, name, city_id) VALUES (241, 'ÇUMRA', 53);
-INSERT INTO districts (id, name, city_id) VALUES (242, 'ÇÜNGÜŞ', 26);
-INSERT INTO districts (id, name, city_id) VALUES (243, 'DADAY', 46);
-INSERT INTO districts (id, name, city_id) VALUES (244, 'DALAMAN', 59);
-INSERT INTO districts (id, name, city_id) VALUES (245, 'DAMAL', 9);
-INSERT INTO districts (id, name, city_id) VALUES (246, 'DARENDE', 55);
-INSERT INTO districts (id, name, city_id) VALUES (247, 'DARGEÇİT', 57);
-INSERT INTO districts (id, name, city_id) VALUES (248, 'DARICA', 52);
-INSERT INTO districts (id, name, city_id) VALUES (249, 'DATÇA', 59);
-INSERT INTO districts (id, name, city_id) VALUES (250, 'DAZKIRI', 3);
-INSERT INTO districts (id, name, city_id) VALUES (251, 'DEFNE', 37);
-INSERT INTO districts (id, name, city_id) VALUES (252, 'DELİCE', 48);
-INSERT INTO districts (id, name, city_id) VALUES (253, 'DEMİRCİ', 56);
-INSERT INTO districts (id, name, city_id) VALUES (254, 'DEMİRKÖY', 49);
-INSERT INTO districts (id, name, city_id) VALUES (255, 'DEMİRÖZÜ', 15);
-INSERT INTO districts (id, name, city_id) VALUES (256, 'DEMRE', 8);
-INSERT INTO districts (id, name, city_id) VALUES (257, 'DERBENT', 53);
-INSERT INTO districts (id, name, city_id) VALUES (258, 'DEREBUCAK', 53);
-INSERT INTO districts (id, name, city_id) VALUES (259, 'DERECİK', 36);
-INSERT INTO districts (id, name, city_id) VALUES (260, 'DERELİ', 34);
-INSERT INTO districts (id, name, city_id) VALUES (261, 'DEREPAZARI', 65);
-INSERT INTO districts (id, name, city_id) VALUES (262, 'DERİK', 57);
-INSERT INTO districts (id, name, city_id) VALUES (263, 'DERİNCE', 52);
-INSERT INTO districts (id, name, city_id) VALUES (264, 'DERİNKUYU', 61);
-INSERT INTO districts (id, name, city_id) VALUES (265, 'DERNEKPAZARI', 75);
-INSERT INTO districts (id, name, city_id) VALUES (266, 'DEVELİ', 47);
-INSERT INTO districts (id, name, city_id) VALUES (267, 'DEVREK', 81);
-INSERT INTO districts (id, name, city_id) VALUES (268, 'DEVREKANİ', 46);
-INSERT INTO districts (id, name, city_id) VALUES (269, 'DİCLE', 26);
-INSERT INTO districts (id, name, city_id) VALUES (270, 'DİDİM', 11);
-INSERT INTO districts (id, name, city_id) VALUES (271, 'DİGOR', 45);
-INSERT INTO districts (id, name, city_id) VALUES (272, 'DİKİLİ', 41);
-INSERT INTO districts (id, name, city_id) VALUES (273, 'DİKMEN', 69);
-INSERT INTO districts (id, name, city_id) VALUES (274, 'DİLOVASI', 52);
-INSERT INTO districts (id, name, city_id) VALUES (275, 'DİNAR', 3);
-INSERT INTO districts (id, name, city_id) VALUES (276, 'DİVRİĞİ', 70);
-INSERT INTO districts (id, name, city_id) VALUES (277, 'DİYADİN', 4);
-INSERT INTO districts (id, name, city_id) VALUES (278, 'DODURGA', 24);
-INSERT INTO districts (id, name, city_id) VALUES (279, 'DOĞANHİSAR', 53);
-INSERT INTO districts (id, name, city_id) VALUES (280, 'DOĞANKENT', 34);
-INSERT INTO districts (id, name, city_id) VALUES (281, 'DOĞANŞAR', 70);
-INSERT INTO districts (id, name, city_id) VALUES (282, 'DOĞANŞEHİR', 55);
-INSERT INTO districts (id, name, city_id) VALUES (283, 'DOĞANYOL', 55);
-INSERT INTO districts (id, name, city_id) VALUES (284, 'DOĞANYURT', 46);
-INSERT INTO districts (id, name, city_id) VALUES (285, 'DOĞUBAYAZIT', 4);
-INSERT INTO districts (id, name, city_id) VALUES (286, 'DOMANİÇ', 54);
-INSERT INTO districts (id, name, city_id) VALUES (287, 'DÖRTDİVAN', 19);
-INSERT INTO districts (id, name, city_id) VALUES (288, 'DÖRTYOL', 37);
-INSERT INTO districts (id, name, city_id) VALUES (289, 'DÖŞEMEALTI', 8);
-INSERT INTO districts (id, name, city_id) VALUES (290, 'DULKADİROĞLU', 42);
-INSERT INTO districts (id, name, city_id) VALUES (291, 'DUMLUPINAR', 54);
-INSERT INTO districts (id, name, city_id) VALUES (292, 'DURAĞAN', 69);
-INSERT INTO districts (id, name, city_id) VALUES (293, 'DURSUNBEY', 12);
-INSERT INTO districts (id, name, city_id) VALUES (294, 'DÜZİÇİ', 64);
-INSERT INTO districts (id, name, city_id) VALUES (295, 'DÜZKÖY', 75);
-INSERT INTO districts (id, name, city_id) VALUES (296, 'ECEABAT', 22);
-INSERT INTO districts (id, name, city_id) VALUES (297, 'EDREMİT', 12);
-INSERT INTO districts (id, name, city_id) VALUES (298, 'EFELER', 11);
-INSERT INTO districts (id, name, city_id) VALUES (299, 'EFLANİ', 43);
-INSERT INTO districts (id, name, city_id) VALUES (300, 'EĞİL', 26);
-INSERT INTO districts (id, name, city_id) VALUES (301, 'EĞİRDİR', 39);
-INSERT INTO districts (id, name, city_id) VALUES (302, 'EKİNÖZÜ', 42);
-INSERT INTO districts (id, name, city_id) VALUES (303, 'ELBEYLİ', 51);
-INSERT INTO districts (id, name, city_id) VALUES (304, 'ELBİSTAN', 42);
-INSERT INTO districts (id, name, city_id) VALUES (305, 'ELDİVAN', 23);
-INSERT INTO districts (id, name, city_id) VALUES (306, 'ELEŞKİRT', 4);
-INSERT INTO districts (id, name, city_id) VALUES (307, 'ELMADAĞ', 7);
-INSERT INTO districts (id, name, city_id) VALUES (308, 'ELMALI', 8);
-INSERT INTO districts (id, name, city_id) VALUES (309, 'EMET', 54);
-INSERT INTO districts (id, name, city_id) VALUES (310, 'EMİRDAĞ', 3);
-INSERT INTO districts (id, name, city_id) VALUES (311, 'EMİRGAZİ', 53);
-INSERT INTO districts (id, name, city_id) VALUES (312, 'ENEZ', 28);
-INSERT INTO districts (id, name, city_id) VALUES (313, 'ERBAA', 74);
-INSERT INTO districts (id, name, city_id) VALUES (314, 'ERCİŞ', 78);
-INSERT INTO districts (id, name, city_id) VALUES (315, 'ERDEK', 12);
-INSERT INTO districts (id, name, city_id) VALUES (316, 'ERDEMLİ', 58);
-INSERT INTO districts (id, name, city_id) VALUES (317, 'EREĞLİ', 53);
-INSERT INTO districts (id, name, city_id) VALUES (318, 'ERENLER', 66);
-INSERT INTO districts (id, name, city_id) VALUES (319, 'ERFELEK', 69);
-INSERT INTO districts (id, name, city_id) VALUES (320, 'ERGANİ', 26);
-INSERT INTO districts (id, name, city_id) VALUES (321, 'ERGENE', 73);
-INSERT INTO districts (id, name, city_id) VALUES (322, 'ERMENEK', 44);
-INSERT INTO districts (id, name, city_id) VALUES (323, 'ERUH', 68);
-INSERT INTO districts (id, name, city_id) VALUES (324, 'ERZİN', 37);
-INSERT INTO districts (id, name, city_id) VALUES (325, 'ESENLER', 40);
-INSERT INTO districts (id, name, city_id) VALUES (326, 'ESENYURT', 40);
-INSERT INTO districts (id, name, city_id) VALUES (327, 'ESKİL', 5);
-INSERT INTO districts (id, name, city_id) VALUES (328, 'ESKİPAZAR', 43);
-INSERT INTO districts (id, name, city_id) VALUES (329, 'ESPİYE', 34);
-INSERT INTO districts (id, name, city_id) VALUES (330, 'EŞME', 77);
-INSERT INTO districts (id, name, city_id) VALUES (331, 'ETİMESGUT', 7);
-INSERT INTO districts (id, name, city_id) VALUES (332, 'EVCİLER', 3);
-INSERT INTO districts (id, name, city_id) VALUES (333, 'EVREN', 7);
-INSERT INTO districts (id, name, city_id) VALUES (334, 'EYNESİL', 34);
-INSERT INTO districts (id, name, city_id) VALUES (335, 'EYÜPSULTAN', 40);
-INSERT INTO districts (id, name, city_id) VALUES (336, 'EYYÜBİYE', 71);
-INSERT INTO districts (id, name, city_id) VALUES (337, 'EZİNE', 22);
-INSERT INTO districts (id, name, city_id) VALUES (338, 'FATİH', 40);
-INSERT INTO districts (id, name, city_id) VALUES (339, 'FATSA', 63);
-INSERT INTO districts (id, name, city_id) VALUES (340, 'FEKE', 1);
-INSERT INTO districts (id, name, city_id) VALUES (341, 'FELAHİYE', 47);
-INSERT INTO districts (id, name, city_id) VALUES (342, 'FERİZLİ', 66);
-INSERT INTO districts (id, name, city_id) VALUES (343, 'FETHİYE', 59);
-INSERT INTO districts (id, name, city_id) VALUES (344, 'FINDIKLI', 65);
-INSERT INTO districts (id, name, city_id) VALUES (345, 'FİNİKE', 8);
-INSERT INTO districts (id, name, city_id) VALUES (346, 'FOÇA', 41);
-INSERT INTO districts (id, name, city_id) VALUES (347, 'GAZİEMİR', 41);
-INSERT INTO districts (id, name, city_id) VALUES (348, 'GAZİOSMANPAŞA', 40);
-INSERT INTO districts (id, name, city_id) VALUES (349, 'GAZİPAŞA', 8);
-INSERT INTO districts (id, name, city_id) VALUES (350, 'GEBZE', 52);
-INSERT INTO districts (id, name, city_id) VALUES (351, 'GEDİZ', 54);
-INSERT INTO districts (id, name, city_id) VALUES (352, 'GELENDOST', 39);
-INSERT INTO districts (id, name, city_id) VALUES (353, 'GELİBOLU', 22);
-INSERT INTO districts (id, name, city_id) VALUES (354, 'GEMEREK', 70);
-INSERT INTO districts (id, name, city_id) VALUES (355, 'GEMLİK', 21);
-INSERT INTO districts (id, name, city_id) VALUES (356, 'GENÇ', 17);
-INSERT INTO districts (id, name, city_id) VALUES (357, 'GERCÜŞ', 14);
-INSERT INTO districts (id, name, city_id) VALUES (358, 'GEREDE', 19);
-INSERT INTO districts (id, name, city_id) VALUES (359, 'GERGER', 2);
-INSERT INTO districts (id, name, city_id) VALUES (360, 'GERMENCİK', 11);
-INSERT INTO districts (id, name, city_id) VALUES (361, 'GERZE', 69);
-INSERT INTO districts (id, name, city_id) VALUES (362, 'GEVAŞ', 78);
-INSERT INTO districts (id, name, city_id) VALUES (363, 'GEYVE', 66);
-INSERT INTO districts (id, name, city_id) VALUES (364, 'GÖKÇEADA', 22);
-INSERT INTO districts (id, name, city_id) VALUES (365, 'GÖKÇEBEY', 81);
-INSERT INTO districts (id, name, city_id) VALUES (366, 'GÖKSUN', 42);
-INSERT INTO districts (id, name, city_id) VALUES (367, 'GÖLBAŞI', 2);
-INSERT INTO districts (id, name, city_id) VALUES (368, 'GÖLCÜK', 52);
-INSERT INTO districts (id, name, city_id) VALUES (369, 'GÖLE', 9);
-INSERT INTO districts (id, name, city_id) VALUES (370, 'GÖLHİSAR', 20);
-INSERT INTO districts (id, name, city_id) VALUES (371, 'GÖLKÖY', 63);
-INSERT INTO districts (id, name, city_id) VALUES (372, 'GÖLMARMARA', 56);
-INSERT INTO districts (id, name, city_id) VALUES (373, 'GÖLOVA', 70);
-INSERT INTO districts (id, name, city_id) VALUES (374, 'GÖLPAZARI', 16);
-INSERT INTO districts (id, name, city_id) VALUES (375, 'GÖLYAKA', 27);
-INSERT INTO districts (id, name, city_id) VALUES (376, 'GÖMEÇ', 12);
-INSERT INTO districts (id, name, city_id) VALUES (377, 'GÖNEN', 12);
-INSERT INTO districts (id, name, city_id) VALUES (378, 'GÖRDES', 56);
-INSERT INTO districts (id, name, city_id) VALUES (379, 'GÖRELE', 34);
-INSERT INTO districts (id, name, city_id) VALUES (380, 'GÖYNÜCEK', 6);
-INSERT INTO districts (id, name, city_id) VALUES (381, 'GÖYNÜK', 19);
-INSERT INTO districts (id, name, city_id) VALUES (382, 'GÜCE', 34);
-INSERT INTO districts (id, name, city_id) VALUES (383, 'GÜÇLÜKONAK', 72);
-INSERT INTO districts (id, name, city_id) VALUES (384, 'GÜDÜL', 7);
-INSERT INTO districts (id, name, city_id) VALUES (385, 'GÜLAĞAÇ', 5);
-INSERT INTO districts (id, name, city_id) VALUES (386, 'GÜLNAR', 58);
-INSERT INTO districts (id, name, city_id) VALUES (387, 'GÜLŞEHİR', 61);
-INSERT INTO districts (id, name, city_id) VALUES (388, 'GÜLYALI', 63);
-INSERT INTO districts (id, name, city_id) VALUES (389, 'GÜMÜŞHACIKÖY', 6);
-INSERT INTO districts (id, name, city_id) VALUES (390, 'GÜMÜŞOVA', 27);
-INSERT INTO districts (id, name, city_id) VALUES (391, 'GÜNDOĞMUŞ', 8);
-INSERT INTO districts (id, name, city_id) VALUES (392, 'GÜNEY', 25);
-INSERT INTO districts (id, name, city_id) VALUES (393, 'GÜNEYSINIR', 53);
-INSERT INTO districts (id, name, city_id) VALUES (394, 'GÜNEYSU', 65);
-INSERT INTO districts (id, name, city_id) VALUES (395, 'GÜNGÖREN', 40);
-INSERT INTO districts (id, name, city_id) VALUES (396, 'GÜNYÜZÜ', 32);
-INSERT INTO districts (id, name, city_id) VALUES (397, 'GÜRGENTEPE', 63);
-INSERT INTO districts (id, name, city_id) VALUES (398, 'GÜROYMAK', 18);
-INSERT INTO districts (id, name, city_id) VALUES (399, 'GÜRPINAR', 78);
-INSERT INTO districts (id, name, city_id) VALUES (400, 'GÜRSU', 21);
-INSERT INTO districts (id, name, city_id) VALUES (401, 'GÜRÜN', 70);
-INSERT INTO districts (id, name, city_id) VALUES (402, 'GÜZELBAHÇE', 41);
-INSERT INTO districts (id, name, city_id) VALUES (403, 'GÜZELYURT', 5);
-INSERT INTO districts (id, name, city_id) VALUES (404, 'HACIBEKTAŞ', 61);
-INSERT INTO districts (id, name, city_id) VALUES (405, 'HACILAR', 47);
-INSERT INTO districts (id, name, city_id) VALUES (406, 'HADİM', 53);
-INSERT INTO districts (id, name, city_id) VALUES (407, 'HAFİK', 70);
-INSERT INTO districts (id, name, city_id) VALUES (408, 'HALFETİ', 71);
-INSERT INTO districts (id, name, city_id) VALUES (409, 'HALİLİYE', 71);
-INSERT INTO districts (id, name, city_id) VALUES (410, 'HALKAPINAR', 53);
-INSERT INTO districts (id, name, city_id) VALUES (411, 'HAMAMÖZÜ', 6);
-INSERT INTO districts (id, name, city_id) VALUES (412, 'HAMUR', 4);
-INSERT INTO districts (id, name, city_id) VALUES (413, 'HAN', 32);
-INSERT INTO districts (id, name, city_id) VALUES (414, 'HANAK', 9);
-INSERT INTO districts (id, name, city_id) VALUES (415, 'HANİ', 26);
-INSERT INTO districts (id, name, city_id) VALUES (416, 'HANÖNÜ', 46);
-INSERT INTO districts (id, name, city_id) VALUES (417, 'HARMANCIK', 21);
-INSERT INTO districts (id, name, city_id) VALUES (418, 'HARRAN', 71);
-INSERT INTO districts (id, name, city_id) VALUES (419, 'HASANBEYLİ', 64);
-INSERT INTO districts (id, name, city_id) VALUES (420, 'HASANKEYF', 14);
-INSERT INTO districts (id, name, city_id) VALUES (421, 'HASKÖY', 60);
-INSERT INTO districts (id, name, city_id) VALUES (422, 'HASSA', 37);
-INSERT INTO districts (id, name, city_id) VALUES (423, 'HAVRAN', 12);
-INSERT INTO districts (id, name, city_id) VALUES (424, 'HAVSA', 28);
-INSERT INTO districts (id, name, city_id) VALUES (425, 'HAVZA', 67);
-INSERT INTO districts (id, name, city_id) VALUES (426, 'HAYMANA', 7);
-INSERT INTO districts (id, name, city_id) VALUES (427, 'HAYRABOLU', 73);
-INSERT INTO districts (id, name, city_id) VALUES (428, 'HAYRAT', 75);
-INSERT INTO districts (id, name, city_id) VALUES (429, 'HAZRO', 26);
-INSERT INTO districts (id, name, city_id) VALUES (430, 'HEKİMHAN', 55);
-INSERT INTO districts (id, name, city_id) VALUES (431, 'HEMŞİN', 65);
-INSERT INTO districts (id, name, city_id) VALUES (432, 'HENDEK', 66);
-INSERT INTO districts (id, name, city_id) VALUES (433, 'HINIS', 31);
-INSERT INTO districts (id, name, city_id) VALUES (434, 'HİLVAN', 71);
-INSERT INTO districts (id, name, city_id) VALUES (435, 'HİSARCIK', 54);
-INSERT INTO districts (id, name, city_id) VALUES (436, 'HİZAN', 18);
-INSERT INTO districts (id, name, city_id) VALUES (437, 'HOCALAR', 3);
-INSERT INTO districts (id, name, city_id) VALUES (438, 'HONAZ', 25);
-INSERT INTO districts (id, name, city_id) VALUES (439, 'HOPA', 10);
-INSERT INTO districts (id, name, city_id) VALUES (440, 'HORASAN', 31);
-INSERT INTO districts (id, name, city_id) VALUES (441, 'HOZAT', 76);
-INSERT INTO districts (id, name, city_id) VALUES (442, 'HÜYÜK', 53);
-INSERT INTO districts (id, name, city_id) VALUES (443, 'ILGAZ', 23);
-INSERT INTO districts (id, name, city_id) VALUES (444, 'ILGIN', 53);
-INSERT INTO districts (id, name, city_id) VALUES (445, 'İBRADI', 8);
-INSERT INTO districts (id, name, city_id) VALUES (446, 'İDİL', 72);
-INSERT INTO districts (id, name, city_id) VALUES (447, 'İHSANGAZİ', 46);
-INSERT INTO districts (id, name, city_id) VALUES (448, 'İHSANİYE', 3);
-INSERT INTO districts (id, name, city_id) VALUES (449, 'İKİZCE', 63);
-INSERT INTO districts (id, name, city_id) VALUES (450, 'İKİZDERE', 65);
-INSERT INTO districts (id, name, city_id) VALUES (451, 'İLİÇ', 30);
-INSERT INTO districts (id, name, city_id) VALUES (452, 'İLKADIM', 67);
-INSERT INTO districts (id, name, city_id) VALUES (453, 'İMAMOĞLU', 1);
-INSERT INTO districts (id, name, city_id) VALUES (454, 'İMRANLI', 70);
-INSERT INTO districts (id, name, city_id) VALUES (455, 'İNCESU', 47);
-INSERT INTO districts (id, name, city_id) VALUES (456, 'İNCİRLİOVA', 11);
-INSERT INTO districts (id, name, city_id) VALUES (457, 'İNEBOLU', 46);
-INSERT INTO districts (id, name, city_id) VALUES (458, 'İNEGÖL', 21);
-INSERT INTO districts (id, name, city_id) VALUES (459, 'İNHİSAR', 16);
-INSERT INTO districts (id, name, city_id) VALUES (460, 'İNÖNÜ', 32);
-INSERT INTO districts (id, name, city_id) VALUES (461, 'İPEKYOLU', 78);
-INSERT INTO districts (id, name, city_id) VALUES (462, 'İPSALA', 28);
-INSERT INTO districts (id, name, city_id) VALUES (463, 'İSCEHİSAR', 3);
-INSERT INTO districts (id, name, city_id) VALUES (464, 'İSKENDERUN', 37);
-INSERT INTO districts (id, name, city_id) VALUES (465, 'İSKİLİP', 24);
-INSERT INTO districts (id, name, city_id) VALUES (466, 'İSLAHİYE', 33);
-INSERT INTO districts (id, name, city_id) VALUES (467, 'İSPİR', 31);
-INSERT INTO districts (id, name, city_id) VALUES (468, 'İVRİNDİ', 12);
-INSERT INTO districts (id, name, city_id) VALUES (469, 'İYİDERE', 65);
-INSERT INTO districts (id, name, city_id) VALUES (470, 'İZMİT', 52);
-INSERT INTO districts (id, name, city_id) VALUES (471, 'İZNİK', 21);
-INSERT INTO districts (id, name, city_id) VALUES (472, 'KABADÜZ', 63);
-INSERT INTO districts (id, name, city_id) VALUES (473, 'KABATAŞ', 63);
-INSERT INTO districts (id, name, city_id) VALUES (474, 'KADIKÖY', 40);
-INSERT INTO districts (id, name, city_id) VALUES (475, 'KADINHANI', 53);
-INSERT INTO districts (id, name, city_id) VALUES (476, 'KADIŞEHRİ', 80);
-INSERT INTO districts (id, name, city_id) VALUES (477, 'KADİRLİ', 64);
-INSERT INTO districts (id, name, city_id) VALUES (478, 'KAĞITHANE', 40);
-INSERT INTO districts (id, name, city_id) VALUES (479, 'KAĞIZMAN', 45);
-INSERT INTO districts (id, name, city_id) VALUES (480, 'KAHRAMANKAZAN', 7);
-INSERT INTO districts (id, name, city_id) VALUES (481, 'KAHTA', 2);
-INSERT INTO districts (id, name, city_id) VALUES (482, 'KALE', 25);
-INSERT INTO districts (id, name, city_id) VALUES (483, 'KALECİK', 7);
-INSERT INTO districts (id, name, city_id) VALUES (484, 'KALKANDERE', 65);
-INSERT INTO districts (id, name, city_id) VALUES (485, 'KAMAN', 50);
-INSERT INTO districts (id, name, city_id) VALUES (486, 'KANDIRA', 52);
-INSERT INTO districts (id, name, city_id) VALUES (487, 'KANGAL', 70);
-INSERT INTO districts (id, name, city_id) VALUES (488, 'KAPAKLI', 73);
-INSERT INTO districts (id, name, city_id) VALUES (489, 'KARABAĞLAR', 41);
-INSERT INTO districts (id, name, city_id) VALUES (490, 'KARABURUN', 41);
-INSERT INTO districts (id, name, city_id) VALUES (491, 'KARACABEY', 21);
-INSERT INTO districts (id, name, city_id) VALUES (492, 'KARACASU', 11);
-INSERT INTO districts (id, name, city_id) VALUES (493, 'KARAÇOBAN', 31);
-INSERT INTO districts (id, name, city_id) VALUES (494, 'KARAHALLI', 77);
-INSERT INTO districts (id, name, city_id) VALUES (495, 'KARAİSALI', 1);
-INSERT INTO districts (id, name, city_id) VALUES (496, 'KARAKEÇİLİ', 48);
-INSERT INTO districts (id, name, city_id) VALUES (497, 'KARAKOÇAN', 29);
-INSERT INTO districts (id, name, city_id) VALUES (498, 'KARAKOYUNLU', 38);
-INSERT INTO districts (id, name, city_id) VALUES (499, 'KARAKÖPRÜ', 71);
-INSERT INTO districts (id, name, city_id) VALUES (500, 'KARAMANLI', 20);
-INSERT INTO districts (id, name, city_id) VALUES (501, 'KARAMÜRSEL', 52);
-INSERT INTO districts (id, name, city_id) VALUES (502, 'KARAPINAR', 53);
-INSERT INTO districts (id, name, city_id) VALUES (503, 'KARAPÜRÇEK', 66);
-INSERT INTO districts (id, name, city_id) VALUES (504, 'KARASU', 66);
-INSERT INTO districts (id, name, city_id) VALUES (505, 'KARATAŞ', 1);
-INSERT INTO districts (id, name, city_id) VALUES (506, 'KARATAY', 53);
-INSERT INTO districts (id, name, city_id) VALUES (507, 'KARAYAZI', 31);
-INSERT INTO districts (id, name, city_id) VALUES (508, 'KARESİ', 12);
-INSERT INTO districts (id, name, city_id) VALUES (509, 'KARGI', 24);
-INSERT INTO districts (id, name, city_id) VALUES (510, 'KARKAMIŞ', 33);
-INSERT INTO districts (id, name, city_id) VALUES (511, 'KARLIOVA', 17);
-INSERT INTO districts (id, name, city_id) VALUES (512, 'KARPUZLU', 11);
-INSERT INTO districts (id, name, city_id) VALUES (513, 'KARŞIYAKA', 41);
-INSERT INTO districts (id, name, city_id) VALUES (514, 'KARTAL', 40);
-INSERT INTO districts (id, name, city_id) VALUES (515, 'KARTEPE', 52);
-INSERT INTO districts (id, name, city_id) VALUES (516, 'KAŞ', 8);
-INSERT INTO districts (id, name, city_id) VALUES (517, 'KAVAK', 67);
-INSERT INTO districts (id, name, city_id) VALUES (518, 'KAVAKLIDERE', 59);
-INSERT INTO districts (id, name, city_id) VALUES (519, 'KAYAPINAR', 26);
-INSERT INTO districts (id, name, city_id) VALUES (520, 'KAYNARCA', 66);
-INSERT INTO districts (id, name, city_id) VALUES (521, 'KAYNAŞLI', 27);
-INSERT INTO districts (id, name, city_id) VALUES (522, 'KAZIMKARABEKİR', 44);
-INSERT INTO districts (id, name, city_id) VALUES (523, 'KEBAN', 29);
-INSERT INTO districts (id, name, city_id) VALUES (524, 'KEÇİBORLU', 39);
-INSERT INTO districts (id, name, city_id) VALUES (525, 'KEÇİÖREN', 7);
-INSERT INTO districts (id, name, city_id) VALUES (526, 'KELES', 21);
-INSERT INTO districts (id, name, city_id) VALUES (527, 'KELKİT', 35);
-INSERT INTO districts (id, name, city_id) VALUES (528, 'KEMAH', 30);
-INSERT INTO districts (id, name, city_id) VALUES (529, 'KEMALİYE', 30);
-INSERT INTO districts (id, name, city_id) VALUES (530, 'KEMALPAŞA', 10);
-INSERT INTO districts (id, name, city_id) VALUES (531, 'KEMER', 8);
-INSERT INTO districts (id, name, city_id) VALUES (532, 'KEPEZ', 8);
-INSERT INTO districts (id, name, city_id) VALUES (533, 'KEPSUT', 12);
-INSERT INTO districts (id, name, city_id) VALUES (534, 'KESKİN', 48);
-INSERT INTO districts (id, name, city_id) VALUES (535, 'KESTEL', 21);
-INSERT INTO districts (id, name, city_id) VALUES (536, 'KEŞAN', 28);
-INSERT INTO districts (id, name, city_id) VALUES (537, 'KEŞAP', 34);
-INSERT INTO districts (id, name, city_id) VALUES (538, 'KIBRISCIK', 19);
-INSERT INTO districts (id, name, city_id) VALUES (539, 'KINIK', 41);
-INSERT INTO districts (id, name, city_id) VALUES (540, 'KIRIKHAN', 37);
-INSERT INTO districts (id, name, city_id) VALUES (541, 'KIRKAĞAÇ', 56);
-INSERT INTO districts (id, name, city_id) VALUES (542, 'KIZILCAHAMAM', 7);
-INSERT INTO districts (id, name, city_id) VALUES (543, 'KIZILIRMAK', 23);
-INSERT INTO districts (id, name, city_id) VALUES (544, 'KIZILÖREN', 3);
-INSERT INTO districts (id, name, city_id) VALUES (545, 'KIZILTEPE', 57);
-INSERT INTO districts (id, name, city_id) VALUES (546, 'KİĞI', 17);
-INSERT INTO districts (id, name, city_id) VALUES (547, 'KİLİMLİ', 81);
-INSERT INTO districts (id, name, city_id) VALUES (548, 'KİRAZ', 41);
-INSERT INTO districts (id, name, city_id) VALUES (549, 'KOCAALİ', 66);
-INSERT INTO districts (id, name, city_id) VALUES (550, 'KOCAKÖY', 26);
-INSERT INTO districts (id, name, city_id) VALUES (551, 'KOCASİNAN', 47);
-INSERT INTO districts (id, name, city_id) VALUES (552, 'KOÇARLI', 11);
-INSERT INTO districts (id, name, city_id) VALUES (553, 'KOFÇAZ', 49);
-INSERT INTO districts (id, name, city_id) VALUES (554, 'KONAK', 41);
-INSERT INTO districts (id, name, city_id) VALUES (555, 'KONYAALTI', 8);
-INSERT INTO districts (id, name, city_id) VALUES (556, 'KORGAN', 63);
-INSERT INTO districts (id, name, city_id) VALUES (557, 'KORGUN', 23);
-INSERT INTO districts (id, name, city_id) VALUES (558, 'KORKUT', 60);
-INSERT INTO districts (id, name, city_id) VALUES (559, 'KORKUTELİ', 8);
-INSERT INTO districts (id, name, city_id) VALUES (560, 'KOVANCILAR', 29);
-INSERT INTO districts (id, name, city_id) VALUES (561, 'KOYULHİSAR', 70);
-INSERT INTO districts (id, name, city_id) VALUES (562, 'KOZAKLI', 61);
-INSERT INTO districts (id, name, city_id) VALUES (563, 'KOZAN', 1);
-INSERT INTO districts (id, name, city_id) VALUES (564, 'KOZLU', 81);
-INSERT INTO districts (id, name, city_id) VALUES (565, 'KOZLUK', 14);
-INSERT INTO districts (id, name, city_id) VALUES (566, 'KÖPRÜBAŞI', 56);
-INSERT INTO districts (id, name, city_id) VALUES (567, 'KÖPRÜKÖY', 31);
-INSERT INTO districts (id, name, city_id) VALUES (568, 'KÖRFEZ', 52);
-INSERT INTO districts (id, name, city_id) VALUES (569, 'KÖSE', 35);
-INSERT INTO districts (id, name, city_id) VALUES (570, 'KÖŞK', 11);
-INSERT INTO districts (id, name, city_id) VALUES (571, 'KÖYCEĞİZ', 59);
-INSERT INTO districts (id, name, city_id) VALUES (572, 'KULA', 56);
-INSERT INTO districts (id, name, city_id) VALUES (573, 'KULP', 26);
-INSERT INTO districts (id, name, city_id) VALUES (574, 'KULU', 53);
-INSERT INTO districts (id, name, city_id) VALUES (575, 'KULUNCAK', 55);
-INSERT INTO districts (id, name, city_id) VALUES (576, 'KUMLU', 37);
-INSERT INTO districts (id, name, city_id) VALUES (577, 'KUMLUCA', 8);
-INSERT INTO districts (id, name, city_id) VALUES (578, 'KUMRU', 63);
-INSERT INTO districts (id, name, city_id) VALUES (579, 'KURŞUNLU', 23);
-INSERT INTO districts (id, name, city_id) VALUES (580, 'KURTALAN', 68);
-INSERT INTO districts (id, name, city_id) VALUES (581, 'KURUCAŞİLE', 13);
-INSERT INTO districts (id, name, city_id) VALUES (582, 'KUŞADASI', 11);
-INSERT INTO districts (id, name, city_id) VALUES (583, 'KUYUCAK', 11);
-INSERT INTO districts (id, name, city_id) VALUES (584, 'KÜÇÜKÇEKMECE', 40);
-INSERT INTO districts (id, name, city_id) VALUES (585, 'KÜRE', 46);
-INSERT INTO districts (id, name, city_id) VALUES (586, 'KÜRTÜN', 35);
-INSERT INTO districts (id, name, city_id) VALUES (587, 'LAÇİN', 24);
-INSERT INTO districts (id, name, city_id) VALUES (588, 'LADİK', 67);
-INSERT INTO districts (id, name, city_id) VALUES (589, 'LALAPAŞA', 28);
-INSERT INTO districts (id, name, city_id) VALUES (590, 'LAPSEKİ', 22);
-INSERT INTO districts (id, name, city_id) VALUES (591, 'LİCE', 26);
-INSERT INTO districts (id, name, city_id) VALUES (592, 'LÜLEBURGAZ', 49);
-INSERT INTO districts (id, name, city_id) VALUES (593, 'MAÇKA', 75);
-INSERT INTO districts (id, name, city_id) VALUES (594, 'MADEN', 29);
-INSERT INTO districts (id, name, city_id) VALUES (595, 'MAHMUDİYE', 32);
-INSERT INTO districts (id, name, city_id) VALUES (596, 'MALAZGİRT', 60);
-INSERT INTO districts (id, name, city_id) VALUES (597, 'MALKARA', 73);
-INSERT INTO districts (id, name, city_id) VALUES (598, 'MALTEPE', 40);
-INSERT INTO districts (id, name, city_id) VALUES (599, 'MAMAK', 7);
-INSERT INTO districts (id, name, city_id) VALUES (600, 'MANAVGAT', 8);
-INSERT INTO districts (id, name, city_id) VALUES (601, 'MANYAS', 12);
-INSERT INTO districts (id, name, city_id) VALUES (602, 'MARMARA', 12);
-INSERT INTO districts (id, name, city_id) VALUES (603, 'MARMARAEREĞLİSİ', 73);
-INSERT INTO districts (id, name, city_id) VALUES (604, 'MARMARİS', 59);
-INSERT INTO districts (id, name, city_id) VALUES (605, 'MAZGİRT', 76);
-INSERT INTO districts (id, name, city_id) VALUES (606, 'MAZIDAĞI', 57);
-INSERT INTO districts (id, name, city_id) VALUES (607, 'MECİTÖZÜ', 24);
-INSERT INTO districts (id, name, city_id) VALUES (608, 'MELİKGAZİ', 47);
-INSERT INTO districts (id, name, city_id) VALUES (609, 'MENDERES', 41);
-INSERT INTO districts (id, name, city_id) VALUES (610, 'MENEMEN', 41);
-INSERT INTO districts (id, name, city_id) VALUES (611, 'MENGEN', 19);
-INSERT INTO districts (id, name, city_id) VALUES (612, 'MENTEŞE', 59);
-INSERT INTO districts (id, name, city_id) VALUES (613, 'MERAM', 53);
-INSERT INTO districts (id, name, city_id) VALUES (614, 'MERİÇ', 28);
-INSERT INTO districts (id, name, city_id) VALUES (615, 'MERKEZ', 2);
-INSERT INTO districts (id, name, city_id) VALUES (616, 'MERKEZEFENDİ', 25);
-INSERT INTO districts (id, name, city_id) VALUES (617, 'MERZİFON', 6);
-INSERT INTO districts (id, name, city_id) VALUES (618, 'MESUDİYE', 63);
-INSERT INTO districts (id, name, city_id) VALUES (619, 'MEZİTLİ', 58);
-INSERT INTO districts (id, name, city_id) VALUES (620, 'MİDYAT', 57);
-INSERT INTO districts (id, name, city_id) VALUES (621, 'MİHALGAZİ', 32);
-INSERT INTO districts (id, name, city_id) VALUES (622, 'MİHALIÇÇIK', 32);
-INSERT INTO districts (id, name, city_id) VALUES (623, 'MİLAS', 59);
-INSERT INTO districts (id, name, city_id) VALUES (624, 'MUCUR', 50);
-INSERT INTO districts (id, name, city_id) VALUES (625, 'MUDANYA', 21);
-INSERT INTO districts (id, name, city_id) VALUES (626, 'MUDURNU', 19);
-INSERT INTO districts (id, name, city_id) VALUES (627, 'MURADİYE', 78);
-INSERT INTO districts (id, name, city_id) VALUES (628, 'MURATLI', 73);
-INSERT INTO districts (id, name, city_id) VALUES (629, 'MURATPAŞA', 8);
-INSERT INTO districts (id, name, city_id) VALUES (630, 'MURGUL', 10);
-INSERT INTO districts (id, name, city_id) VALUES (631, 'MUSABEYLİ', 51);
-INSERT INTO districts (id, name, city_id) VALUES (632, 'MUSTAFAKEMALPAŞA', 21);
-INSERT INTO districts (id, name, city_id) VALUES (633, 'MUT', 58);
-INSERT INTO districts (id, name, city_id) VALUES (634, 'MUTKİ', 18);
-INSERT INTO districts (id, name, city_id) VALUES (635, 'NALLIHAN', 7);
-INSERT INTO districts (id, name, city_id) VALUES (636, 'NARLIDERE', 41);
-INSERT INTO districts (id, name, city_id) VALUES (637, 'NARMAN', 31);
-INSERT INTO districts (id, name, city_id) VALUES (638, 'NAZIMİYE', 76);
-INSERT INTO districts (id, name, city_id) VALUES (639, 'NAZİLLİ', 11);
-INSERT INTO districts (id, name, city_id) VALUES (640, 'NİKSAR', 74);
-INSERT INTO districts (id, name, city_id) VALUES (641, 'NİLÜFER', 21);
-INSERT INTO districts (id, name, city_id) VALUES (642, 'NİZİP', 33);
-INSERT INTO districts (id, name, city_id) VALUES (643, 'NURDAĞI', 33);
-INSERT INTO districts (id, name, city_id) VALUES (644, 'NURHAK', 42);
-INSERT INTO districts (id, name, city_id) VALUES (645, 'NUSAYBİN', 57);
-INSERT INTO districts (id, name, city_id) VALUES (646, 'ODUNPAZARI', 32);
-INSERT INTO districts (id, name, city_id) VALUES (647, 'OF', 75);
-INSERT INTO districts (id, name, city_id) VALUES (648, 'OĞUZELİ', 33);
-INSERT INTO districts (id, name, city_id) VALUES (649, 'OĞUZLAR', 24);
-INSERT INTO districts (id, name, city_id) VALUES (650, 'OLTU', 31);
-INSERT INTO districts (id, name, city_id) VALUES (651, 'OLUR', 31);
-INSERT INTO districts (id, name, city_id) VALUES (652, 'ONİKİŞUBAT', 42);
-INSERT INTO districts (id, name, city_id) VALUES (653, 'ORHANELİ', 21);
-INSERT INTO districts (id, name, city_id) VALUES (654, 'ORHANGAZİ', 21);
-INSERT INTO districts (id, name, city_id) VALUES (655, 'ORTA', 23);
-INSERT INTO districts (id, name, city_id) VALUES (656, 'ORTACA', 59);
-INSERT INTO districts (id, name, city_id) VALUES (657, 'ORTAHİSAR', 75);
-INSERT INTO districts (id, name, city_id) VALUES (658, 'ORTAKÖY', 5);
-INSERT INTO districts (id, name, city_id) VALUES (659, 'OSMANCIK', 24);
-INSERT INTO districts (id, name, city_id) VALUES (660, 'OSMANELİ', 16);
-INSERT INTO districts (id, name, city_id) VALUES (661, 'OSMANGAZİ', 21);
-INSERT INTO districts (id, name, city_id) VALUES (662, 'OTLUKBELİ', 30);
-INSERT INTO districts (id, name, city_id) VALUES (663, 'OVACIK', 43);
-INSERT INTO districts (id, name, city_id) VALUES (664, 'ÖDEMİŞ', 41);
-INSERT INTO districts (id, name, city_id) VALUES (665, 'ÖMERLİ', 57);
-INSERT INTO districts (id, name, city_id) VALUES (666, 'ÖZALP', 78);
-INSERT INTO districts (id, name, city_id) VALUES (667, 'ÖZVATAN', 47);
-INSERT INTO districts (id, name, city_id) VALUES (668, 'PALANDÖKEN', 31);
-INSERT INTO districts (id, name, city_id) VALUES (669, 'PALU', 29);
-INSERT INTO districts (id, name, city_id) VALUES (670, 'PAMUKKALE', 25);
-INSERT INTO districts (id, name, city_id) VALUES (671, 'PAMUKOVA', 66);
-INSERT INTO districts (id, name, city_id) VALUES (672, 'PASİNLER', 31);
-INSERT INTO districts (id, name, city_id) VALUES (673, 'PATNOS', 4);
-INSERT INTO districts (id, name, city_id) VALUES (674, 'PAYAS', 37);
-INSERT INTO districts (id, name, city_id) VALUES (675, 'PAZAR', 65);
-INSERT INTO districts (id, name, city_id) VALUES (676, 'PAZARCIK', 42);
-INSERT INTO districts (id, name, city_id) VALUES (677, 'PAZARLAR', 54);
-INSERT INTO districts (id, name, city_id) VALUES (678, 'PAZARYERİ', 16);
-INSERT INTO districts (id, name, city_id) VALUES (679, 'PAZARYOLU', 31);
-INSERT INTO districts (id, name, city_id) VALUES (680, 'PEHLİVANKÖY', 49);
-INSERT INTO districts (id, name, city_id) VALUES (681, 'PENDİK', 40);
-INSERT INTO districts (id, name, city_id) VALUES (682, 'PERŞEMBE', 63);
-INSERT INTO districts (id, name, city_id) VALUES (683, 'PERTEK', 76);
-INSERT INTO districts (id, name, city_id) VALUES (684, 'PERVARİ', 68);
-INSERT INTO districts (id, name, city_id) VALUES (685, 'PINARBAŞI', 46);
-INSERT INTO districts (id, name, city_id) VALUES (686, 'PINARHİSAR', 49);
-INSERT INTO districts (id, name, city_id) VALUES (687, 'PİRAZİZ', 34);
-INSERT INTO districts (id, name, city_id) VALUES (688, 'POLATELİ', 51);
-INSERT INTO districts (id, name, city_id) VALUES (689, 'POLATLI', 7);
-INSERT INTO districts (id, name, city_id) VALUES (690, 'POSOF', 9);
-INSERT INTO districts (id, name, city_id) VALUES (691, 'POZANTI', 1);
-INSERT INTO districts (id, name, city_id) VALUES (692, 'PURSAKLAR', 7);
-INSERT INTO districts (id, name, city_id) VALUES (693, 'PÜLÜMÜR', 76);
-INSERT INTO districts (id, name, city_id) VALUES (694, 'PÜTÜRGE', 55);
-INSERT INTO districts (id, name, city_id) VALUES (695, 'REFAHİYE', 30);
-INSERT INTO districts (id, name, city_id) VALUES (696, 'REŞADİYE', 74);
-INSERT INTO districts (id, name, city_id) VALUES (697, 'REYHANLI', 37);
-INSERT INTO districts (id, name, city_id) VALUES (698, 'SAFRANBOLU', 43);
-INSERT INTO districts (id, name, city_id) VALUES (699, 'SAİMBEYLİ', 1);
-INSERT INTO districts (id, name, city_id) VALUES (700, 'SALIPAZARI', 67);
-INSERT INTO districts (id, name, city_id) VALUES (701, 'SALİHLİ', 56);
-INSERT INTO districts (id, name, city_id) VALUES (702, 'SAMANDAĞ', 37);
-INSERT INTO districts (id, name, city_id) VALUES (703, 'SAMSAT', 2);
-INSERT INTO districts (id, name, city_id) VALUES (704, 'SANCAKTEPE', 40);
-INSERT INTO districts (id, name, city_id) VALUES (705, 'SANDIKLI', 3);
-INSERT INTO districts (id, name, city_id) VALUES (706, 'SAPANCA', 66);
-INSERT INTO districts (id, name, city_id) VALUES (707, 'SARAY', 73);
-INSERT INTO districts (id, name, city_id) VALUES (708, 'SARAYDÜZÜ', 69);
-INSERT INTO districts (id, name, city_id) VALUES (709, 'SARAYKENT', 80);
-INSERT INTO districts (id, name, city_id) VALUES (710, 'SARAYKÖY', 25);
-INSERT INTO districts (id, name, city_id) VALUES (711, 'SARAYÖNÜ', 53);
-INSERT INTO districts (id, name, city_id) VALUES (712, 'SARICAKAYA', 32);
-INSERT INTO districts (id, name, city_id) VALUES (713, 'SARIÇAM', 1);
-INSERT INTO districts (id, name, city_id) VALUES (714, 'SARIGÖL', 56);
-INSERT INTO districts (id, name, city_id) VALUES (715, 'SARIKAMIŞ', 45);
-INSERT INTO districts (id, name, city_id) VALUES (716, 'SARIKAYA', 80);
-INSERT INTO districts (id, name, city_id) VALUES (717, 'SARIOĞLAN', 47);
-INSERT INTO districts (id, name, city_id) VALUES (718, 'SARIVELİLER', 44);
-INSERT INTO districts (id, name, city_id) VALUES (719, 'SARIYAHŞİ', 5);
-INSERT INTO districts (id, name, city_id) VALUES (720, 'SARIYER', 40);
-INSERT INTO districts (id, name, city_id) VALUES (721, 'SARIZ', 47);
-INSERT INTO districts (id, name, city_id) VALUES (722, 'SARUHANLI', 56);
-INSERT INTO districts (id, name, city_id) VALUES (723, 'SASON', 14);
-INSERT INTO districts (id, name, city_id) VALUES (724, 'SAVAŞTEPE', 12);
-INSERT INTO districts (id, name, city_id) VALUES (725, 'SAVUR', 57);
-INSERT INTO districts (id, name, city_id) VALUES (726, 'SEBEN', 19);
-INSERT INTO districts (id, name, city_id) VALUES (727, 'SEFERİHİSAR', 41);
-INSERT INTO districts (id, name, city_id) VALUES (728, 'SELÇUK', 41);
-INSERT INTO districts (id, name, city_id) VALUES (729, 'SELÇUKLU', 53);
-INSERT INTO districts (id, name, city_id) VALUES (730, 'SELENDİ', 56);
-INSERT INTO districts (id, name, city_id) VALUES (731, 'SELİM', 45);
-INSERT INTO districts (id, name, city_id) VALUES (732, 'SENİRKENT', 39);
-INSERT INTO districts (id, name, city_id) VALUES (733, 'SERDİVAN', 66);
-INSERT INTO districts (id, name, city_id) VALUES (734, 'SERİK', 8);
-INSERT INTO districts (id, name, city_id) VALUES (735, 'SERİNHİSAR', 25);
-INSERT INTO districts (id, name, city_id) VALUES (736, 'SEYDİKEMER', 59);
-INSERT INTO districts (id, name, city_id) VALUES (737, 'SEYDİLER', 46);
-INSERT INTO districts (id, name, city_id) VALUES (738, 'SEYDİŞEHİR', 53);
-INSERT INTO districts (id, name, city_id) VALUES (739, 'SEYHAN', 1);
-INSERT INTO districts (id, name, city_id) VALUES (740, 'SEYİTGAZİ', 32);
-INSERT INTO districts (id, name, city_id) VALUES (741, 'SINDIRGI', 12);
-INSERT INTO districts (id, name, city_id) VALUES (742, 'SİLİFKE', 58);
-INSERT INTO districts (id, name, city_id) VALUES (743, 'SİLİVRİ', 40);
-INSERT INTO districts (id, name, city_id) VALUES (744, 'SİLOPİ', 72);
-INSERT INTO districts (id, name, city_id) VALUES (745, 'SİLVAN', 26);
-INSERT INTO districts (id, name, city_id) VALUES (746, 'SİMAV', 54);
-INSERT INTO districts (id, name, city_id) VALUES (747, 'SİNANPAŞA', 3);
-INSERT INTO districts (id, name, city_id) VALUES (748, 'SİNCAN', 7);
-INSERT INTO districts (id, name, city_id) VALUES (749, 'SİNCİK', 2);
-INSERT INTO districts (id, name, city_id) VALUES (750, 'SİVASLI', 77);
-INSERT INTO districts (id, name, city_id) VALUES (751, 'SİVEREK', 71);
-INSERT INTO districts (id, name, city_id) VALUES (752, 'SİVRİCE', 29);
-INSERT INTO districts (id, name, city_id) VALUES (753, 'SİVRİHİSAR', 32);
-INSERT INTO districts (id, name, city_id) VALUES (754, 'SOLHAN', 17);
-INSERT INTO districts (id, name, city_id) VALUES (755, 'SOMA', 56);
-INSERT INTO districts (id, name, city_id) VALUES (756, 'SORGUN', 80);
-INSERT INTO districts (id, name, city_id) VALUES (757, 'SÖĞÜT', 16);
-INSERT INTO districts (id, name, city_id) VALUES (758, 'SÖĞÜTLÜ', 66);
-INSERT INTO districts (id, name, city_id) VALUES (759, 'SÖKE', 11);
-INSERT INTO districts (id, name, city_id) VALUES (760, 'SULAKYURT', 48);
-INSERT INTO districts (id, name, city_id) VALUES (761, 'SULTANBEYLİ', 40);
-INSERT INTO districts (id, name, city_id) VALUES (762, 'SULTANDAĞI', 3);
-INSERT INTO districts (id, name, city_id) VALUES (763, 'SULTANGAZİ', 40);
-INSERT INTO districts (id, name, city_id) VALUES (764, 'SULTANHANI', 5);
-INSERT INTO districts (id, name, city_id) VALUES (765, 'SULTANHİSAR', 11);
-INSERT INTO districts (id, name, city_id) VALUES (766, 'SULUOVA', 6);
-INSERT INTO districts (id, name, city_id) VALUES (767, 'SULUSARAY', 74);
-INSERT INTO districts (id, name, city_id) VALUES (768, 'SUMBAS', 64);
-INSERT INTO districts (id, name, city_id) VALUES (769, 'SUNGURLU', 24);
-INSERT INTO districts (id, name, city_id) VALUES (770, 'SUR', 26);
-INSERT INTO districts (id, name, city_id) VALUES (771, 'SURUÇ', 71);
-INSERT INTO districts (id, name, city_id) VALUES (772, 'SUSURLUK', 12);
-INSERT INTO districts (id, name, city_id) VALUES (773, 'SUSUZ', 45);
-INSERT INTO districts (id, name, city_id) VALUES (774, 'SUŞEHRİ', 70);
-INSERT INTO districts (id, name, city_id) VALUES (775, 'SÜLEYMANPAŞA', 73);
-INSERT INTO districts (id, name, city_id) VALUES (776, 'SÜLOĞLU', 28);
-INSERT INTO districts (id, name, city_id) VALUES (777, 'SÜRMENE', 75);
-INSERT INTO districts (id, name, city_id) VALUES (778, 'SÜTÇÜLER', 39);
-INSERT INTO districts (id, name, city_id) VALUES (779, 'ŞABANÖZÜ', 23);
-INSERT INTO districts (id, name, city_id) VALUES (780, 'ŞAHİNBEY', 33);
-INSERT INTO districts (id, name, city_id) VALUES (781, 'ŞALPAZARI', 75);
-INSERT INTO districts (id, name, city_id) VALUES (782, 'ŞAPHANE', 54);
-INSERT INTO districts (id, name, city_id) VALUES (783, 'ŞARKIŞLA', 70);
-INSERT INTO districts (id, name, city_id) VALUES (784, 'ŞARKİKARAAĞAÇ', 39);
-INSERT INTO districts (id, name, city_id) VALUES (785, 'ŞARKÖY', 73);
-INSERT INTO districts (id, name, city_id) VALUES (786, 'ŞAVŞAT', 10);
-INSERT INTO districts (id, name, city_id) VALUES (787, 'ŞEBİNKARAHİSAR', 34);
-INSERT INTO districts (id, name, city_id) VALUES (788, 'ŞEFAATLİ', 80);
-INSERT INTO districts (id, name, city_id) VALUES (789, 'ŞEHİTKAMİL', 33);
-INSERT INTO districts (id, name, city_id) VALUES (790, 'ŞEHZADELER', 56);
-INSERT INTO districts (id, name, city_id) VALUES (791, 'ŞEMDİNLİ', 36);
-INSERT INTO districts (id, name, city_id) VALUES (792, 'ŞENKAYA', 31);
-INSERT INTO districts (id, name, city_id) VALUES (793, 'ŞENPAZAR', 46);
-INSERT INTO districts (id, name, city_id) VALUES (794, 'ŞEREFLİKOÇHİSAR', 7);
-INSERT INTO districts (id, name, city_id) VALUES (795, 'ŞİLE', 40);
-INSERT INTO districts (id, name, city_id) VALUES (796, 'ŞİRAN', 35);
-INSERT INTO districts (id, name, city_id) VALUES (797, 'ŞİRVAN', 68);
-INSERT INTO districts (id, name, city_id) VALUES (798, 'ŞİŞLİ', 40);
-INSERT INTO districts (id, name, city_id) VALUES (799, 'ŞUHUT', 3);
-INSERT INTO districts (id, name, city_id) VALUES (800, 'TALAS', 47);
-INSERT INTO districts (id, name, city_id) VALUES (801, 'TARAKLI', 66);
-INSERT INTO districts (id, name, city_id) VALUES (802, 'TARSUS', 58);
-INSERT INTO districts (id, name, city_id) VALUES (803, 'TAŞKENT', 53);
-INSERT INTO districts (id, name, city_id) VALUES (804, 'TAŞKÖPRÜ', 46);
-INSERT INTO districts (id, name, city_id) VALUES (805, 'TAŞLIÇAY', 4);
-INSERT INTO districts (id, name, city_id) VALUES (806, 'TAŞOVA', 6);
-INSERT INTO districts (id, name, city_id) VALUES (807, 'TATVAN', 18);
-INSERT INTO districts (id, name, city_id) VALUES (808, 'TAVAS', 25);
-INSERT INTO districts (id, name, city_id) VALUES (809, 'TAVŞANLI', 54);
-INSERT INTO districts (id, name, city_id) VALUES (810, 'TEFENNİ', 20);
-INSERT INTO districts (id, name, city_id) VALUES (811, 'TEKKEKÖY', 67);
-INSERT INTO districts (id, name, city_id) VALUES (812, 'TEKMAN', 31);
-INSERT INTO districts (id, name, city_id) VALUES (813, 'TEPEBAŞI', 32);
-INSERT INTO districts (id, name, city_id) VALUES (814, 'TERCAN', 30);
-INSERT INTO districts (id, name, city_id) VALUES (815, 'TERMAL', 79);
-INSERT INTO districts (id, name, city_id) VALUES (816, 'TERME', 67);
-INSERT INTO districts (id, name, city_id) VALUES (817, 'TİLLO', 68);
-INSERT INTO districts (id, name, city_id) VALUES (818, 'TİRE', 41);
-INSERT INTO districts (id, name, city_id) VALUES (819, 'TİREBOLU', 34);
-INSERT INTO districts (id, name, city_id) VALUES (820, 'TOMARZA', 47);
-INSERT INTO districts (id, name, city_id) VALUES (821, 'TONYA', 75);
-INSERT INTO districts (id, name, city_id) VALUES (822, 'TOPRAKKALE', 64);
-INSERT INTO districts (id, name, city_id) VALUES (823, 'TORBALI', 41);
-INSERT INTO districts (id, name, city_id) VALUES (824, 'TOROSLAR', 58);
-INSERT INTO districts (id, name, city_id) VALUES (825, 'TORTUM', 31);
-INSERT INTO districts (id, name, city_id) VALUES (826, 'TORUL', 35);
-INSERT INTO districts (id, name, city_id) VALUES (827, 'TOSYA', 46);
-INSERT INTO districts (id, name, city_id) VALUES (828, 'TUFANBEYLİ', 1);
-INSERT INTO districts (id, name, city_id) VALUES (829, 'TURGUTLU', 56);
-INSERT INTO districts (id, name, city_id) VALUES (830, 'TURHAL', 74);
-INSERT INTO districts (id, name, city_id) VALUES (831, 'TUŞBA', 78);
-INSERT INTO districts (id, name, city_id) VALUES (832, 'TUT', 2);
-INSERT INTO districts (id, name, city_id) VALUES (833, 'TUTAK', 4);
-INSERT INTO districts (id, name, city_id) VALUES (834, 'TUZLA', 40);
-INSERT INTO districts (id, name, city_id) VALUES (835, 'TUZLUCA', 38);
-INSERT INTO districts (id, name, city_id) VALUES (836, 'TUZLUKÇU', 53);
-INSERT INTO districts (id, name, city_id) VALUES (837, 'TÜRKELİ', 69);
-INSERT INTO districts (id, name, city_id) VALUES (838, 'TÜRKOĞLU', 42);
-INSERT INTO districts (id, name, city_id) VALUES (839, 'UĞURLUDAĞ', 24);
-INSERT INTO districts (id, name, city_id) VALUES (840, 'ULA', 59);
-INSERT INTO districts (id, name, city_id) VALUES (841, 'ULAŞ', 70);
-INSERT INTO districts (id, name, city_id) VALUES (842, 'ULUBEY', 63);
-INSERT INTO districts (id, name, city_id) VALUES (843, 'ULUBORLU', 39);
-INSERT INTO districts (id, name, city_id) VALUES (844, 'ULUDERE', 72);
-INSERT INTO districts (id, name, city_id) VALUES (845, 'ULUKIŞLA', 62);
-INSERT INTO districts (id, name, city_id) VALUES (846, 'ULUS', 13);
-INSERT INTO districts (id, name, city_id) VALUES (847, 'URLA', 41);
-INSERT INTO districts (id, name, city_id) VALUES (848, 'UZUNDERE', 31);
-INSERT INTO districts (id, name, city_id) VALUES (849, 'UZUNKÖPRÜ', 28);
-INSERT INTO districts (id, name, city_id) VALUES (850, 'ÜMRANİYE', 40);
-INSERT INTO districts (id, name, city_id) VALUES (851, 'ÜNYE', 63);
-INSERT INTO districts (id, name, city_id) VALUES (852, 'ÜRGÜP', 61);
-INSERT INTO districts (id, name, city_id) VALUES (853, 'ÜSKÜDAR', 40);
-INSERT INTO districts (id, name, city_id) VALUES (854, 'ÜZÜMLÜ', 30);
-INSERT INTO districts (id, name, city_id) VALUES (855, 'VAKFIKEBİR', 75);
-INSERT INTO districts (id, name, city_id) VALUES (856, 'VARTO', 60);
-INSERT INTO districts (id, name, city_id) VALUES (857, 'VEZİRKÖPRÜ', 67);
-INSERT INTO districts (id, name, city_id) VALUES (858, 'VİRANŞEHİR', 71);
-INSERT INTO districts (id, name, city_id) VALUES (859, 'VİZE', 49);
-INSERT INTO districts (id, name, city_id) VALUES (860, 'YAĞLIDERE', 34);
-INSERT INTO districts (id, name, city_id) VALUES (861, 'YAHŞİHAN', 48);
-INSERT INTO districts (id, name, city_id) VALUES (862, 'YAHYALI', 47);
-INSERT INTO districts (id, name, city_id) VALUES (863, 'YAKAKENT', 67);
-INSERT INTO districts (id, name, city_id) VALUES (864, 'YAKUTİYE', 31);
-INSERT INTO districts (id, name, city_id) VALUES (865, 'YALIHÜYÜK', 53);
-INSERT INTO districts (id, name, city_id) VALUES (866, 'YALVAÇ', 39);
-INSERT INTO districts (id, name, city_id) VALUES (867, 'YAPRAKLI', 23);
-INSERT INTO districts (id, name, city_id) VALUES (868, 'YATAĞAN', 59);
-INSERT INTO districts (id, name, city_id) VALUES (869, 'YAVUZELİ', 33);
-INSERT INTO districts (id, name, city_id) VALUES (870, 'YAYLADAĞI', 37);
-INSERT INTO districts (id, name, city_id) VALUES (871, 'YAYLADERE', 17);
-INSERT INTO districts (id, name, city_id) VALUES (872, 'YAZIHAN', 55);
-INSERT INTO districts (id, name, city_id) VALUES (873, 'YEDİSU', 17);
-INSERT INTO districts (id, name, city_id) VALUES (874, 'YENİCE', 22);
-INSERT INTO districts (id, name, city_id) VALUES (875, 'YENİÇAĞA', 19);
-INSERT INTO districts (id, name, city_id) VALUES (876, 'YENİFAKILI', 80);
-INSERT INTO districts (id, name, city_id) VALUES (877, 'YENİMAHALLE', 7);
-INSERT INTO districts (id, name, city_id) VALUES (878, 'YENİPAZAR', 11);
-INSERT INTO districts (id, name, city_id) VALUES (879, 'YENİŞARBADEMLİ', 39);
-INSERT INTO districts (id, name, city_id) VALUES (880, 'YENİŞEHİR', 21);
-INSERT INTO districts (id, name, city_id) VALUES (881, 'YERKÖY', 80);
-INSERT INTO districts (id, name, city_id) VALUES (882, 'YEŞİLHİSAR', 47);
-INSERT INTO districts (id, name, city_id) VALUES (883, 'YEŞİLLİ', 57);
-INSERT INTO districts (id, name, city_id) VALUES (884, 'YEŞİLOVA', 20);
-INSERT INTO districts (id, name, city_id) VALUES (885, 'YEŞİLYURT', 55);
-INSERT INTO districts (id, name, city_id) VALUES (886, 'YIĞILCA', 27);
-INSERT INTO districts (id, name, city_id) VALUES (887, 'YILDIRIM', 21);
-INSERT INTO districts (id, name, city_id) VALUES (888, 'YILDIZELİ', 70);
-INSERT INTO districts (id, name, city_id) VALUES (889, 'YOMRA', 75);
-INSERT INTO districts (id, name, city_id) VALUES (890, 'YUMURTALIK', 1);
-INSERT INTO districts (id, name, city_id) VALUES (891, 'YUNAK', 53);
-INSERT INTO districts (id, name, city_id) VALUES (892, 'YUNUSEMRE', 56);
-INSERT INTO districts (id, name, city_id) VALUES (893, 'YUSUFELİ', 10);
-INSERT INTO districts (id, name, city_id) VALUES (894, 'YÜKSEKOVA', 36);
-INSERT INTO districts (id, name, city_id) VALUES (895, 'YÜREĞİR', 1);
-INSERT INTO districts (id, name, city_id) VALUES (896, 'ZARA', 70);
-INSERT INTO districts (id, name, city_id) VALUES (897, 'ZEYTİNBURNU', 40);
-INSERT INTO districts (id, name, city_id) VALUES (898, 'ZİLE', 74);
-INSERT INTO districts (id, name, city_id) VALUES (899, 'ZONGULDAK', 81);
-INSERT INTO districts (id, name, city_id) VALUES (971, 'KEMALPAŞA', 10);
-INSERT INTO districts (id, name, city_id) VALUES (972, 'SULTANHANI', 5);
+-- Districts tablosuna toplu veri girişi
+-- 900+ insert komutunu tek seferde gönderiyoruz.
+INSERT INTO districts (id, name, city_id)
+VALUES 
+(1, '19 MAYIS', 67),
+(2, 'ABANA', 46),
+(3, 'ACIGÖL', 61),
+(4, 'ACIPAYAM', 25),
+(5, 'ADAKLI', 17),
+(6, 'ADALAR', 40),
+(7, 'ADAPAZARI', 66),
+(8, 'ADİLCEVAZ', 18),
+(9, 'AFŞİN', 42),
+(10, 'AĞAÇÖREN', 5),
+(11, 'AĞIN', 29),
+(12, 'AĞLASUN', 20),
+(13, 'AĞLI', 46),
+(14, 'AHIRLI', 53),
+(15, 'AHLAT', 18),
+(16, 'AHMETLİ', 56),
+(17, 'AKÇAABAT', 75),
+(18, 'AKÇADAĞ', 55),
+(19, 'AKÇAKALE', 71),
+(20, 'AKÇAKENT', 50),
+(21, 'AKÇAKOCA', 27),
+(22, 'AKDAĞMADENİ', 80),
+(23, 'AKDENİZ', 58),
+(24, 'AKHİSAR', 56),
+(25, 'AKINCILAR', 70),
+(26, 'AKKIŞLA', 47),
+(27, 'AKKUŞ', 63),
+(28, 'AKÖREN', 53),
+(29, 'AKPINAR', 50),
+(30, 'AKSEKİ', 8),
+(31, 'AKSU', 8),
+(32, 'AKŞEHİR', 53),
+(33, 'AKYAKA', 45),
+(34, 'AKYAZI', 66),
+(35, 'AKYURT', 7),
+(36, 'ALACA', 24),
+(37, 'ALACAKAYA', 29),
+(38, 'ALAÇAM', 67),
+(39, 'ALADAĞ', 1),
+(40, 'ALANYA', 8),
+(41, 'ALAPLI', 81),
+(42, 'ALAŞEHİR', 56),
+(43, 'ALİAĞA', 41),
+(44, 'ALMUS', 74),
+(45, 'ALPU', 32),
+(46, 'ALTIEYLÜL', 12),
+(47, 'ALTINDAĞ', 7),
+(48, 'ALTINEKİN', 53),
+(49, 'ALTINORDU', 63),
+(50, 'ALTINOVA', 79),
+(51, 'ALTINÖZÜ', 37),
+(52, 'ALTINTAŞ', 54),
+(53, 'ALTINYAYLA', 20),
+(54, 'ALTUNHİSAR', 62),
+(55, 'ALUCRA', 34),
+(56, 'AMASRA', 13),
+(57, 'ANAMUR', 58),
+(58, 'ANDIRIN', 42),
+(59, 'ANTAKYA', 37),
+(60, 'ARABAN', 33),
+(61, 'ARAÇ', 46),
+(62, 'ARAKLI', 75),
+(63, 'ARALIK', 38),
+(64, 'ARAPGİR', 55),
+(65, 'ARDANUÇ', 10),
+(66, 'ARDEŞEN', 65),
+(67, 'ARGUVAN', 55),
+(68, 'ARHAVİ', 10),
+(69, 'ARICAK', 29),
+(70, 'ARİFİYE', 66),
+(71, 'ARMUTLU', 79),
+(72, 'ARNAVUTKÖY', 40),
+(73, 'ARPAÇAY', 45),
+(74, 'ARSİN', 75),
+(75, 'ARSUZ', 37),
+(76, 'ARTOVA', 74),
+(77, 'ARTUKLU', 57),
+(78, 'ASARCIK', 67),
+(79, 'ASLANAPA', 54),
+(80, 'AŞKALE', 31),
+(81, 'ATABEY', 39),
+(82, 'ATAKUM', 67),
+(83, 'ATAŞEHİR', 40),
+(84, 'ATKARACALAR', 23),
+(85, 'AVANOS', 61),
+(86, 'AVCILAR', 40),
+(87, 'AYANCIK', 69),
+(88, 'AYAŞ', 7),
+(89, 'AYBASTI', 63),
+(90, 'AYDINCIK', 58),
+(91, 'AYDINTEPE', 15),
+(92, 'AYRANCI', 44),
+(93, 'AYVACIK', 22),
+(94, 'AYVALIK', 12),
+(95, 'AZDAVAY', 46),
+(96, 'AZİZİYE', 31),
+(97, 'BABADAĞ', 25),
+(98, 'BABAESKİ', 49),
+(99, 'BAFRA', 67),
+(100, 'BAĞCILAR', 40),
+(101, 'BAĞLAR', 26),
+(102, 'BAHÇE', 64),
+(103, 'BAHÇELİEVLER', 40),
+(104, 'BAHÇESARAY', 78),
+(105, 'BAHŞILI', 48),
+(106, 'BAKIRKÖY', 40),
+(107, 'BAKLAN', 25),
+(108, 'BALA', 7),
+(109, 'BALÇOVA', 41),
+(110, 'BALIŞEYH', 48),
+(111, 'BALYA', 12),
+(112, 'BANAZ', 77),
+(113, 'BANDIRMA', 12),
+(114, 'BASKİL', 29),
+(115, 'BAŞAKŞEHİR', 40),
+(116, 'BAŞÇİFTLİK', 74),
+(117, 'BAŞİSKELE', 52),
+(118, 'BAŞKALE', 78),
+(119, 'BAŞMAKÇI', 3),
+(120, 'BAŞYAYLA', 44),
+(121, 'BATTALGAZİ', 55),
+(122, 'BAYAT', 3),
+(123, 'BAYINDIR', 41),
+(124, 'BAYKAN', 68),
+(125, 'BAYRAKLI', 41),
+(126, 'BAYRAMİÇ', 22),
+(127, 'BAYRAMÖREN', 23),
+(128, 'BAYRAMPAŞA', 40),
+(129, 'BEKİLLİ', 25),
+(130, 'BELEN', 37),
+(131, 'BERGAMA', 41),
+(132, 'BESNİ', 2),
+(133, 'BEŞİKDÜZÜ', 75),
+(134, 'BEŞİKTAŞ', 40),
+(135, 'BEŞİRİ', 14),
+(136, 'BEYAĞAÇ', 25),
+(137, 'BEYDAĞ', 41),
+(138, 'BEYKOZ', 40),
+(139, 'BEYLİKDÜZÜ', 40),
+(140, 'BEYLİKOVA', 32),
+(141, 'BEYOĞLU', 40),
+(142, 'BEYPAZARI', 7),
+(143, 'BEYŞEHİR', 53),
+(144, 'BEYTÜŞŞEBAP', 72),
+(145, 'BİGA', 22),
+(146, 'BİGADİÇ', 12),
+(147, 'BİRECİK', 71),
+(148, 'BİSMİL', 26),
+(149, 'BODRUM', 59),
+(150, 'BOĞAZKALE', 24),
+(151, 'BOĞAZLIYAN', 80),
+(152, 'BOLVADİN', 3),
+(153, 'BOR', 62),
+(154, 'BORÇKA', 10),
+(155, 'BORNOVA', 41),
+(156, 'BOYABAT', 69),
+(157, 'BOZCAADA', 22),
+(158, 'BOZDOĞAN', 11),
+(159, 'BOZKIR', 53),
+(160, 'BOZKURT', 25),
+(161, 'BOZOVA', 71),
+(162, 'BOZTEPE', 50),
+(163, 'BOZÜYÜK', 16),
+(164, 'BOZYAZI', 58),
+(165, 'BUCA', 41),
+(166, 'BUCAK', 20),
+(167, 'BUHARKENT', 11),
+(168, 'BULANCAK', 34),
+(169, 'BULANIK', 60),
+(170, 'BULDAN', 25),
+(171, 'BURHANİYE', 12),
+(172, 'BÜNYAN', 47),
+(173, 'BÜYÜKÇEKMECE', 40),
+(174, 'BÜYÜKORHAN', 21),
+(175, 'CANİK', 67),
+(176, 'CEYHAN', 1),
+(177, 'CEYLANPINAR', 71),
+(178, 'CİDE', 46),
+(179, 'CİHANBEYLİ', 53),
+(180, 'CİZRE', 72),
+(181, 'CUMAYERİ', 27),
+(182, 'ÇAĞLAYANCERİT', 42),
+(183, 'ÇAL', 25),
+(184, 'ÇALDIRAN', 78),
+(185, 'ÇAMARDI', 62),
+(186, 'ÇAMAŞ', 63),
+(187, 'ÇAMELİ', 25),
+(188, 'ÇAMLIDERE', 7),
+(189, 'ÇAMLIHEMŞİN', 65),
+(190, 'ÇAMLIYAYLA', 58),
+(191, 'ÇAMOLUK', 34),
+(192, 'ÇAN', 22),
+(193, 'ÇANAKÇI', 34),
+(194, 'ÇANDIR', 80),
+(195, 'ÇANKAYA', 7),
+(196, 'ÇARDAK', 25),
+(197, 'ÇARŞAMBA', 67),
+(198, 'ÇARŞIBAŞI', 75),
+(199, 'ÇAT', 31),
+(200, 'ÇATAK', 78),
+(201, 'ÇATALCA', 40),
+(202, 'ÇATALPINAR', 63),
+(203, 'ÇATALZEYTİN', 46),
+(204, 'ÇAVDARHİSAR', 54),
+(205, 'ÇAVDIR', 20),
+(206, 'ÇAY', 3),
+(207, 'ÇAYBAŞI', 63),
+(208, 'ÇAYCUMA', 81),
+(209, 'ÇAYELİ', 65),
+(210, 'ÇAYIRALAN', 80),
+(211, 'ÇAYIRLI', 30),
+(212, 'ÇAYIROVA', 52),
+(213, 'ÇAYKARA', 75),
+(214, 'ÇEKEREK', 80),
+(215, 'ÇEKMEKÖY', 40),
+(216, 'ÇELEBİ', 48),
+(217, 'ÇELİKHAN', 2),
+(218, 'ÇELTİK', 53),
+(219, 'ÇELTİKÇİ', 20),
+(220, 'ÇEMİŞGEZEK', 76),
+(221, 'ÇERKEŞ', 23),
+(222, 'ÇERKEZKÖY', 73),
+(223, 'ÇERMİK', 26),
+(224, 'ÇEŞME', 41),
+(225, 'ÇILDIR', 9),
+(226, 'ÇINAR', 26),
+(227, 'ÇINARCIK', 79),
+(228, 'ÇİÇEKDAĞI', 50),
+(229, 'ÇİFTELER', 32),
+(230, 'ÇİFTLİK', 62),
+(231, 'ÇİFTLİKKÖY', 79),
+(232, 'ÇİĞLİ', 41),
+(233, 'ÇİLİMLİ', 27),
+(234, 'ÇİNE', 11),
+(235, 'ÇİVRİL', 25),
+(236, 'ÇOBANLAR', 3),
+(237, 'ÇORLU', 73),
+(238, 'ÇUBUK', 7),
+(239, 'ÇUKURCA', 36),
+(240, 'ÇUKUROVA', 1),
+(241, 'ÇUMRA', 53),
+(242, 'ÇÜNGÜŞ', 26),
+(243, 'DADAY', 46),
+(244, 'DALAMAN', 59),
+(245, 'DAMAL', 9),
+(246, 'DARENDE', 55),
+(247, 'DARGEÇİT', 57),
+(248, 'DARICA', 52),
+(249, 'DATÇA', 59),
+(250, 'DAZKIRI', 3),
+(251, 'DEFNE', 37),
+(252, 'DELİCE', 48),
+(253, 'DEMİRCİ', 56),
+(254, 'DEMİRKÖY', 49),
+(255, 'DEMİRÖZÜ', 15),
+(256, 'DEMRE', 8),
+(257, 'DERBENT', 53),
+(258, 'DEREBUCAK', 53),
+(259, 'DERECİK', 36),
+(260, 'DERELİ', 34),
+(261, 'DEREPAZARI', 65),
+(262, 'DERİK', 57),
+(263, 'DERİNCE', 52),
+(264, 'DERİNKUYU', 61),
+(265, 'DERNEKPAZARI', 75),
+(266, 'DEVELİ', 47),
+(267, 'DEVREK', 81),
+(268, 'DEVREKANİ', 46),
+(269, 'DİCLE', 26),
+(270, 'DİDİM', 11),
+(271, 'DİGOR', 45),
+(272, 'DİKİLİ', 41),
+(273, 'DİKMEN', 69),
+(274, 'DİLOVASI', 52),
+(275, 'DİNAR', 3),
+(276, 'DİVRİĞİ', 70),
+(277, 'DİYADİN', 4),
+(278, 'DODURGA', 24),
+(279, 'DOĞANHİSAR', 53),
+(280, 'DOĞANKENT', 34),
+(281, 'DOĞANŞAR', 70),
+(282, 'DOĞANŞEHİR', 55),
+(283, 'DOĞANYOL', 55),
+(284, 'DOĞANYURT', 46),
+(285, 'DOĞUBAYAZIT', 4),
+(286, 'DOMANİÇ', 54),
+(287, 'DÖRTDİVAN', 19),
+(288, 'DÖRTYOL', 37),
+(289, 'DÖŞEMEALTI', 8),
+(290, 'DULKADİROĞLU', 42),
+(291, 'DUMLUPINAR', 54),
+(292, 'DURAĞAN', 69),
+(293, 'DURSUNBEY', 12),
+(294, 'DÜZİÇİ', 64),
+(295, 'DÜZKÖY', 75),
+(296, 'ECEABAT', 22),
+(297, 'EDREMİT', 12),
+(298, 'EFELER', 11),
+(299, 'EFLANİ', 43),
+(300, 'EĞİL', 26),
+(301, 'EĞİRDİR', 39),
+(302, 'EKİNÖZÜ', 42),
+(303, 'ELBEYLİ', 51),
+(304, 'ELBİSTAN', 42),
+(305, 'ELDİVAN', 23),
+(306, 'ELEŞKİRT', 4),
+(307, 'ELMADAĞ', 7),
+(308, 'ELMALI', 8),
+(309, 'EMET', 54),
+(310, 'EMİRDAĞ', 3),
+(311, 'EMİRGAZİ', 53),
+(312, 'ENEZ', 28),
+(313, 'ERBAA', 74),
+(314, 'ERCİŞ', 78),
+(315, 'ERDEK', 12),
+(316, 'ERDEMLİ', 58),
+(317, 'EREĞLİ', 53),
+(318, 'ERENLER', 66),
+(319, 'ERFELEK', 69),
+(320, 'ERGANİ', 26),
+(321, 'ERGENE', 73),
+(322, 'ERMENEK', 44),
+(323, 'ERUH', 68),
+(324, 'ERZİN', 37),
+(325, 'ESENLER', 40),
+(326, 'ESENYURT', 40),
+(327, 'ESKİL', 5),
+(328, 'ESKİPAZAR', 43),
+(329, 'ESPİYE', 34),
+(330, 'EŞME', 77),
+(331, 'ETİMESGUT', 7),
+(332, 'EVCİLER', 3),
+(333, 'EVREN', 7),
+(334, 'EYNESİL', 34),
+(335, 'EYÜPSULTAN', 40),
+(336, 'EYYÜBİYE', 71),
+(337, 'EZİNE', 22),
+(338, 'FATİH', 40),
+(339, 'FATSA', 63),
+(340, 'FEKE', 1),
+(341, 'FELAHİYE', 47),
+(342, 'FERİZLİ', 66),
+(343, 'FETHİYE', 59),
+(344, 'FINDIKLI', 65),
+(345, 'FİNİKE', 8),
+(346, 'FOÇA', 41),
+(347, 'GAZİEMİR', 41),
+(348, 'GAZİOSMANPAŞA', 40),
+(349, 'GAZİPAŞA', 8),
+(350, 'GEBZE', 52),
+(351, 'GEDİZ', 54),
+(352, 'GELENDOST', 39),
+(353, 'GELİBOLU', 22),
+(354, 'GEMEREK', 70),
+(355, 'GEMLİK', 21),
+(356, 'GENÇ', 17),
+(357, 'GERCÜŞ', 14),
+(358, 'GEREDE', 19),
+(359, 'GERGER', 2),
+(360, 'GERMENCİK', 11),
+(361, 'GERZE', 69),
+(362, 'GEVAŞ', 78),
+(363, 'GEYVE', 66),
+(364, 'GÖKÇEADA', 22),
+(365, 'GÖKÇEBEY', 81),
+(366, 'GÖKSUN', 42),
+(367, 'GÖLBAŞI', 2),
+(368, 'GÖLCÜK', 52),
+(369, 'GÖLE', 9),
+(370, 'GÖLHİSAR', 20),
+(371, 'GÖLKÖY', 63),
+(372, 'GÖLMARMARA', 56),
+(373, 'GÖLOVA', 70),
+(374, 'GÖLPAZARI', 16),
+(375, 'GÖLYAKA', 27),
+(376, 'GÖMEÇ', 12),
+(377, 'GÖNEN', 12),
+(378, 'GÖRDES', 56),
+(379, 'GÖRELE', 34),
+(380, 'GÖYNÜCEK', 6),
+(381, 'GÖYNÜK', 19),
+(382, 'GÜCE', 34),
+(383, 'GÜÇLÜKONAK', 72),
+(384, 'GÜDÜL', 7),
+(385, 'GÜLAĞAÇ', 5),
+(386, 'GÜLNAR', 58),
+(387, 'GÜLŞEHİR', 61),
+(388, 'GÜLYALI', 63),
+(389, 'GÜMÜŞHACIKÖY', 6),
+(390, 'GÜMÜŞOVA', 27),
+(391, 'GÜNDOĞMUŞ', 8),
+(392, 'GÜNEY', 25),
+(393, 'GÜNEYSINIR', 53),
+(394, 'GÜNEYSU', 65),
+(395, 'GÜNGÖREN', 40),
+(396, 'GÜNYÜZÜ', 32),
+(397, 'GÜRGENTEPE', 63),
+(398, 'GÜROYMAK', 18),
+(399, 'GÜRPINAR', 78),
+(400, 'GÜRSU', 21),
+(401, 'GÜRÜN', 70),
+(402, 'GÜZELBAHÇE', 41),
+(403, 'GÜZELYURT', 5),
+(404, 'HACIBEKTAŞ', 61),
+(405, 'HACILAR', 47),
+(406, 'HADİM', 53),
+(407, 'HAFİK', 70),
+(408, 'HALFETİ', 71),
+(409, 'HALİLİYE', 71),
+(410, 'HALKAPINAR', 53),
+(411, 'HAMAMÖZÜ', 6),
+(412, 'HAMUR', 4),
+(413, 'HAN', 32),
+(414, 'HANAK', 9),
+(415, 'HANİ', 26),
+(416, 'HANÖNÜ', 46),
+(417, 'HARMANCIK', 21),
+(418, 'HARRAN', 71),
+(419, 'HASANBEYLİ', 64),
+(420, 'HASANKEYF', 14),
+(421, 'HASKÖY', 60),
+(422, 'HASSA', 37),
+(423, 'HAVRAN', 12),
+(424, 'HAVSA', 28),
+(425, 'HAVZA', 67),
+(426, 'HAYMANA', 7),
+(427, 'HAYRABOLU', 73),
+(428, 'HAYRAT', 75),
+(429, 'HAZRO', 26),
+(430, 'HEKİMHAN', 55),
+(431, 'HEMŞİN', 65),
+(432, 'HENDEK', 66),
+(433, 'HINIS', 31),
+(434, 'HİLVAN', 71),
+(435, 'HİSARCIK', 54),
+(436, 'HİZAN', 18),
+(437, 'HOCALAR', 3),
+(438, 'HONAZ', 25),
+(439, 'HOPA', 10),
+(440, 'HORASAN', 31),
+(441, 'HOZAT', 76),
+(442, 'HÜYÜK', 53),
+(443, 'ILGAZ', 23),
+(444, 'ILGIN', 53),
+(445, 'İBRADI', 8),
+(446, 'İDİL', 72),
+(447, 'İHSANGAZİ', 46),
+(448, 'İHSANİYE', 3),
+(449, 'İKİZCE', 63),
+(450, 'İKİZDERE', 65),
+(451, 'İLİÇ', 30),
+(452, 'İLKADIM', 67),
+(453, 'İMAMOĞLU', 1),
+(454, 'İMRANLI', 70),
+(455, 'İNCESU', 47),
+(456, 'İNCİRLİOVA', 11),
+(457, 'İNEBOLU', 46),
+(458, 'İNEGÖL', 21),
+(459, 'İNHİSAR', 16),
+(460, 'İNÖNÜ', 32),
+(461, 'İPEKYOLU', 78),
+(462, 'İPSALA', 28),
+(463, 'İSCEHİSAR', 3),
+(464, 'İSKENDERUN', 37),
+(465, 'İSKİLİP', 24),
+(466, 'İSLAHİYE', 33),
+(467, 'İSPİR', 31),
+(468, 'İVRİNDİ', 12),
+(469, 'İYİDERE', 65),
+(470, 'İZMİT', 52),
+(471, 'İZNİK', 21),
+(472, 'KABADÜZ', 63),
+(473, 'KABATAŞ', 63),
+(474, 'KADIKÖY', 40),
+(475, 'KADINHANI', 53),
+(476, 'KADIŞEHRİ', 80),
+(477, 'KADİRLİ', 64),
+(478, 'KAĞITHANE', 40),
+(479, 'KAĞIZMAN', 45),
+(480, 'KAHRAMANKAZAN', 7),
+(481, 'KAHTA', 2),
+(482, 'KALE', 25),
+(483, 'KALECİK', 7),
+(484, 'KALKANDERE', 65),
+(485, 'KAMAN', 50),
+(486, 'KANDIRA', 52),
+(487, 'KANGAL', 70),
+(488, 'KAPAKLI', 73),
+(489, 'KARABAĞLAR', 41),
+(490, 'KARABURUN', 41),
+(491, 'KARACABEY', 21),
+(492, 'KARACASU', 11),
+(493, 'KARAÇOBAN', 31),
+(494, 'KARAHALLI', 77),
+(495, 'KARAİSALI', 1),
+(496, 'KARAKEÇİLİ', 48),
+(497, 'KARAKOÇAN', 29),
+(498, 'KARAKOYUNLU', 38),
+(499, 'KARAKÖPRÜ', 71),
+(500, 'KARAMANLI', 20),
+(501, 'KARAMÜRSEL', 52),
+(502, 'KARAPINAR', 53),
+(503, 'KARAPÜRÇEK', 66),
+(504, 'KARASU', 66),
+(505, 'KARATAŞ', 1),
+(506, 'KARATAY', 53),
+(507, 'KARAYAZI', 31),
+(508, 'KARESİ', 12),
+(509, 'KARGI', 24),
+(510, 'KARKAMIŞ', 33),
+(511, 'KARLIOVA', 17),
+(512, 'KARPUZLU', 11),
+(513, 'KARŞIYAKA', 41),
+(514, 'KARTAL', 40),
+(515, 'KARTEPE', 52),
+(516, 'KAŞ', 8),
+(517, 'KAVAK', 67),
+(518, 'KAVAKLIDERE', 59),
+(519, 'KAYAPINAR', 26),
+(520, 'KAYNARCA', 66),
+(521, 'KAYNAŞLI', 27),
+(522, 'KAZIMKARABEKİR', 44),
+(523, 'KEBAN', 29),
+(524, 'KEÇİBORLU', 39),
+(525, 'KEÇİÖREN', 7),
+(526, 'KELES', 21),
+(527, 'KELKİT', 35),
+(528, 'KEMAH', 30),
+(529, 'KEMALİYE', 30),
+(530, 'KEMALPAŞA', 10),
+(531, 'KEMER', 8),
+(532, 'KEPEZ', 8),
+(533, 'KEPSUT', 12),
+(534, 'KESKİN', 48),
+(535, 'KESTEL', 21),
+(536, 'KEŞAN', 28),
+(537, 'KEŞAP', 34),
+(538, 'KIBRISCIK', 19),
+(539, 'KINIK', 41),
+(540, 'KIRIKHAN', 37),
+(541, 'KIRKAĞAÇ', 56),
+(542, 'KIZILCAHAMAM', 7),
+(543, 'KIZILIRMAK', 23),
+(544, 'KIZILÖREN', 3),
+(545, 'KIZILTEPE', 57),
+(546, 'KİĞI', 17),
+(547, 'KİLİMLİ', 81),
+(548, 'KİRAZ', 41),
+(549, 'KOCAALİ', 66),
+(550, 'KOCAKÖY', 26),
+(551, 'KOCASİNAN', 47),
+(552, 'KOÇARLI', 11),
+(553, 'KOFÇAZ', 49),
+(554, 'KONAK', 41),
+(555, 'KONYAALTI', 8),
+(556, 'KORGAN', 63),
+(557, 'KORGUN', 23),
+(558, 'KORKUT', 60),
+(559, 'KORKUTELİ', 8),
+(560, 'KOVANCILAR', 29),
+(561, 'KOYULHİSAR', 70),
+(562, 'KOZAKLI', 61),
+(563, 'KOZAN', 1),
+(564, 'KOZLU', 81),
+(565, 'KOZLUK', 14),
+(566, 'KÖPRÜBAŞI', 56),
+(567, 'KÖPRÜKÖY', 31),
+(568, 'KÖRFEZ', 52),
+(569, 'KÖSE', 35),
+(570, 'KÖŞK', 11),
+(571, 'KÖYCEĞİZ', 59),
+(572, 'KULA', 56),
+(573, 'KULP', 26),
+(574, 'KULU', 53),
+(575, 'KULUNCAK', 55),
+(576, 'KUMLU', 37),
+(577, 'KUMLUCA', 8),
+(578, 'KUMRU', 63),
+(579, 'KURŞUNLU', 23),
+(580, 'KURTALAN', 68),
+(581, 'KURUCAŞİLE', 13),
+(582, 'KUŞADASI', 11),
+(583, 'KUYUCAK', 11),
+(584, 'KÜÇÜKÇEKMECE', 40),
+(585, 'KÜRE', 46),
+(586, 'KÜRTÜN', 35),
+(587, 'LAÇİN', 24),
+(588, 'LADİK', 67),
+(589, 'LALAPAŞA', 28),
+(590, 'LAPSEKİ', 22),
+(591, 'LİCE', 26),
+(592, 'LÜLEBURGAZ', 49),
+(593, 'MAÇKA', 75),
+(594, 'MADEN', 29),
+(595, 'MAHMUDİYE', 32),
+(596, 'MALAZGİRT', 60),
+(597, 'MALKARA', 73),
+(598, 'MALTEPE', 40),
+(599, 'MAMAK', 7),
+(600, 'MANAVGAT', 8),
+(601, 'MANYAS', 12),
+(602, 'MARMARA', 12),
+(603, 'MARMARAEREĞLİSİ', 73),
+(604, 'MARMARİS', 59),
+(605, 'MAZGİRT', 76),
+(606, 'MAZIDAĞI', 57),
+(607, 'MECİTÖZÜ', 24),
+(608, 'MELİKGAZİ', 47),
+(609, 'MENDERES', 41),
+(610, 'MENEMEN', 41),
+(611, 'MENGEN', 19),
+(612, 'MENTEŞE', 59),
+(613, 'MERAM', 53),
+(614, 'MERİÇ', 28),
+(615, 'MERKEZ', 2),
+(616, 'MERKEZEFENDİ', 25),
+(617, 'MERZİFON', 6),
+(618, 'MESUDİYE', 63),
+(619, 'MEZİTLİ', 58),
+(620, 'MİDYAT', 57),
+(621, 'MİHALGAZİ', 32),
+(622, 'MİHALIÇÇIK', 32),
+(623, 'MİLAS', 59),
+(624, 'MUCUR', 50),
+(625, 'MUDANYA', 21),
+(626, 'MUDURNU', 19),
+(627, 'MURADİYE', 78),
+(628, 'MURATLI', 73),
+(629, 'MURATPAŞA', 8),
+(630, 'MURGUL', 10),
+(631, 'MUSABEYLİ', 51),
+(632, 'MUSTAFAKEMALPAŞA', 21),
+(633, 'MUT', 58),
+(634, 'MUTKİ', 18),
+(635, 'NALLIHAN', 7),
+(636, 'NARLIDERE', 41),
+(637, 'NARMAN', 31),
+(638, 'NAZIMİYE', 76),
+(639, 'NAZİLLİ', 11),
+(640, 'NİKSAR', 74),
+(641, 'NİLÜFER', 21),
+(642, 'NİZİP', 33),
+(643, 'NURDAĞI', 33),
+(644, 'NURHAK', 42),
+(645, 'NUSAYBİN', 57),
+(646, 'ODUNPAZARI', 32),
+(647, 'OF', 75),
+(648, 'OĞUZELİ', 33),
+(649, 'OĞUZLAR', 24),
+(650, 'OLTU', 31),
+(651, 'OLUR', 31),
+(652, 'ONİKİŞUBAT', 42),
+(653, 'ORHANELİ', 21),
+(654, 'ORHANGAZİ', 21),
+(655, 'ORTA', 23),
+(656, 'ORTACA', 59),
+(657, 'ORTAHİSAR', 75),
+(658, 'ORTAKÖY', 5),
+(659, 'OSMANCIK', 24),
+(660, 'OSMANELİ', 16),
+(661, 'OSMANGAZİ', 21),
+(662, 'OTLUKBELİ', 30),
+(663, 'OVACIK', 43),
+(664, 'ÖDEMİŞ', 41),
+(665, 'ÖMERLİ', 57),
+(666, 'ÖZALP', 78),
+(667, 'ÖZVATAN', 47),
+(668, 'PALANDÖKEN', 31),
+(669, 'PALU', 29),
+(670, 'PAMUKKALE', 25),
+(671, 'PAMUKOVA', 66),
+(672, 'PASİNLER', 31),
+(673, 'PATNOS', 4),
+(674, 'PAYAS', 37),
+(675, 'PAZAR', 65),
+(676, 'PAZARCIK', 42),
+(677, 'PAZARLAR', 54),
+(678, 'PAZARYERİ', 16),
+(679, 'PAZARYOLU', 31),
+(680, 'PEHLİVANKÖY', 49),
+(681, 'PENDİK', 40),
+(682, 'PERŞEMBE', 63),
+(683, 'PERTEK', 76),
+(684, 'PERVARİ', 68),
+(685, 'PINARBAŞI', 46),
+(686, 'PINARHİSAR', 49),
+(687, 'PİRAZİZ', 34),
+(688, 'POLATELİ', 51),
+(689, 'POLATLI', 7),
+(690, 'POSOF', 9),
+(691, 'POZANTI', 1),
+(692, 'PURSAKLAR', 7),
+(693, 'PÜLÜMÜR', 76),
+(694, 'PÜTÜRGE', 55),
+(695, 'REFAHİYE', 30),
+(696, 'REŞADİYE', 74),
+(697, 'REYHANLI', 37),
+(698, 'SAFRANBOLU', 43),
+(699, 'SAİMBEYLİ', 1),
+(700, 'SALIPAZARI', 67),
+(701, 'SALİHLİ', 56),
+(702, 'SAMANDAĞ', 37),
+(703, 'SAMSAT', 2),
+(704, 'SANCAKTEPE', 40),
+(705, 'SANDIKLI', 3),
+(706, 'SAPANCA', 66),
+(707, 'SARAY', 73),
+(708, 'SARAYDÜZÜ', 69),
+(709, 'SARAYKENT', 80),
+(710, 'SARAYKÖY', 25),
+(711, 'SARAYÖNÜ', 53),
+(712, 'SARICAKAYA', 32),
+(713, 'SARIÇAM', 1),
+(714, 'SARIGÖL', 56),
+(715, 'SARIKAMIŞ', 45),
+(716, 'SARIKAYA', 80),
+(717, 'SARIOĞLAN', 47),
+(718, 'SARIVELİLER', 44),
+(719, 'SARIYAHŞİ', 5),
+(720, 'SARIYER', 40),
+(721, 'SARIZ', 47),
+(722, 'SARUHANLI', 56),
+(723, 'SASON', 14),
+(724, 'SAVAŞTEPE', 12),
+(725, 'SAVUR', 57),
+(726, 'SEBEN', 19),
+(727, 'SEFERİHİSAR', 41),
+(728, 'SELÇUK', 41),
+(729, 'SELÇUKLU', 53),
+(730, 'SELENDİ', 56),
+(731, 'SELİM', 45),
+(732, 'SENİRKENT', 39),
+(733, 'SERDİVAN', 66),
+(734, 'SERİK', 8),
+(735, 'SERİNHİSAR', 25),
+(736, 'SEYDİKEMER', 59),
+(737, 'SEYDİLER', 46),
+(738, 'SEYDİŞEHİR', 53),
+(739, 'SEYHAN', 1),
+(740, 'SEYİTGAZİ', 32),
+(741, 'SINDIRGI', 12),
+(742, 'SİLİFKE', 58),
+(743, 'SİLİVRİ', 40),
+(744, 'SİLOPİ', 72),
+(745, 'SİLVAN', 26),
+(746, 'SİMAV', 54),
+(747, 'SİNANPAŞA', 3),
+(748, 'SİNCAN', 7),
+(749, 'SİNCİK', 2),
+(750, 'SİVASLI', 77),
+(751, 'SİVEREK', 71),
+(752, 'SİVRİCE', 29),
+(753, 'SİVRİHİSAR', 32),
+(754, 'SOLHAN', 17),
+(755, 'SOMA', 56),
+(756, 'SORGUN', 80),
+(757, 'SÖĞÜT', 16),
+(758, 'SÖĞÜTLÜ', 66),
+(759, 'SÖKE', 11),
+(760, 'SULAKYURT', 48),
+(761, 'SULTANBEYLİ', 40),
+(762, 'SULTANDAĞI', 3),
+(763, 'SULTANGAZİ', 40),
+(764, 'SULTANHANI', 5),
+(765, 'SULTANHİSAR', 11),
+(766, 'SULUOVA', 6),
+(767, 'SULUSARAY', 74),
+(768, 'SUMBAS', 64),
+(769, 'SUNGURLU', 24),
+(770, 'SUR', 26),
+(771, 'SURUÇ', 71),
+(772, 'SUSURLUK', 12),
+(773, 'SUSUZ', 45),
+(774, 'SUŞEHRİ', 70),
+(775, 'SÜLEYMANPAŞA', 73),
+(776, 'SÜLOĞLU', 28),
+(777, 'SÜRMENE', 75),
+(778, 'SÜTÇÜLER', 39),
+(779, 'ŞABANÖZÜ', 23),
+(780, 'ŞAHİNBEY', 33),
+(781, 'ŞALPAZARI', 75),
+(782, 'ŞAPHANE', 54),
+(783, 'ŞARKIŞLA', 70),
+(784, 'ŞARKİKARAAĞAÇ', 39),
+(785, 'ŞARKÖY', 73),
+(786, 'ŞAVŞAT', 10),
+(787, 'ŞEBİNKARAHİSAR', 34),
+(788, 'ŞEFAATLİ', 80),
+(789, 'ŞEHİTKAMİL', 33),
+(790, 'ŞEHZADELER', 56),
+(791, 'ŞEMDİNLİ', 36),
+(792, 'ŞENKAYA', 31),
+(793, 'ŞENPAZAR', 46),
+(794, 'ŞEREFLİKOÇHİSAR', 7),
+(795, 'ŞİLE', 40),
+(796, 'ŞİRAN', 35),
+(797, 'ŞİRVAN', 68),
+(798, 'ŞİŞLİ', 40),
+(799, 'ŞUHUT', 3),
+(800, 'TALAS', 47),
+(801, 'TARAKLI', 66),
+(802, 'TARSUS', 58),
+(803, 'TAŞKENT', 53),
+(804, 'TAŞKÖPRÜ', 46),
+(805, 'TAŞLIÇAY', 4),
+(806, 'TAŞOVA', 6),
+(807, 'TATVAN', 18),
+(808, 'TAVAS', 25),
+(809, 'TAVŞANLI', 54),
+(810, 'TEFENNİ', 20),
+(811, 'TEKKEKÖY', 67),
+(812, 'TEKMAN', 31),
+(813, 'TEPEBAŞI', 32),
+(814, 'TERCAN', 30),
+(815, 'TERMAL', 79),
+(816, 'TERME', 67),
+(817, 'TİLLO', 68),
+(818, 'TİRE', 41),
+(819, 'TİREBOLU', 34),
+(820, 'TOMARZA', 47),
+(821, 'TONYA', 75),
+(822, 'TOPRAKKALE', 64),
+(823, 'TORBALI', 41),
+(824, 'TOROSLAR', 58),
+(825, 'TORTUM', 31),
+(826, 'TORUL', 35),
+(827, 'TOSYA', 46),
+(828, 'TUFANBEYLİ', 1),
+(829, 'TURGUTLU', 56),
+(830, 'TURHAL', 74),
+(831, 'TUŞBA', 78),
+(832, 'TUT', 2),
+(833, 'TUTAK', 4),
+(834, 'TUZLA', 40),
+(835, 'TUZLUCA', 38),
+(836, 'TUZLUKÇU', 53),
+(837, 'TÜRKELİ', 69),
+(838, 'TÜRKOĞLU', 42),
+(839, 'UĞURLUDAĞ', 24),
+(840, 'ULA', 59),
+(841, 'ULAŞ', 70),
+(842, 'ULUBEY', 63),
+(843, 'ULUBORLU', 39),
+(844, 'ULUDERE', 72),
+(845, 'ULUKIŞLA', 62),
+(846, 'ULUS', 13),
+(847, 'URLA', 41),
+(848, 'UZUNDERE', 31),
+(849, 'UZUNKÖPRÜ', 28),
+(850, 'ÜMRANİYE', 40),
+(851, 'ÜNYE', 63),
+(852, 'ÜRGÜP', 61),
+(853, 'ÜSKÜDAR', 40),
+(854, 'ÜZÜMLÜ', 30),
+(855, 'VAKFIKEBİR', 75),
+(856, 'VARTO', 60),
+(857, 'VEZİRKÖPRÜ', 67),
+(858, 'VİRANŞEHİR', 71),
+(859, 'VİZE', 49),
+(860, 'YAĞLIDERE', 34),
+(861, 'YAHŞİHAN', 48),
+(862, 'YAHYALI', 47),
+(863, 'YAKAKENT', 67),
+(864, 'YAKUTİYE', 31),
+(865, 'YALIHÜYÜK', 53),
+(866, 'YALVAÇ', 39),
+(867, 'YAPRAKLI', 23),
+(868, 'YATAĞAN', 59),
+(869, 'YAVUZELİ', 33),
+(870, 'YAYLADAĞI', 37),
+(871, 'YAYLADERE', 17),
+(872, 'YAZIHAN', 55),
+(873, 'YEDİSU', 17),
+(874, 'YENİCE', 22),
+(875, 'YENİÇAĞA', 19),
+(876, 'YENİFAKILI', 80),
+(877, 'YENİMAHALLE', 7),
+(878, 'YENİPAZAR', 11),
+(879, 'YENİŞARBADEMLİ', 39),
+(880, 'YENİŞEHİR', 21),
+(881, 'YERKÖY', 80),
+(882, 'YEŞİLHİSAR', 47),
+(883, 'YEŞİLLİ', 57),
+(884, 'YEŞİLOVA', 20),
+(885, 'YEŞİLYURT', 55),
+(886, 'YIĞILCA', 27),
+(887, 'YILDIRIM', 21),
+(888, 'YILDIZELİ', 70),
+(889, 'YOMRA', 75),
+(890, 'YUMURTALIK', 1),
+(891, 'YUNAK', 53),
+(892, 'YUNUSEMRE', 56),
+(893, 'YUSUFELİ', 10),
+(894, 'YÜKSEKOVA', 36),
+(895, 'YÜREĞİR', 1),
+(896, 'ZARA', 70),
+(897, 'ZEYTİNBURNU', 40),
+(898, 'ZİLE', 74),
+(899, 'ZONGULDAK', 81),
+(971, 'KEMALPAŞA', 41),
+(972, 'SULTANHANI', 5)
+ON CONFLICT (city_id, name) DO NOTHING;
 
 SELECT setval('districts_id_seq', (SELECT MAX(id) FROM districts));

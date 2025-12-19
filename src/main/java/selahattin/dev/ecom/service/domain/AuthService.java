@@ -18,11 +18,11 @@ import selahattin.dev.ecom.config.properties.ClientProperties;
 import selahattin.dev.ecom.dto.infra.CookieDto;
 import selahattin.dev.ecom.dto.infra.EmailMessageDto;
 import selahattin.dev.ecom.dto.request.SigninRequest;
-import selahattin.dev.ecom.dto.request.SigninWithPassword;
+import selahattin.dev.ecom.dto.request.VerifyOtpRequest; // DTO GÜNCELLENDİ
 import selahattin.dev.ecom.dto.request.SignupRequest;
 import selahattin.dev.ecom.dto.request.VerifyEmailRequest;
 import selahattin.dev.ecom.dto.response.SigninResponse;
-import selahattin.dev.ecom.entity.UserEntity;
+import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.exception.auth.InvalidOtpException;
 import selahattin.dev.ecom.exception.auth.InvalidRefreshTokenException;
 import selahattin.dev.ecom.exception.auth.InvalidSignupVerificationTokenException;
@@ -48,11 +48,12 @@ public class AuthService {
 	private final CookieService cookieService;
 	private final ClientProperties clientProperties;
 
-	/* --- Signin --- */
+	/* --- Signin (OTP Flow) --- */
 	public void sendLoginOtp(SigninRequest signinRequest) {
 		String otp = generateOtp();
 		UserEntity user = userService.findByEmail(signinRequest.getEmail());
 
+		// Redis Key: otp:user@mail.com -> 123456
 		saveToRedis(OTP_KEY_TEMPLATE + user.getEmail(), otp, OTP_DURATION_MINUTES, TimeUnit.MINUTES);
 
 		EmailMessageDto emailMessage = createEmailMessage(
@@ -63,9 +64,9 @@ public class AuthService {
 		redisQueueService.enqueueEmail(emailMessage);
 	}
 
-	public SigninResponse verifyLoginOtp(SigninWithPassword request, HttpServletResponse response) {
+	public SigninResponse verifyLoginOtp(VerifyOtpRequest request, HttpServletResponse response) {
 		String email = request.getEmail();
-		String inputOtp = request.getPassword();
+		String inputOtp = request.getCode();
 
 		validateRedisValue(OTP_KEY_TEMPLATE + email, inputOtp);
 
@@ -94,10 +95,24 @@ public class AuthService {
 		redisQueueService.enqueueEmail(emailMessage);
 	}
 
+	public void verifySignup(VerifyEmailRequest request) {
+		String token = request.getToken();
+		String redisKey = SIGNUP_KEY_TEMPLATE + token;
+
+		String email = (String) getFromRedis(redisKey);
+
+		if (email == null) {
+			throw new InvalidSignupVerificationTokenException("Geçersiz veya süresi dolmuş doğrulama linki!");
+		}
+
+		userService.activateUser(email);
+		deleteFromRedis(redisKey);
+	}
+
 	public void resendVerificationEmail(SigninRequest signinRequest) {
 		UserEntity user = userService.findByEmail(signinRequest.getEmail());
 
-		if (user.isActivated()) {
+		if (user.getEmailVerifiedAt() != null) {
 			throw new InvalidSignupVerificationTokenException("Kullanıcı zaten aktif.");
 		}
 
@@ -115,20 +130,6 @@ public class AuthService {
 
 		redisQueueService.enqueueEmail(emailMessage);
 	}
-
-	public void verifySignup(VerifyEmailRequest request) {
-		String token = request.getToken();
-		String redisKey = SIGNUP_KEY_TEMPLATE + token;
-
-		String email = (String) getFromRedis(redisKey);
-
-		if (email == null) {
-			throw new InvalidSignupVerificationTokenException("Geçersiz veya süresi dolmuş doğrulama linki!");
-		}
-
-		userService.activateUser(email);
-		deleteFromRedis(redisKey);
-	}
 	/* --- --- */
 
 	/* --- Signout --- */
@@ -137,7 +138,7 @@ public class AuthService {
 			String email = jwtTokenProvider.extractUsername(refreshToken, false);
 			tokenService.deleteToken(email, deviceId);
 		} catch (Exception e) {
-			// Logla ama kullanıcıya çaktırma, cookie silinsin yeter
+			// Token bozuksa bile cookie temizle
 		}
 		cookieService.clearCookies(response);
 	}
@@ -180,22 +181,27 @@ public class AuthService {
 
 	private SigninResponse generateTokensAndReturnResponse(UserEntity user, String deviceId,
 			HttpServletResponse response) {
+
+		// Password olmadığı için userDetails'i user entity üzerinden manuel
+		// oluşturuyoruz
 		CustomUserDetails userDetails = new CustomUserDetails(user);
 
+		// Cookie Factory tokenları generate eder (JwtTokenProvider kullanır)
 		CookieDto cookieDto = cookieFactory.create(userDetails, deviceId);
 
+		// Redis'e hashleyerek sakla
 		tokenService.storeToken(user.getEmail(), cookieDto);
+
+		// Response'a cookie bas
 		cookieService.createCookies(cookieDto, response);
 
 		return SigninResponse.builder()
 				.email(user.getEmail())
-				.role(user.getRole().name())
+				.roles(jwtTokenProvider.extractRoles(cookieDto.getAccessToken()))
 				.build();
 	}
 
-	/**
-	 * Redis Operations
-	 */
+	/* Redis Helpers */
 	private void saveToRedis(String key, Object value, long duration, TimeUnit unit) {
 		redisTemplate.opsForValue().set(key, value, duration, unit);
 	}

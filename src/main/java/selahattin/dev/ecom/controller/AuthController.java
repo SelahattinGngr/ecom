@@ -11,7 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.request.SigninRequest;
-import selahattin.dev.ecom.dto.request.SigninWithPassword;
+import selahattin.dev.ecom.dto.request.VerifyOtpRequest; // Yeni DTO
 import selahattin.dev.ecom.dto.request.SignupRequest;
 import selahattin.dev.ecom.dto.request.VerifyEmailRequest;
 import selahattin.dev.ecom.dto.response.SigninResponse;
@@ -25,25 +25,28 @@ public class AuthController {
 
 	private final AuthService authService;
 
-	// --- AUTHENTICATION ---
+	// --- AUTHENTICATION (OTP FLOW) ---
 
+	// Adım 1: Kullanıcı mailini girer, OTP ister.
 	@PostMapping("/public/signin")
 	public ResponseEntity<ApiResponse<String>> requestLoginOtp(@Valid @RequestBody SigninRequest signinRequest) {
 		authService.sendLoginOtp(signinRequest);
 		return ResponseEntity.ok(ApiResponse.success("Doğrulama kodu gönderildi.", "OTP_SENT"));
 	}
 
+	// Adım 1.1: Kod gelmediyse tekrar iste.
 	@PostMapping("/public/resend-otp")
 	public ResponseEntity<ApiResponse<String>> resendLoginOtp(@Valid @RequestBody SigninRequest signinRequest) {
 		authService.sendLoginOtp(signinRequest);
 		return ResponseEntity.ok(ApiResponse.success("Doğrulama kodu tekrar gönderildi.", "OTP_RESENT"));
 	}
 
+	// Adım 2: Kullanıcı mail + kodu girer, Token alır.
 	@PostMapping("/public/signin-verify")
 	public ResponseEntity<ApiResponse<SigninResponse>> verifyLoginOtp(HttpServletResponse response,
-			@Valid @RequestBody SigninWithPassword signinRequest) {
+			@Valid @RequestBody VerifyOtpRequest verifyRequest) { // DTO değişti
 		return ResponseEntity
-				.ok(ApiResponse.success("Giriş Başarılı", authService.verifyLoginOtp(signinRequest, response)));
+				.ok(ApiResponse.success("Giriş Başarılı", authService.verifyLoginOtp(verifyRequest, response)));
 	}
 
 	// --- REGISTRATION ---

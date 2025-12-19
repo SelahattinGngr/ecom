@@ -1,5 +1,6 @@
 package selahattin.dev.ecom.dto.response;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,5 @@ public class CurrentUserResponse {
     private String lastName;
     private String phoneNumber;
     private String email;
-    private String role;
-    // İleride buraya avatarUrl, phone number vs. eklenir.
+    private List<String> roles;
 }

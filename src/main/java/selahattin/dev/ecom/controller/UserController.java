@@ -31,6 +31,9 @@ public class UserController {
     private final UserService userService;
     private final UserAddressService userAddressService;
 
+    /**
+     * Current User APIs
+     */
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<CurrentUserResponse>> getCurrentUser() {
         return ResponseEntity
@@ -44,10 +47,28 @@ public class UserController {
                 .ok(ApiResponse.success("Profil güncellendi.", userService.updateProfile(request)));
     }
 
+    /**
+     * User Address APIs
+     */
+
     @GetMapping("/addresses")
     public ResponseEntity<ApiResponse<List<AddressResponse>>> getMyAddresses() {
         return ResponseEntity
                 .ok(ApiResponse.success("Adresler listelendi.", userAddressService.getMyAddresses()));
+    }
+
+    @GetMapping("/addresses/{addressId}")
+    public ResponseEntity<ApiResponse<AddressResponse>> getAddress(@PathVariable UUID addressId) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Adres bilgileri alındı.", userAddressService.getAddress(addressId)));
+    }
+
+    @PutMapping("/addresses/{addressId}")
+    public ResponseEntity<ApiResponse<AddressResponse>> updateAddress(
+            @PathVariable UUID addressId,
+            @Valid @RequestBody CreateAddressRequest request) {
+        return ResponseEntity
+                .ok(ApiResponse.success("Adres güncellendi.", userAddressService.updateAddress(addressId, request)));
     }
 
     @PostMapping("/addresses")

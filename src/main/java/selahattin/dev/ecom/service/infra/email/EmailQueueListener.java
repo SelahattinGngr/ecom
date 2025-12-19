@@ -62,7 +62,10 @@ public class EmailQueueListener {
 
                 if (emailDto != null) {
                     log.info("Kuyruktan mail alındı: {}", emailDto.getTo());
-                    emailService.sendPasswordMail(emailDto.getTo(), emailDto.getContent());
+                    emailService.sendMail(
+                            emailDto.getTo(),
+                            emailDto.getSubject(),
+                            emailDto.getContent());
                 }
             } catch (Exception e) {
                 if (active) {

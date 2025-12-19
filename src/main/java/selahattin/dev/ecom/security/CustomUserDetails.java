@@ -1,7 +1,7 @@
 package selahattin.dev.ecom.security;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -9,7 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import selahattin.dev.ecom.entity.UserEntity;
+import selahattin.dev.ecom.entity.auth.UserEntity;
 
 @Getter
 @RequiredArgsConstructor
@@ -17,16 +17,19 @@ public class CustomUserDetails implements UserDetails {
 
     private final transient UserEntity user;
 
-    private String password;
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority(user.getRole().name()));
+        // UserEntity içindeki RoleEntity setini gezip Spring Security'nin anlayacağı
+        // dile çeviriyorum
+        return user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
     }
 
     @Override
     public String getPassword() {
-        return password;
+        // OTP sisteminde password yoktur. Interface gereği null dönüyoruz.
+        return null;
     }
 
     @Override

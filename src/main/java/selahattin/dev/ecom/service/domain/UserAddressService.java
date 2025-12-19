@@ -10,14 +10,16 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.request.CreateAddressRequest;
 import selahattin.dev.ecom.dto.response.AddressResponse;
-import selahattin.dev.ecom.entity.AddressEntity;
-import selahattin.dev.ecom.entity.CityEntity;
-import selahattin.dev.ecom.entity.DistrictEntity;
-import selahattin.dev.ecom.entity.UserEntity;
+import selahattin.dev.ecom.entity.auth.UserEntity;
+import selahattin.dev.ecom.entity.location.AddressEntity;
+import selahattin.dev.ecom.entity.location.CityEntity;
+import selahattin.dev.ecom.entity.location.CountryEntity;
+import selahattin.dev.ecom.entity.location.DistrictEntity;
 import selahattin.dev.ecom.exception.auth.UnauthorizedException;
 import selahattin.dev.ecom.exception.user.ResourceNotFoundException;
 import selahattin.dev.ecom.repository.AddressRepository;
 import selahattin.dev.ecom.repository.CityRepository;
+import selahattin.dev.ecom.repository.CountryRepository;
 import selahattin.dev.ecom.repository.DistrictRepository;
 
 @Service
@@ -26,22 +28,22 @@ public class UserAddressService {
 
     private final UserService userService;
     private final AddressRepository addressRepository;
+    private final CountryRepository countryRepository;
     private final CityRepository cityRepository;
     private final DistrictRepository districtRepository;
 
     public List<AddressResponse> getMyAddresses() {
         UserEntity currentUser = userService.getCurrentUser();
-
         List<AddressEntity> addresses = addressRepository.findAllByUserId(currentUser.getId());
-
-        return addresses.stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return addresses.stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Transactional
     public AddressResponse createAddress(CreateAddressRequest request) {
         UserEntity currentUser = userService.getCurrentUser();
+
+        CountryEntity country = countryRepository.findById(request.getCountryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Ülke bulunamadı"));
 
         CityEntity city = cityRepository.findById(request.getCityId())
                 .orElseThrow(() -> new ResourceNotFoundException("Şehir bulunamadı"));
@@ -49,7 +51,6 @@ public class UserAddressService {
         DistrictEntity district = districtRepository.findById(request.getDistrictId())
                 .orElseThrow(() -> new ResourceNotFoundException("İlçe bulunamadı"));
 
-        // İlçe o şehre mi ait kontrolü (Validasyon)
         if (!district.getCity().getId().equals(city.getId())) {
             throw new IllegalArgumentException("Seçilen ilçe, seçilen şehre ait değil!");
         }
@@ -57,10 +58,12 @@ public class UserAddressService {
         AddressEntity address = AddressEntity.builder()
                 .user(currentUser)
                 .title(request.getTitle())
+                .country(country)
                 .city(city)
                 .district(district)
                 .neighborhood(request.getNeighborhood())
                 .fullAddress(request.getFullAddress())
+                .postalCode(request.getZipCode())
                 .contactName(request.getContactName())
                 .contactPhone(request.getContactPhone())
                 .build();
@@ -75,7 +78,6 @@ public class UserAddressService {
         AddressEntity address = addressRepository.findById(addressId)
                 .orElseThrow(() -> new ResourceNotFoundException("Adres bulunamadı"));
 
-        // Başkasının adresini silemesin! (Güvenlik)
         if (!address.getUser().getId().equals(currentUser.getId())) {
             throw new UnauthorizedException("Bu adresi silmeye yetkiniz yok.");
         }
@@ -83,7 +85,63 @@ public class UserAddressService {
         addressRepository.delete(address);
     }
 
-    // Entity -> DTO Çevirici
+    @Transactional
+    public AddressResponse updateAddress(UUID addressId, CreateAddressRequest request) {
+        UserEntity currentUser = userService.getCurrentUser();
+        AddressEntity address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new ResourceNotFoundException("Adres bulunamadı"));
+
+        if (!address.getUser().getId().equals(currentUser.getId())) {
+            throw new UnauthorizedException("Bu adresi güncellemeye yetkiniz yok.");
+        }
+
+        // Country update eklendi
+        if (!address.getCountry().getId().equals(request.getCountryId())) {
+            CountryEntity country = countryRepository.findById(request.getCountryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Ülke bulunamadı"));
+            address.setCountry(country);
+        }
+
+        boolean cityChanged = !address.getCity().getId().equals(request.getCityId());
+        boolean districtChanged = !address.getDistrict().getId().equals(request.getDistrictId());
+
+        if (cityChanged || districtChanged) {
+            CityEntity city = cityRepository.findById(request.getCityId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Şehir bulunamadı"));
+
+            DistrictEntity district = districtRepository.findById(request.getDistrictId())
+                    .orElseThrow(() -> new ResourceNotFoundException("İlçe bulunamadı"));
+
+            if (!district.getCity().getId().equals(city.getId())) {
+                throw new IllegalArgumentException("Seçilen ilçe, seçilen şehre ait değil!");
+            }
+
+            address.setCity(city);
+            address.setDistrict(district);
+        }
+
+        address.setTitle(request.getTitle());
+        address.setNeighborhood(request.getNeighborhood());
+        address.setFullAddress(request.getFullAddress());
+        address.setContactName(request.getContactName());
+        address.setContactPhone(request.getContactPhone());
+        address.setPostalCode(request.getZipCode());
+
+        AddressEntity updatedAddress = addressRepository.save(address);
+        return mapToResponse(updatedAddress);
+    }
+
+    public AddressResponse getAddress(UUID addressId) {
+        UserEntity currentUser = userService.getCurrentUser();
+        AddressEntity address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new ResourceNotFoundException("Adres bulunamadı"));
+
+        if (!address.getUser().getId().equals(currentUser.getId())) {
+            throw new UnauthorizedException("Bu adresi görmeye yetkiniz yok.");
+        }
+        return mapToResponse(address);
+    }
+
     private AddressResponse mapToResponse(AddressEntity entity) {
         return AddressResponse.builder()
                 .id(entity.getId())

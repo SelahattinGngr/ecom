@@ -1,56 +1,124 @@
-@url = http://localhost:5353/api/v1/auth
+@baseUrl = http://localhost:5353/api/v1
+@authUrl = {{baseUrl}}/auth
+@userUrl = {{baseUrl}}/users
+@locationUrl = {{baseUrl}}/locations
 
-###
-POST {{url}}/public/signin HTTP/1.1
-Content-Type: application/json
-
-{
-    "email": "selahattin_gungor53@hotmail.com"
-}
-
-### verify-login-otp
-POST {{url}}/public/signin-verify HTTP/1.1
-Content-Type: application/json
-
-{
-  "email": "selahattin_gungor53@hotmail.com",
-  "password": "416729"
-}
+# --- AUTHENTICATION ---
 
 ### signup
-POST {{url}}/public/signup HTTP/1.1
+POST {{authUrl}}/public/signup HTTP/1.1
 Content-Type: application/json
 
 {
-  "email": "selahattin_gungor53@hotmail.com",
+  "email": "selahattingungor53@hotmail.com",
   "firstName": "selahattin",
   "lastName": "gungor"
 }
 
-### verify-signup
-POST {{url}}/public/signup-verify HTTP/1.1
-Content-Type: application/json
-
-{
-  "token": "ec2fd34c-3e1f-46ce-aceb-6abfa781a016"
-}
-
-### /public/resend-verification-email
-POST {{url}}/public/resend-verification-email HTTP/1.1
+### resend-verification-email
+POST {{authUrl}}/public/resend-verification-email HTTP/1.1
 Content-Type: application/json
 
 {
   "email": "selahattin_gungor53@hotmail.com"
 }
 
+### verify-signup
+POST {{authUrl}}/public/signup-verify HTTP/1.1
+Content-Type: application/json
+
+{
+  "token": "8bef0a35-473f-4a40-afd3-f5c9ad935c89"
+}
+
+### signin
+POST {{authUrl}}/public/signin HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "selahattin_gungor53@hotmail.com"
+}
+
+### resend-login-otp
+POST {{authUrl}}/public/resend-otp HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "selahattin_gungor53@hotmail.com"
+}
+
+### verify-login-otp
+POST {{authUrl}}/public/signin-verify HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "selahattin_gungor53@hotmail.com",
+  "code": "277726"
+}
+
 ### signout
-POST {{url}}/signout HTTP/1.1
+POST {{authUrl}}/signout HTTP/1.1
 
 ### refresh-token
-POST {{url}}/refresh-token HTTP/1.1
+POST {{authUrl}}/refresh-token HTTP/1.1
+
+# --- USER PROFILE ---
 
 ### get-current-user
-GET http://localhost:5353/api/v1/users/me HTTP/1.1
+GET {{userUrl}}/me HTTP/1.1
+
+### update-current-user
+PUT {{userUrl}}/me HTTP/1.1
+Content-Type: application/json
+
+{
+  "firstName": "selahattin",
+  "lastName": "gungor",
+  "phoneNumber": "5551234567"
+}
+
+# --- ADDRESS MANAGEMENT ---
+
+### add-address
+POST {{userUrl}}/addresses HTTP/1.1
+Content-Type: application/json
+
+{
+  "street": "123 Main St",
+  "city": "Anytown",
+  "state": "CA",
+  "zipCode": "12345",
+  "country": "USA"
+}
+
+### addresses
+GET {{userUrl}}/addresses HTTP/1.1
+
+### get-address-by-id
+GET {{userUrl}}/addresses/1 HTTP/1.1
+
+### update-address
+PUT {{userUrl}}/addresses/1 HTTP/1.1
+Content-Type: application/json
+
+{
+  "street": "456 Elm St",
+  "city": "Othertown",
+  "state": "NY",
+  "zipCode": "67890",
+  "country": "USA"
+}
+
+### delete-address
+DELETE {{userUrl}}/addresses/1 HTTP/1.1
+
+# --- LOCATIONS (Public Data) ---
+
+### get-countries
+GET {{locationUrl}}/countries HTTP/1.1
 
 ### get-cities
-GET http://localhost:5353/api/v1/locations/cities HTTP/1.1
+GET {{locationUrl}}/cities/1 HTTP/1.1
+
+### get-districts
+GET {{locationUrl}}/districts/31 HTTP/1.1

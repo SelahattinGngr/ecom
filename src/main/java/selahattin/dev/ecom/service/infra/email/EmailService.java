@@ -14,11 +14,11 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
-    public void sendPasswordMail(String toEmail, String content) {
+    public void sendMail(String toEmail, String subject, String content) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(toEmail);
-            message.setSubject("Tek Kullanımlık Giriş Şifreniz");
+            message.setSubject(subject);
             message.setText(content);
 
             mailSender.send(message);

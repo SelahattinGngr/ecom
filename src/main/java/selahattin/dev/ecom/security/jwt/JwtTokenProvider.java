@@ -1,10 +1,14 @@
 package selahattin.dev.ecom.security.jwt;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +19,8 @@ import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.config.properties.JwtProperties;
-import selahattin.dev.ecom.entity.UserEntity;
+import selahattin.dev.ecom.dto.infra.TokenDto;
+import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.security.CustomUserDetails;
 
 @Slf4j
@@ -40,22 +45,26 @@ public class JwtTokenProvider {
         long expiration = jwtProperties.getAccessTokenExpirationMs();
         UserEntity user = userDetails.getUser();
 
-        String role = userDetails.getAuthorities().isEmpty()
-                ? "USER"
-                : userDetails.getAuthorities().iterator().next().getAuthority();
+        // Rolleri String listesine çevir
+        List<String> roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList());
 
         String uid = user.getId().toString();
         String firstName = user.getFirstName();
         String lastName = user.getLastName();
+        String phoneNumber = user.getPhoneNumber();
 
-        return generateToken(
-                userDetails.getUsername(),
-                role,
-                uid,
-                firstName,
-                lastName,
-                expiration,
-                getAccessSigningKey());
+        return generateToken(TokenDto.builder()
+                .subject(userDetails.getUsername())
+                .roles(roles)
+                .uid(uid)
+                .firstName(firstName)
+                .lastName(lastName)
+                .phoneNumber(phoneNumber)
+                .expirationMillis(expiration)
+                .key(getAccessSigningKey())
+                .build());
     }
 
     public String generateRefreshToken(UserDetails userDetails, String deviceId) {
@@ -70,24 +79,25 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    // Helper Metot (Payload Zenginleştirme)
-    private String generateToken(String subject, String role, String uid, String firstName, String lastName,
-            long expirationMillis, SecretKey key) {
+    // Helper Metot (Payload Doldurma)
+    private String generateToken(TokenDto tokenDto) {
         Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + expirationMillis);
+        Date expiryDate = new Date(now.getTime() + tokenDto.getExpirationMillis());
 
         var builder = Jwts.builder()
-                .subject(subject)
+                .subject(tokenDto.getSubject()) // email
                 .issuedAt(now)
                 .expiration(expiryDate)
-                .signWith(key, Jwts.SIG.HS256)
-                .claim("role", role)
-                .claim("uid", uid);
+                .signWith(tokenDto.getKey(), Jwts.SIG.HS256)
+                .claim("roles", tokenDto.getRoles()) // Rol Listesi
+                .claim("uid", tokenDto.getUid()); // User ID
 
-        if (firstName != null)
-            builder.claim("fn", firstName);
-        if (lastName != null)
-            builder.claim("ln", lastName);
+        if (tokenDto.getFirstName() != null)
+            builder.claim("fn", tokenDto.getFirstName());
+        if (tokenDto.getLastName() != null)
+            builder.claim("ln", tokenDto.getLastName());
+        if (tokenDto.getPhoneNumber() != null)
+            builder.claim("pn", tokenDto.getPhoneNumber());
 
         return builder.compact();
     }
@@ -122,13 +132,18 @@ public class JwtTokenProvider {
         return extractAllClaims(token, key).getSubject();
     }
 
-    public String extractRole(String token) {
+    public List<String> extractRoles(String token) {
         try {
             Claims claims = extractAllClaims(token, getAccessSigningKey());
-            String role = claims.get("role", String.class);
-            return (role == null) ? "USER" : role;
+            List<?> rawList = claims.get("roles", List.class);
+            if (rawList == null)
+                return Collections.emptyList();
+
+            return rawList.stream()
+                    .map(Object::toString)
+                    .collect(Collectors.toList());
         } catch (Exception e) {
-            return "USER";
+            return Collections.emptyList();
         }
     }
 
@@ -138,6 +153,10 @@ public class JwtTokenProvider {
 
     public String extractLastName(String token) {
         return extractClaim(token, "ln");
+    }
+
+    public String extractPhoneNumber(String token) {
+        return extractClaim(token, "pn");
     }
 
     public String extractUserId(String jwt) {
@@ -168,5 +187,11 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public class JwtTokenException extends RuntimeException {
+        public JwtTokenException(String message) {
+            super(message);
+        }
     }
 }

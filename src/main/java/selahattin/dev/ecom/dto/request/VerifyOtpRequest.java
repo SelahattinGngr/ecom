@@ -8,11 +8,11 @@ import lombok.Data;
 
 @Data
 @Validated
-public class SigninWithPassword {
+public class VerifyOtpRequest {
     @Email
     @NotBlank
     private String email;
 
-    @NotBlank
-    private String password;
+    @NotBlank(message = "Doğrulama kodu boş olamaz")
+    private String code;
 }

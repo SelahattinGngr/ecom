@@ -7,25 +7,31 @@ import lombok.Data;
 
 @Data
 public class CreateAddressRequest {
-    @NotBlank
+    @NotBlank(message = "Adres başlığı boş olamaz")
     private String title; // Ev, İş
 
-    @NotNull
+    @NotNull(message = "Ülke seçimi zorunludur")
+    private Integer countryId;
+
+    @NotNull(message = "Şehir seçimi zorunludur")
     private Integer cityId;
 
-    @NotNull
+    @NotNull(message = "İlçe seçimi zorunludur")
     private Integer districtId;
 
-    @NotBlank
+    @NotBlank(message = "Posta kodu boş olamaz")
+    private String zipCode;
+
+    @NotBlank(message = "Mahalle boş olamaz")
     private String neighborhood;
 
-    @NotBlank
+    @NotBlank(message = "Açık adres boş olamaz")
     private String fullAddress;
 
-    @NotBlank
-    private String contactName; // Kime teslim edilecek?
+    @NotBlank(message = "İletişim kurulacak kişi adı boş olamaz")
+    private String contactName;
 
     @NotBlank
-    @Pattern(regexp = "^\\+?[0 9]{10,15}$", message = "Geçersiz telefon formatı")
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "Geçersiz telefon formatı. Örn: 5551234567")
     private String contactPhone;
 }

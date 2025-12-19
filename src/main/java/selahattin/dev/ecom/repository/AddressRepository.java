@@ -5,7 +5,7 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import selahattin.dev.ecom.entity.AddressEntity;
+import selahattin.dev.ecom.entity.location.AddressEntity;
 
 public interface AddressRepository extends JpaRepository<AddressEntity, UUID> {
     List<AddressEntity> findAllByUserId(UUID userId);

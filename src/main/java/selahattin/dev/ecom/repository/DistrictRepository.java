@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import selahattin.dev.ecom.entity.DistrictEntity;
+import selahattin.dev.ecom.entity.location.DistrictEntity;
 
 public interface DistrictRepository extends JpaRepository<DistrictEntity, Integer> {
     List<DistrictEntity> findAllByCityIdOrderByNameAsc(Integer cityId);

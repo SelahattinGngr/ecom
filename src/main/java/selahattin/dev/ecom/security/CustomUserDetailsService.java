@@ -6,7 +6,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import selahattin.dev.ecom.entity.UserEntity;
+import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.repository.UserRepository;
 
 @Service
@@ -17,7 +17,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         @Override
         public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-                UserEntity user = userRepository.findByEmail(email)
+                UserEntity user = userRepository.findByEmailAndDeletedAtIsNull(email)
                                 .orElseThrow(() -> new UsernameNotFoundException("Kullanıcı bulunamadı: " + email));
 
                 return new CustomUserDetails(user);

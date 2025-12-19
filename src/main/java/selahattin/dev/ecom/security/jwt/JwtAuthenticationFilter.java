@@ -1,11 +1,12 @@
 package selahattin.dev.ecom.security.jwt;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -17,10 +18,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import selahattin.dev.ecom.entity.UserEntity;
+import selahattin.dev.ecom.entity.auth.RoleEntity;
+import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.security.CustomUserDetails;
 import selahattin.dev.ecom.service.infra.CookieService;
-import selahattin.dev.ecom.utils.enums.Role;
 
 @Slf4j
 @Component
@@ -40,38 +41,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = cookieService.extractAccessToken(request);
             if (jwt != null && jwtTokenProvider.validateAccessToken(jwt)) {
 
+                // Token'dan tüm bilgileri sömürüyoruz
                 String email = jwtTokenProvider.extractUsername(jwt, true);
-                String roleString = jwtTokenProvider.extractRole(jwt);
+                List<String> roleNames = jwtTokenProvider.extractRoles(jwt);
                 String userId = jwtTokenProvider.extractUserId(jwt);
                 String firstName = jwtTokenProvider.extractFirstName(jwt);
                 String lastName = jwtTokenProvider.extractLastName(jwt);
+                String phoneNumber = jwtTokenProvider.extractPhoneNumber(jwt);
 
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
+                    // String Listesi -> RoleEntity Setine dönüşüm
+                    Set<RoleEntity> roleEntities = roleNames.stream()
+                            .map(roleName -> RoleEntity.builder().name(roleName).build())
+                            .collect(Collectors.toSet());
+
+                    // User nesnesini DB'ye sormadan, Token verileriyle dolduruyoruz
                     UserEntity partialUser = UserEntity.builder()
                             .id(UUID.fromString(userId))
                             .email(email)
-                            .role(Role.valueOf(roleString))
                             .firstName(firstName)
                             .lastName(lastName)
+                            .phoneNumber(phoneNumber)
+                            .roles(roleEntities)
                             .build();
 
+                    // Password olmadığı için sadece user entity veriyorum
                     CustomUserDetails userDetails = new CustomUserDetails(partialUser);
 
-                    SimpleGrantedAuthority authority = new SimpleGrantedAuthority(roleString);
-
+                    // Spring Security'e yetki veriyorum. Credentials (2. parametre) null çünkü
+                    // password yok.
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
-                            Collections.singleton(authority));
+                            userDetails.getAuthorities());
 
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
         } catch (Exception e) {
-            // Token bozuksa, süresi dolmuşsa veya parse hatası varsa logla ve geç.
-            // Context boş kalacağı için kullanıcı 401/403 alır.
             log.error("Authentication Filter Error: {}", e.getMessage());
         }
 
