@@ -27,9 +27,12 @@ public class CookieFactory {
     }
 
     private CookieDto createDto(CustomUserDetails user, String deviceId) {
-        String accessToken = jwtTokenProvider.generateAccessToken(user);
+        String accessToken = jwtTokenProvider.generateAccessToken(user.getUser().getEmail(),
+                user.getUser().getId().toString(),
+                user.getUser().getRoles().stream().map(r -> r.getName()).toList(),
+                deviceId);
 
-        String refreshToken = jwtTokenProvider.generateRefreshToken(user, deviceId);
+        String refreshToken = jwtTokenProvider.generateRefreshToken(user.getUsername(), deviceId);
 
         return CookieDto.builder()
                 .deviceId(deviceId)

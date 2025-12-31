@@ -6,22 +6,25 @@ import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_KEY_TEMPLAT
 import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_TOKEN_DURATION_HOURS;
 
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.config.properties.ClientProperties;
 import selahattin.dev.ecom.dto.infra.CookieDto;
 import selahattin.dev.ecom.dto.infra.EmailMessageDto;
 import selahattin.dev.ecom.dto.request.SigninRequest;
-import selahattin.dev.ecom.dto.request.VerifyOtpRequest; // DTO GÜNCELLENDİ
 import selahattin.dev.ecom.dto.request.SignupRequest;
 import selahattin.dev.ecom.dto.request.VerifyEmailRequest;
+import selahattin.dev.ecom.dto.request.VerifyOtpRequest;
 import selahattin.dev.ecom.dto.response.SigninResponse;
+import selahattin.dev.ecom.entity.auth.RoleEntity;
 import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.exception.auth.InvalidOtpException;
 import selahattin.dev.ecom.exception.auth.InvalidRefreshTokenException;
@@ -53,7 +56,6 @@ public class AuthService {
 		String otp = generateOtp();
 		UserEntity user = userService.findByEmail(signinRequest.getEmail());
 
-		// Redis Key: otp:user@mail.com -> 123456
 		saveToRedis(OTP_KEY_TEMPLATE + user.getEmail(), otp, OTP_DURATION_MINUTES, TimeUnit.MINUTES);
 
 		EmailMessageDto emailMessage = createEmailMessage(
@@ -64,7 +66,8 @@ public class AuthService {
 		redisQueueService.enqueueEmail(emailMessage);
 	}
 
-	public SigninResponse verifyLoginOtp(VerifyOtpRequest request, HttpServletResponse response) {
+	public SigninResponse verifyLoginOtp(VerifyOtpRequest request, HttpServletResponse response,
+			HttpServletRequest httpRequest) {
 		String email = request.getEmail();
 		String inputOtp = request.getCode();
 
@@ -73,7 +76,11 @@ public class AuthService {
 		UserEntity user = userService.findByEmail(email);
 		deleteFromRedis(OTP_KEY_TEMPLATE + email);
 
-		return generateTokensAndReturnResponse(user, response);
+		// IP ve UA çekiyoruz
+		String ip = getClientIp(httpRequest);
+		String ua = getUserAgent(httpRequest);
+
+		return generateTokensAndReturnResponse(user, response, ip, ua);
 	}
 	/* --- --- */
 
@@ -145,13 +152,13 @@ public class AuthService {
 	/* --- --- */
 
 	/* --- Token Operations --- */
-	public void refreshToken(String refreshToken, HttpServletResponse response) {
+	public void refreshToken(String refreshToken, HttpServletResponse response, HttpServletRequest httpRequest) {
 		if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
 			throw new InvalidRefreshTokenException("Geçersiz Refresh Token.");
 		}
 
 		String email = jwtTokenProvider.extractUsername(refreshToken, false);
-		String deviceId = jwtTokenProvider.extractDeviceId(refreshToken);
+		String deviceId = jwtTokenProvider.extractDeviceId(refreshToken, false);
 
 		if (deviceId == null) {
 			throw new NotfoundDeviceException("Token içinde Cihaz bilgisi bulunamadı.");
@@ -163,7 +170,10 @@ public class AuthService {
 
 		UserEntity user = userService.findByEmail(email);
 
-		generateTokensAndReturnResponse(user, deviceId, response);
+		String ip = getClientIp(httpRequest);
+		String ua = getUserAgent(httpRequest);
+
+		generateTokensAndReturnResponse(user, deviceId, response, ip, ua);
 	}
 	/* --- --- */
 
@@ -174,32 +184,42 @@ public class AuthService {
 		return String.format("%06d", new SecureRandom().nextInt(1000000));
 	}
 
-	private SigninResponse generateTokensAndReturnResponse(UserEntity user, HttpServletResponse response) {
+	private SigninResponse generateTokensAndReturnResponse(UserEntity user, HttpServletResponse response, String ip,
+			String ua) {
 		String deviceId = UUID.randomUUID().toString();
-		return generateTokensAndReturnResponse(user, deviceId, response);
+		return generateTokensAndReturnResponse(user, deviceId, response, ip, ua);
 	}
 
 	private SigninResponse generateTokensAndReturnResponse(UserEntity user, String deviceId,
-			HttpServletResponse response) {
+			HttpServletResponse response, String ipAddress, String userAgent) {
 
-		// Password olmadığı için userDetails'i user entity üzerinden manuel
-		// oluşturuyoruz
+		List<String> roles = user.getRoles().stream().map(RoleEntity::getName).toList();
 		CustomUserDetails userDetails = new CustomUserDetails(user);
-
-		// Cookie Factory tokenları generate eder (JwtTokenProvider kullanır)
 		CookieDto cookieDto = cookieFactory.create(userDetails, deviceId);
 
-		// Redis'e hashleyerek sakla
-		tokenService.storeToken(user.getEmail(), cookieDto);
+		tokenService.storeSession(user, cookieDto, ipAddress, userAgent);
 
-		// Response'a cookie bas
 		cookieService.createCookies(cookieDto, response);
 
 		return SigninResponse.builder()
 				.email(user.getEmail())
-				.roles(jwtTokenProvider.extractRoles(cookieDto.getAccessToken()))
+				.roles(roles)
 				.build();
 	}
+
+	private String getClientIp(HttpServletRequest request) {
+		String xfHeader = request.getHeader("X-Forwarded-For");
+		if (xfHeader == null) {
+			return request.getRemoteAddr();
+		}
+		return xfHeader.split(",")[0];
+	}
+
+	private String getUserAgent(HttpServletRequest request) {
+		String ua = request.getHeader("User-Agent");
+		return ua != null ? ua : "Unknown";
+	}
+	// ------------------------------
 
 	/* Redis Helpers */
 	private void saveToRedis(String key, Object value, long duration, TimeUnit unit) {

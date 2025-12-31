@@ -1,6 +1,7 @@
 package selahattin.dev.ecom.security.jwt;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -18,10 +19,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import selahattin.dev.ecom.dto.infra.SessionPayload;
+import selahattin.dev.ecom.entity.auth.PermissionEntity;
 import selahattin.dev.ecom.entity.auth.RoleEntity;
 import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.security.CustomUserDetails;
 import selahattin.dev.ecom.service.infra.CookieService;
+import selahattin.dev.ecom.service.infra.RoleCacheService;
+import selahattin.dev.ecom.service.infra.TokenService;
 
 @Slf4j
 @Component
@@ -30,60 +35,65 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CookieService cookieService;
+    private final RoleCacheService roleCacheService;
+    private final TokenService tokenService;
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain) throws ServletException, IOException {
-
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
         try {
             String jwt = cookieService.extractAccessToken(request);
+
             if (jwt != null && jwtTokenProvider.validateAccessToken(jwt)) {
 
-                // Token'dan tüm bilgileri sömürüyoruz
                 String email = jwtTokenProvider.extractUsername(jwt, true);
-                List<String> roleNames = jwtTokenProvider.extractRoles(jwt);
-                String userId = jwtTokenProvider.extractUserId(jwt);
-                String firstName = jwtTokenProvider.extractFirstName(jwt);
-                String lastName = jwtTokenProvider.extractLastName(jwt);
-                String phoneNumber = jwtTokenProvider.extractPhoneNumber(jwt);
+                String deviceId = jwtTokenProvider.extractDeviceId(jwt, true);
 
-                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                if (email != null && deviceId != null
+                        && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                    // String Listesi -> RoleEntity Setine dönüşüm
-                    Set<RoleEntity> roleEntities = roleNames.stream()
-                            .map(roleName -> RoleEntity.builder().name(roleName).build())
-                            .collect(Collectors.toSet());
+                    // KULLANICI DETAYLARINI REDIS'TEN ÇEK (TokenService üzerinden)
+                    SessionPayload session = tokenService.getSession(email, deviceId);
 
-                    // User nesnesini DB'ye sormadan, Token verileriyle dolduruyoruz
-                    UserEntity partialUser = UserEntity.builder()
-                            .id(UUID.fromString(userId))
-                            .email(email)
-                            .firstName(firstName)
-                            .lastName(lastName)
-                            .phoneNumber(phoneNumber)
-                            .roles(roleEntities)
-                            .build();
+                    if (session != null) {
+                        // Yetkileri belirle
+                        Set<RoleEntity> roleEntities = session.getRoleNames().stream()
+                                .map(roleName -> {
+                                    List<String> permissions = roleCacheService.getPermissionsForRole(roleName);
+                                    Set<PermissionEntity> perms = (permissions == null) ? Collections.emptySet()
+                                            : permissions.stream().map(p -> PermissionEntity.builder().name(p).build())
+                                                    .collect(Collectors.toSet());
 
-                    // Password olmadığı için sadece user entity veriyorum
-                    CustomUserDetails userDetails = new CustomUserDetails(partialUser);
+                                    return RoleEntity.builder().name(roleName).permissions(perms).build();
+                                })
+                                .collect(Collectors.toSet());
 
-                    // Spring Security'e yetki veriyorum. Credentials (2. parametre) null çünkü
-                    // password yok.
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities());
+                        // UserEntity Oluştur (Redis verisiyle)
+                        UserEntity partialUser = UserEntity.builder()
+                                .id(UUID.fromString(session.getUserId()))
+                                .email(session.getEmail())
+                                .firstName(session.getFirstName())
+                                .lastName(session.getLastName())
+                                .phoneNumber(session.getPhoneNumber())
+                                .roles(roleEntities)
+                                .build();
 
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                        CustomUserDetails userDetails = new CustomUserDetails(partialUser);
+
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    } else {
+                        // Token geçerli ama Redis oturumu silinmiş (Örn: Admin banlamış)
+                        log.warn("Redis oturumu bulunamadı: {}", email);
+                    }
                 }
             }
         } catch (Exception e) {
-            log.error("Authentication Filter Error: {}", e.getMessage());
+            log.error("Auth Filter Hatası: {}", e.getMessage());
         }
-
         filterChain.doFilter(request, response);
     }
 }

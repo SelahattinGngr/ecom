@@ -7,13 +7,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.request.SigninRequest;
-import selahattin.dev.ecom.dto.request.VerifyOtpRequest; // Yeni DTO
 import selahattin.dev.ecom.dto.request.SignupRequest;
 import selahattin.dev.ecom.dto.request.VerifyEmailRequest;
+import selahattin.dev.ecom.dto.request.VerifyOtpRequest;
 import selahattin.dev.ecom.dto.response.SigninResponse;
 import selahattin.dev.ecom.response.ApiResponse;
 import selahattin.dev.ecom.service.domain.AuthService;
@@ -44,9 +45,11 @@ public class AuthController {
 	// Adım 2: Kullanıcı mail + kodu girer, Token alır.
 	@PostMapping("/public/signin-verify")
 	public ResponseEntity<ApiResponse<SigninResponse>> verifyLoginOtp(HttpServletResponse response,
-			@Valid @RequestBody VerifyOtpRequest verifyRequest) { // DTO değişti
+			HttpServletRequest request,
+			@Valid @RequestBody VerifyOtpRequest verifyRequest) {
 		return ResponseEntity
-				.ok(ApiResponse.success("Giriş Başarılı", authService.verifyLoginOtp(verifyRequest, response)));
+				.ok(ApiResponse.success("Giriş Başarılı",
+						authService.verifyLoginOtp(verifyRequest, response, request)));
 	}
 
 	// --- REGISTRATION ---
@@ -73,13 +76,13 @@ public class AuthController {
 				.ok(ApiResponse.success("Doğrulama e-postası tekrar gönderildi.", "VERIFICATION_EMAIL_RESENT"));
 	}
 
-	@PostMapping("/refresh-token")
+	@PostMapping("/public/refresh-token")
 	public ResponseEntity<ApiResponse<String>> refreshToken(
 			@CookieValue(required = false) String refreshToken,
 			@CookieValue(required = false) String deviceId,
-			HttpServletResponse response) {
+			HttpServletResponse response, HttpServletRequest request) {
 
-		authService.refreshToken(refreshToken, response);
+		authService.refreshToken(refreshToken, response, request);
 		return ResponseEntity.ok(ApiResponse.success("Token yenilendi.", "TOKEN_REFRESHED"));
 	}
 

@@ -63,10 +63,6 @@ CREATE TABLE IF NOT EXISTS roles
     created_at  TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO roles (name, description, is_system)
-VALUES ('admin', 'Admin role', TRUE),
-       ('customer', 'Customer role', TRUE);
-
 CREATE TABLE IF NOT EXISTS permissions
 (
     id          UUID PRIMARY KEY     DEFAULT gen_random_uuid(),

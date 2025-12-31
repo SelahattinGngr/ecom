@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.entity.auth.UserEntity;
-import selahattin.dev.ecom.repository.UserRepository;
+import selahattin.dev.ecom.repository.auth.UserRepository;
 
 @Service
 @RequiredArgsConstructor

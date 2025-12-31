@@ -4,7 +4,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,26 +11,32 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.request.SignupRequest;
 import selahattin.dev.ecom.dto.request.UpdateProfileRequest;
 import selahattin.dev.ecom.dto.response.CurrentUserResponse;
+import selahattin.dev.ecom.dto.response.SessionResponse;
 import selahattin.dev.ecom.entity.auth.RoleEntity;
 import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.exception.auth.AuthenticationContextException;
 import selahattin.dev.ecom.exception.user.ResourceNotFoundException;
 import selahattin.dev.ecom.exception.user.UserAlreadyExistsException;
-import selahattin.dev.ecom.repository.RoleRepository;
-import selahattin.dev.ecom.repository.UserRepository;
+import selahattin.dev.ecom.repository.auth.RoleRepository;
+import selahattin.dev.ecom.repository.auth.UserRepository;
 import selahattin.dev.ecom.security.CustomUserDetails;
+import selahattin.dev.ecom.service.infra.CookieService;
+import selahattin.dev.ecom.service.infra.TokenService;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
+    private final TokenService tokenService;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-
+    private final CookieService cookieService;
+    private final HttpServletRequest request;
     // --- AUTHENTICATION FLOW METHODS ---
 
     @Transactional
@@ -49,7 +54,7 @@ public class UserService {
                 .email(signupRequest.getEmail())
                 .firstName(signupRequest.getFirstName())
                 .lastName(signupRequest.getLastName())
-                .phoneNumber("") // İlk etapta boş
+                .phoneNumber("")
                 .roles(Set.of(customerRole))
                 .build();
 
@@ -102,18 +107,37 @@ public class UserService {
         return mapToResponse(savedUser);
     }
 
+    // --- SESSION METHODS ---
+
+    public List<SessionResponse> getCurrentUserSessions() {
+        UserEntity currentUser = getCurrentUser();
+        String currentDeviceId = cookieService.extractDeviceId(request);
+
+        return tokenService.getUserSessions(currentUser.getEmail(), currentDeviceId);
+    }
+
+    public void deleteCurrentUserSession(String deviceId) {
+        UserEntity currentUser = getCurrentUser();
+        tokenService.deleteToken(currentUser.getEmail(), deviceId);
+    }
+
+    public void deleteAllCurrentUserSessions() {
+        UserEntity currentUser = getCurrentUser();
+        tokenService.deleteAllTokens(currentUser.getEmail());
+    }
+
     // --- HELPER METHODS ---
 
     private CurrentUserResponse mapToResponse(UserEntity user) {
         List<String> roles = user.getRoles().stream()
                 .map(RoleEntity::getName)
-                .collect(Collectors.toList());
+                .toList();
 
         return CurrentUserResponse.builder()
                 .email(user.getEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .roles(roles) // Liste
+                .roles(roles)
                 .phoneNumber(user.getPhoneNumber())
                 .build();
     }
@@ -138,4 +162,5 @@ public class UserService {
 
         throw new AuthenticationContextException("Kullanıcı kimliği doğrulanamadı.");
     }
+
 }

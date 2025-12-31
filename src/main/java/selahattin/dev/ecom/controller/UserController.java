@@ -6,9 +6,9 @@ import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,6 +19,7 @@ import selahattin.dev.ecom.dto.request.CreateAddressRequest;
 import selahattin.dev.ecom.dto.request.UpdateProfileRequest;
 import selahattin.dev.ecom.dto.response.AddressResponse;
 import selahattin.dev.ecom.dto.response.CurrentUserResponse;
+import selahattin.dev.ecom.dto.response.SessionResponse;
 import selahattin.dev.ecom.response.ApiResponse;
 import selahattin.dev.ecom.service.domain.UserAddressService;
 import selahattin.dev.ecom.service.domain.UserService;
@@ -40,7 +41,7 @@ public class UserController {
                 .ok(ApiResponse.success("Kullanıcı bilgileri alındı.", userService.getCurrentUserInfo()));
     }
 
-    @PutMapping("/me")
+    @PatchMapping("/me")
     public ResponseEntity<ApiResponse<CurrentUserResponse>> updateProfile(
             @Valid @RequestBody UpdateProfileRequest request) {
         return ResponseEntity
@@ -63,7 +64,7 @@ public class UserController {
                 .ok(ApiResponse.success("Adres bilgileri alındı.", userAddressService.getAddress(addressId)));
     }
 
-    @PutMapping("/addresses/{addressId}")
+    @PatchMapping("/addresses/{addressId}")
     public ResponseEntity<ApiResponse<AddressResponse>> updateAddress(
             @PathVariable UUID addressId,
             @Valid @RequestBody CreateAddressRequest request) {
@@ -84,4 +85,25 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.success("Adres silindi."));
     }
 
+    /**
+     * Session APIs
+     */
+
+    @GetMapping("/me/sessions")
+    public ResponseEntity<ApiResponse<List<SessionResponse>>> getMySessions() {
+        return ResponseEntity
+                .ok(ApiResponse.success("Oturumlar listelendi.", userService.getCurrentUserSessions()));
+    }
+
+    @DeleteMapping("/me/sessions/{deviceId}")
+    public ResponseEntity<ApiResponse<Void>> deleteMySession(@PathVariable String deviceId) {
+        userService.deleteCurrentUserSession(deviceId);
+        return ResponseEntity.ok(ApiResponse.success("Oturum sonlandırıldı."));
+    }
+
+    @DeleteMapping("/me/sessions")
+    public ResponseEntity<ApiResponse<Void>> deleteAllMySessions() {
+        userService.deleteAllCurrentUserSessions();
+        return ResponseEntity.ok(ApiResponse.success("Tüm oturumlar sonlandırıldı."));
+    }
 }

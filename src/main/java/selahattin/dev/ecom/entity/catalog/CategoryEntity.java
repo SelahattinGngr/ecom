@@ -45,10 +45,10 @@ public class CategoryEntity {
     private CategoryEntity parent;
 
     @OneToMany(mappedBy = "parent")
-    private List<CategoryEntity> subCategories;
+    private List<CategoryEntity> subCategories; // Alt kategoriler
 
     @Column(name = "image_url")
-    private String imageUrl;
+    private String imageUrl; // Gelecekte kategori resmi için. Şimdilik yok.
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

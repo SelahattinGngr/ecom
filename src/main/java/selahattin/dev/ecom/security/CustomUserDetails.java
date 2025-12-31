@@ -1,7 +1,8 @@
 package selahattin.dev.ecom.security;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.stream.Collectors;
+import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -9,6 +10,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.entity.auth.PermissionEntity;
+import selahattin.dev.ecom.entity.auth.RoleEntity;
 import selahattin.dev.ecom.entity.auth.UserEntity;
 
 @Getter
@@ -17,19 +20,29 @@ public class CustomUserDetails implements UserDetails {
 
     private final transient UserEntity user;
 
+    // TODO: Token içeriği değiştirilecek, her istekte redisten çekilecek, rol
+    // sistemi düzeltilecek.
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // UserEntity içindeki RoleEntity setini gezip Spring Security'nin anlayacağı
-        // dile çeviriyorum
-        return user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
-                .collect(Collectors.toList());
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        for (RoleEntity role : user.getRoles()) {
+            // 1. Rolün kendisini ekle (Örn: ROLE_developer)
+            // Spring Security standartlarına uymak için ROLE_ prefix ekliyoruz.
+            authorities.add(new SimpleGrantedAuthority(role.getName()));
+
+            // 2. Rolün İzinlerini (Permissions) ekle (Örn: product:create)
+            if (role.getPermissions() != null) {
+                for (PermissionEntity permission : role.getPermissions()) {
+                    authorities.add(new SimpleGrantedAuthority(permission.getName()));
+                }
+            }
+        }
+        return authorities;
     }
 
     @Override
     public String getPassword() {
-        // OTP sisteminde password yoktur. Interface gereği null dönüyoruz.
-        return null;
+        return null; // OTP kullandığın için null
     }
 
     @Override

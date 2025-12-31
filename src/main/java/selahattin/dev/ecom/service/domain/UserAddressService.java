@@ -17,10 +17,10 @@ import selahattin.dev.ecom.entity.location.CountryEntity;
 import selahattin.dev.ecom.entity.location.DistrictEntity;
 import selahattin.dev.ecom.exception.auth.UnauthorizedException;
 import selahattin.dev.ecom.exception.user.ResourceNotFoundException;
-import selahattin.dev.ecom.repository.AddressRepository;
-import selahattin.dev.ecom.repository.CityRepository;
-import selahattin.dev.ecom.repository.CountryRepository;
-import selahattin.dev.ecom.repository.DistrictRepository;
+import selahattin.dev.ecom.repository.location.AddressRepository;
+import selahattin.dev.ecom.repository.location.CityRepository;
+import selahattin.dev.ecom.repository.location.CountryRepository;
+import selahattin.dev.ecom.repository.location.DistrictRepository;
 
 @Service
 @RequiredArgsConstructor

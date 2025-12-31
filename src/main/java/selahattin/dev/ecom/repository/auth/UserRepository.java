@@ -1,4 +1,4 @@
-package selahattin.dev.ecom.repository;
+package selahattin.dev.ecom.repository.auth;
 
 import java.util.Optional;
 import java.util.UUID;
