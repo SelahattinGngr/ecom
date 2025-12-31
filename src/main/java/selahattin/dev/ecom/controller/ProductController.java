@@ -21,6 +21,7 @@ public class ProductController {
 
     private final ProductService productService;
 
+    // TODO product variant için size ve color eklenecek
     @GetMapping
     public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProducts(
             @RequestParam(required = false) String query,

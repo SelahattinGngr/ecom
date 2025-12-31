@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class FileStorageService {
 
-    private final Path rootLocation = Paths.get("uploads");
+    private final Path rootLocation = Paths.get("assets/public/products");
 
     public FileStorageService() {
         try {
@@ -27,7 +27,7 @@ public class FileStorageService {
         try {
             String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
             Files.copy(file.getInputStream(), this.rootLocation.resolve(fileName), StandardCopyOption.REPLACE_EXISTING);
-            return "/uploads/" + fileName; // client'e döneceğimiz URL
+            return "/assets/public/products/" + fileName; // client'e döneceğimiz URL
         } catch (Exception e) {
             throw new RuntimeException("Dosya yüklenemedi: " + e.getMessage());
         }

@@ -61,7 +61,7 @@ User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 
 {
   "email": "selahattin_gungor53@hotmail.com",
-  "code": "720249"
+  "code": "181790"
 }
 
 ### signout
@@ -163,14 +163,18 @@ GET {{categoryUrl}}/17 HTTP/1.1
 # --- PRODUCTS (Public) ---
 
 ### list-products (Tümünü Getir)
-GET {{productUrl}} HTTP/1.1
+GET {{productUrl}}?size=50 HTTP/1.1
 
 ### list-products-filter (Filtreleme Örneği)
 # categoryId=1 (Elektronik), query=laptop, minPrice=10000
-GET {{productUrl}}?categoryId=1&query=laptop&minPrice=10000&sort=basePrice,asc HTTP/1.1
+GET {{productUrl}}?categoryId=1&minPrice=450&sort=basePrice,asc HTTP/1.1
 
 ### get-product-by-slug
-GET {{productUrl}}/slug/mavi-gomlek HTTP/1.1
+GET {{productUrl}}/slug/mavi-gomlek-ca0b HTTP/1.1
+
+# --- GET PRODUCT IMAGES ---
+### get-product-image
+GET http://localhost:5353/assets/public/products/c2f49b45-96cf-46e6-ba8a-4ef5809bdfb5_test.png HTTP/1.1
 
 
 # --- ADMIN PRODUCTS (Role: Admin/Employee) ---
