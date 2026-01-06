@@ -8,11 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.dto.request.product.ProductFilterRequest;
 import selahattin.dev.ecom.dto.response.product.ProductResponse;
 import selahattin.dev.ecom.response.ApiResponse;
 import selahattin.dev.ecom.service.domain.ProductService;
-
-import java.math.BigDecimal;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,17 +20,14 @@ public class ProductController {
 
     private final ProductService productService;
 
-    // TODO product variant için size ve color eklenecek
     @GetMapping
     public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProducts(
-            @RequestParam(required = false) String query,
-            @RequestParam(required = false) Integer categoryId,
-            @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice,
-            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @ModelAttribute ProductFilterRequest filter,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC, size = 50) Pageable pageable) {
+
         return ResponseEntity.ok(ApiResponse.success(
                 "Ürünler listelendi",
-                productService.getProducts(query, categoryId, minPrice, maxPrice, pageable)));
+                productService.getProducts(filter, pageable)));
     }
 
     @GetMapping("/slug/{slug}")

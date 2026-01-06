@@ -12,4 +12,5 @@ import selahattin.dev.ecom.entity.auth.RoleEntity;
 public interface RoleRepository extends JpaRepository<RoleEntity, UUID> {
     Optional<RoleEntity> findByName(String name);
 
+    boolean existsByName(String name);
 }

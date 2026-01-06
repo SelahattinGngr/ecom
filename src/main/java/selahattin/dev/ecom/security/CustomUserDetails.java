@@ -20,14 +20,10 @@ public class CustomUserDetails implements UserDetails {
 
     private final transient UserEntity user;
 
-    // TODO: Token içeriği değiştirilecek, her istekte redisten çekilecek, rol
-    // sistemi düzeltilecek.
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (RoleEntity role : user.getRoles()) {
-            // 1. Rolün kendisini ekle (Örn: ROLE_developer)
-            // Spring Security standartlarına uymak için ROLE_ prefix ekliyoruz.
             authorities.add(new SimpleGrantedAuthority(role.getName()));
 
             // 2. Rolün İzinlerini (Permissions) ekle (Örn: product:create)

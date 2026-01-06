@@ -13,4 +13,6 @@ public interface CategoryRepository extends JpaRepository<CategoryEntity, Intege
     List<CategoryEntity> findAllByParentIsNullAndDeletedAtIsNull();
 
     public boolean existsByName(String name);
+
+    public boolean existsBySlug(String slug);
 }
