@@ -26,7 +26,7 @@ public class EcomApplication {
 	}
 
 	@Bean
-	@Profile("test")
+	@Profile("prod")
 	public CommandLineRunner createUsersForDev(UserRepository userRepository, RoleRepository roleRepository,
 			PermissionRepository permissionRepository, CategoryRepository categoryRepository,
 			ProductImageRepository productImageRepository, ProductRepository productRepository,
