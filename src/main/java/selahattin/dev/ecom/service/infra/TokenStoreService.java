@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.dto.infra.SessionPayload;
 import selahattin.dev.ecom.dto.response.SessionResponse;
+import selahattin.dev.ecom.exception.BusinessException;
+import selahattin.dev.ecom.exception.ErrorCode;
 
 @Slf4j
 @Service
@@ -50,8 +52,7 @@ public class TokenStoreService {
                     jsonValue,
                     Duration.ofMillis(expirationMillis));
         } catch (JsonProcessingException e) {
-            log.error("Session JSON serileştirme hatası", e);
-            throw new RuntimeException("Oturum kaydedilemedi.");
+            throw new BusinessException(ErrorCode.JSON_PROCESSING_ERROR, "Oturum verisi kaydedilemedi.");
         }
     }
 
@@ -67,7 +68,6 @@ public class TokenStoreService {
         try {
             return objectMapper.readValue(jsonValue, SessionPayload.class);
         } catch (JsonProcessingException e) {
-            log.error("Session JSON okuma hatası", e);
             return null;
         }
     }
@@ -148,7 +148,7 @@ public class TokenStoreService {
             byte[] encodedhash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(encodedhash);
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 hatası", e);
+            throw new BusinessException(ErrorCode.CRYPTO_ERROR, "Hashing algoritması bulunamadı.");
         }
     }
 

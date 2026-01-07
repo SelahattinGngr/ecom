@@ -13,7 +13,8 @@ import selahattin.dev.ecom.dto.request.category.CreateCategoryRequest;
 import selahattin.dev.ecom.dto.request.category.UpdateCategoryRequest;
 import selahattin.dev.ecom.dto.response.catalog.CategoryResponse;
 import selahattin.dev.ecom.entity.catalog.CategoryEntity;
-import selahattin.dev.ecom.exception.user.ResourceNotFoundException;
+import selahattin.dev.ecom.exception.BusinessException;
+import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.catalog.CategoryRepository;
 import selahattin.dev.ecom.utils.SlugUtils;
 
@@ -37,13 +38,13 @@ public class AdminCategoryService {
         String slug = SlugUtils.toSlug(request.getName());
 
         if (categoryRepository.existsBySlug(slug)) {
-            throw new IllegalArgumentException("Bu isimde bir kategori zaten var.");
+            throw new BusinessException(ErrorCode.DUPLICATE_CATEGORY_NAME);
         }
 
         CategoryEntity parent = null;
         if (request.getParentId() != null) {
             parent = categoryRepository.findById(request.getParentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Üst kategori bulunamadı"));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
         }
 
         CategoryEntity category = CategoryEntity.builder()
@@ -61,7 +62,7 @@ public class AdminCategoryService {
     @Transactional
     public CategoryResponse updateCategory(Integer id, UpdateCategoryRequest request) {
         CategoryEntity category = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Kategori bulunamadı"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
         if (StringUtils.hasText(request.getName())) {
             category.setName(request.getName());
@@ -75,10 +76,11 @@ public class AdminCategoryService {
 
         if (request.getParentId() != null) {
             if (request.getParentId().equals(category.getId())) {
-                throw new IllegalArgumentException("Kategori kendi kendisinin üst kategorisi olamaz.");
+                throw new BusinessException(ErrorCode.INVALID_REQUEST,
+                        "Kategori kendi kendisinin üst kategorisi olamaz.");
             }
             CategoryEntity parent = categoryRepository.findById(request.getParentId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Üst kategori bulunamadı"));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
             category.setParent(parent);
         }
 
@@ -89,8 +91,9 @@ public class AdminCategoryService {
     @Transactional
     public void deleteCategory(Integer id) {
         CategoryEntity category = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Kategori bulunamadı"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
+        // Eğer alt kategorileri varsa silinmesini engelleyebiliriz
         category.setDeletedAt(OffsetDateTime.now());
         categoryRepository.save(category);
     }

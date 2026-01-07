@@ -9,7 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.response.catalog.CategoryResponse;
 import selahattin.dev.ecom.entity.catalog.CategoryEntity;
-import selahattin.dev.ecom.exception.user.ResourceNotFoundException;
+import selahattin.dev.ecom.exception.BusinessException;
+import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.catalog.CategoryRepository;
 
 @Service
@@ -32,11 +33,11 @@ public class CategoryService {
 	@Transactional(readOnly = true)
 	public CategoryResponse getCategoryById(Integer id) {
 		CategoryEntity category = categoryRepository.findById(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Kategori bulunamadı."));
+				.orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
 		// Eğer silinmişse 404 ver (Soft delete kontrolü)
 		if (category.getDeletedAt() != null) {
-			throw new ResourceNotFoundException("Kategori bulunamadı.");
+			throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
 		}
 
 		return mapToResponse(category);

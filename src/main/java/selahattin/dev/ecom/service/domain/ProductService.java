@@ -22,7 +22,8 @@ import selahattin.dev.ecom.dto.response.product.ProductResponse;
 import selahattin.dev.ecom.dto.response.product.VariantResponse;
 import selahattin.dev.ecom.entity.catalog.ProductEntity;
 import selahattin.dev.ecom.entity.catalog.ProductVariantEntity;
-import selahattin.dev.ecom.exception.user.ResourceNotFoundException;
+import selahattin.dev.ecom.exception.BusinessException;
+import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.catalog.ProductRepository;
 
 @Service
@@ -129,7 +130,7 @@ public class ProductService {
 	@Transactional(readOnly = true)
 	public ProductResponse getProductBySlug(String slug) {
 		ProductEntity product = productRepository.findBySlugAndDeletedAtIsNull(slug)
-				.orElseThrow(() -> new ResourceNotFoundException("Ürün bulunamadı: " + slug));
+				.orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
 		// MAPPER'A 'TRUE' GÖNDERİYORUZ -> DETAY VAR
 		return mapToResponse(product, true);

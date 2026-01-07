@@ -18,4 +18,6 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     boolean existsByEmailAndDeletedAtIsNull(String email);
 
     boolean existsByPhoneNumberAndDeletedAtIsNull(String phoneNumber);
+
+    boolean existsByRoles_Id(UUID roleId);
 }

@@ -2,7 +2,6 @@ package selahattin.dev.ecom.service.domain;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,8 +14,8 @@ import selahattin.dev.ecom.entity.location.AddressEntity;
 import selahattin.dev.ecom.entity.location.CityEntity;
 import selahattin.dev.ecom.entity.location.CountryEntity;
 import selahattin.dev.ecom.entity.location.DistrictEntity;
-import selahattin.dev.ecom.exception.auth.UnauthorizedException;
-import selahattin.dev.ecom.exception.user.ResourceNotFoundException;
+import selahattin.dev.ecom.exception.BusinessException;
+import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.location.AddressRepository;
 import selahattin.dev.ecom.repository.location.CityRepository;
 import selahattin.dev.ecom.repository.location.CountryRepository;
@@ -35,7 +34,7 @@ public class UserAddressService {
     public List<AddressResponse> getMyAddresses() {
         UserEntity currentUser = userService.getCurrentUser();
         List<AddressEntity> addresses = addressRepository.findAllByUserId(currentUser.getId());
-        return addresses.stream().map(this::mapToResponse).collect(Collectors.toList());
+        return addresses.stream().map(this::mapToResponse).toList();
     }
 
     @Transactional
@@ -43,16 +42,16 @@ public class UserAddressService {
         UserEntity currentUser = userService.getCurrentUser();
 
         CountryEntity country = countryRepository.findById(request.getCountryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Ülke bulunamadı"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.COUNTRY_NOT_FOUND));
 
         CityEntity city = cityRepository.findById(request.getCityId())
-                .orElseThrow(() -> new ResourceNotFoundException("Şehir bulunamadı"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.CITY_NOT_FOUND));
 
         DistrictEntity district = districtRepository.findById(request.getDistrictId())
-                .orElseThrow(() -> new ResourceNotFoundException("İlçe bulunamadı"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.DISTRICT_NOT_FOUND));
 
         if (!district.getCity().getId().equals(city.getId())) {
-            throw new IllegalArgumentException("Seçilen ilçe, seçilen şehre ait değil!");
+            throw new BusinessException(ErrorCode.DISTRICT_CITY_MISMATCH);
         }
 
         AddressEntity address = AddressEntity.builder()
@@ -76,10 +75,10 @@ public class UserAddressService {
     public void deleteAddress(UUID addressId) {
         UserEntity currentUser = userService.getCurrentUser();
         AddressEntity address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Adres bulunamadı"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ADDRESS_NOT_FOUND));
 
         if (!address.getUser().getId().equals(currentUser.getId())) {
-            throw new UnauthorizedException("Bu adresi silmeye yetkiniz yok.");
+            throw new BusinessException(ErrorCode.ADDRESS_ACCESS_DENIED, "Bu adresi silmeye yetkiniz yok.");
         }
 
         addressRepository.delete(address);
@@ -89,16 +88,16 @@ public class UserAddressService {
     public AddressResponse updateAddress(UUID addressId, CreateAddressRequest request) {
         UserEntity currentUser = userService.getCurrentUser();
         AddressEntity address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Adres bulunamadı"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ADDRESS_NOT_FOUND));
 
         if (!address.getUser().getId().equals(currentUser.getId())) {
-            throw new UnauthorizedException("Bu adresi güncellemeye yetkiniz yok.");
+            throw new BusinessException(ErrorCode.ADDRESS_ACCESS_DENIED, "Bu adresi güncellemeye yetkiniz yok.");
         }
 
         // Country update eklendi
         if (!address.getCountry().getId().equals(request.getCountryId())) {
             CountryEntity country = countryRepository.findById(request.getCountryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Ülke bulunamadı"));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.COUNTRY_NOT_FOUND));
             address.setCountry(country);
         }
 
@@ -107,13 +106,13 @@ public class UserAddressService {
 
         if (cityChanged || districtChanged) {
             CityEntity city = cityRepository.findById(request.getCityId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Şehir bulunamadı"));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.CITY_NOT_FOUND));
 
             DistrictEntity district = districtRepository.findById(request.getDistrictId())
-                    .orElseThrow(() -> new ResourceNotFoundException("İlçe bulunamadı"));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.DISTRICT_NOT_FOUND));
 
             if (!district.getCity().getId().equals(city.getId())) {
-                throw new IllegalArgumentException("Seçilen ilçe, seçilen şehre ait değil!");
+                throw new BusinessException(ErrorCode.DISTRICT_CITY_MISMATCH);
             }
 
             address.setCity(city);
@@ -134,10 +133,10 @@ public class UserAddressService {
     public AddressResponse getAddress(UUID addressId) {
         UserEntity currentUser = userService.getCurrentUser();
         AddressEntity address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new ResourceNotFoundException("Adres bulunamadı"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ADDRESS_NOT_FOUND));
 
         if (!address.getUser().getId().equals(currentUser.getId())) {
-            throw new UnauthorizedException("Bu adresi görmeye yetkiniz yok.");
+            throw new BusinessException(ErrorCode.ADDRESS_ACCESS_DENIED);
         }
         return mapToResponse(address);
     }

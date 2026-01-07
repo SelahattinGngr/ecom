@@ -21,12 +21,13 @@ import selahattin.dev.ecom.entity.catalog.CategoryEntity;
 import selahattin.dev.ecom.entity.catalog.ProductEntity;
 import selahattin.dev.ecom.entity.catalog.ProductImageEntity;
 import selahattin.dev.ecom.entity.catalog.ProductVariantEntity;
-import selahattin.dev.ecom.exception.user.ResourceNotFoundException;
+import selahattin.dev.ecom.exception.BusinessException;
+import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.catalog.CategoryRepository;
 import selahattin.dev.ecom.repository.catalog.ProductImageRepository;
 import selahattin.dev.ecom.repository.catalog.ProductRepository;
 import selahattin.dev.ecom.repository.catalog.ProductVariantRepository;
-import selahattin.dev.ecom.service.infra.storage.FileStorageService;
+import selahattin.dev.ecom.service.infra.FileStorageService;
 import selahattin.dev.ecom.utils.SlugUtils;
 
 @Service
@@ -44,7 +45,7 @@ public class AdminProductsService {
     @Transactional
     public ProductResponse createProductWithImages(CreateProductRequest request, List<MultipartFile> images) {
         CategoryEntity category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Kategori bulunamadı"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
         String slug = SlugUtils.toSlug(request.getName());
         if (productRepository.existsBySlugAndDeletedAtIsNull(slug)) {
@@ -95,7 +96,7 @@ public class AdminProductsService {
 
         if (request.getCategoryId() != null) {
             CategoryEntity category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Kategori bulunamadı"));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
             product.setCategory(category);
         }
 
@@ -136,10 +137,10 @@ public class AdminProductsService {
     @Transactional
     public void deleteVariant(UUID productId, UUID variantId) {
         ProductVariantEntity variant = variantRepository.findById(variantId)
-                .orElseThrow(() -> new ResourceNotFoundException("Varyant bulunamadı"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.VARIANT_NOT_FOUND));
 
         if (!variant.getProduct().getId().equals(productId)) {
-            throw new IllegalArgumentException("Varyant bu ürüne ait değil");
+            throw new BusinessException(ErrorCode.VARIANT_MISMATCH);
         }
 
         variant.setDeletedAt(OffsetDateTime.now());
@@ -165,7 +166,7 @@ public class AdminProductsService {
     @Transactional
     public void deleteImage(UUID productId, UUID imageId) {
         ProductImageEntity image = imageRepository.findById(imageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Görsel bulunamadı"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
 
         image.setDeletedAt(OffsetDateTime.now());
         imageRepository.save(image);
@@ -175,7 +176,7 @@ public class AdminProductsService {
     private ProductEntity findProduct(UUID id) {
         return productRepository.findById(id)
                 .filter(p -> p.getDeletedAt() == null)
-                .orElseThrow(() -> new ResourceNotFoundException("Ürün bulunamadı"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
     }
 
     private ProductResponse mapToAdminResponse(ProductEntity product) {

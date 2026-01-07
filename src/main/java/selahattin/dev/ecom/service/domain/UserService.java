@@ -19,9 +19,8 @@ import selahattin.dev.ecom.dto.response.CurrentUserResponse;
 import selahattin.dev.ecom.dto.response.SessionResponse;
 import selahattin.dev.ecom.entity.auth.RoleEntity;
 import selahattin.dev.ecom.entity.auth.UserEntity;
-import selahattin.dev.ecom.exception.auth.AuthenticationContextException;
-import selahattin.dev.ecom.exception.user.ResourceNotFoundException;
-import selahattin.dev.ecom.exception.user.UserAlreadyExistsException;
+import selahattin.dev.ecom.exception.BusinessException;
+import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.auth.RoleRepository;
 import selahattin.dev.ecom.repository.auth.UserRepository;
 import selahattin.dev.ecom.security.CustomUserDetails;
@@ -44,11 +43,11 @@ public class UserService {
         // Sadece AKTİF kullanıcı var mı diye bakıyoruz.
         // Silinmiş kullanıcı varsa, yeni kayıt oluşturulmasına izin veriyoruz.
         if (userRepository.existsByEmailAndDeletedAtIsNull(signupRequest.getEmail())) {
-            throw new UserAlreadyExistsException(signupRequest.getEmail());
+            throw new BusinessException(ErrorCode.USER_ALREADY_EXISTS, signupRequest.getEmail());
         }
 
         RoleEntity customerRole = roleRepository.findByName("customer")
-                .orElseThrow(() -> new ResourceNotFoundException("Sistem rolü bulunamadı: customer"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
 
         UserEntity user = UserEntity.builder()
                 .email(signupRequest.getEmail())
@@ -70,7 +69,7 @@ public class UserService {
 
     public UserEntity findByEmail(String email) {
         return userRepository.findByEmailAndDeletedAtIsNull(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Kullanıcı bulunamadı: " + email));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND, email));
     }
 
     // --- USER PROFILE METHODS ---
@@ -98,7 +97,7 @@ public class UserService {
 
             // Başka bir aktif kullanıcı bu numarayı kullanıyor mu?
             if (!newPhone.equals(oldPhone) && userRepository.existsByPhoneNumberAndDeletedAtIsNull(newPhone)) {
-                throw new UserAlreadyExistsException("Bu telefon numarası zaten kullanımda.");
+                throw new BusinessException(ErrorCode.USER_PHONE_ALREADY_EXISTS, newPhone);
             }
             currentUser.setPhoneNumber(newPhone);
         }
@@ -146,7 +145,7 @@ public class UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AuthenticationContextException("Oturum bulunamadı, lütfen giriş yapın.");
+            throw new BusinessException(ErrorCode.SESSION_NOT_FOUND);
         }
 
         Object principal = authentication.getPrincipal();
@@ -157,10 +156,15 @@ public class UserService {
             // Lazy loading hatası almamak ve transaction bütünlüğü için bu daha güvenli.
             UUID userId = userDetails.getUser().getId();
             return userRepository.findById(userId)
-                    .orElseThrow(() -> new AuthenticationContextException("Kullanıcı bulunamadı."));
+                    .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND,
+                            "email: " + userDetails.getUser().getEmail()));
         }
 
-        throw new AuthenticationContextException("Kullanıcı kimliği doğrulanamadı.");
+        throw new BusinessException(ErrorCode.AUTH_CONTEXT_ERROR);
     }
 
+    // --- ADMIN METHODS ---
+    public boolean isRoleAssignedToAnyUser(UUID roleId) {
+        return userRepository.existsByRoles_Id(roleId);
+    }
 }

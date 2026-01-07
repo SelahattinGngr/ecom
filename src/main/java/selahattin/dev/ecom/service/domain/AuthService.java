@@ -26,11 +26,8 @@ import selahattin.dev.ecom.dto.request.VerifyOtpRequest;
 import selahattin.dev.ecom.dto.response.SigninResponse;
 import selahattin.dev.ecom.entity.auth.RoleEntity;
 import selahattin.dev.ecom.entity.auth.UserEntity;
-import selahattin.dev.ecom.exception.auth.InvalidOtpException;
-import selahattin.dev.ecom.exception.auth.InvalidRefreshTokenException;
-import selahattin.dev.ecom.exception.auth.InvalidSignupVerificationTokenException;
-import selahattin.dev.ecom.exception.auth.NotfoundDeviceException;
-import selahattin.dev.ecom.exception.auth.SessionExpiredException;
+import selahattin.dev.ecom.exception.BusinessException;
+import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.security.CustomUserDetails;
 import selahattin.dev.ecom.security.jwt.JwtTokenProvider;
 import selahattin.dev.ecom.service.infra.CookieService;
@@ -109,7 +106,7 @@ public class AuthService {
 		String email = (String) getFromRedis(redisKey);
 
 		if (email == null) {
-			throw new InvalidSignupVerificationTokenException("Geçersiz veya süresi dolmuş doğrulama linki!");
+			throw new BusinessException(ErrorCode.INVALID_VERIFICATION_TOKEN);
 		}
 
 		userService.activateUser(email);
@@ -120,7 +117,7 @@ public class AuthService {
 		UserEntity user = userService.findByEmail(signinRequest.getEmail());
 
 		if (user.getEmailVerifiedAt() != null) {
-			throw new InvalidSignupVerificationTokenException("Kullanıcı zaten aktif.");
+			throw new BusinessException(ErrorCode.USER_ALREADY_VERIFIED);
 		}
 
 		String token = UUID.randomUUID().toString();
@@ -154,18 +151,18 @@ public class AuthService {
 	/* --- Token Operations --- */
 	public void refreshToken(String refreshToken, HttpServletResponse response, HttpServletRequest httpRequest) {
 		if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
-			throw new InvalidRefreshTokenException("Geçersiz Refresh Token.");
+			throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
 
 		String email = jwtTokenProvider.extractUsername(refreshToken, false);
 		String deviceId = jwtTokenProvider.extractDeviceId(refreshToken, false);
 
 		if (deviceId == null) {
-			throw new NotfoundDeviceException("Token içinde Cihaz bilgisi bulunamadı.");
+			throw new BusinessException(ErrorCode.DEVICE_NOT_FOUND, "Token içinde Cihaz bilgisi bulunamadı.");
 		}
 
 		if (!tokenService.validateToken(email, deviceId, refreshToken)) {
-			throw new SessionExpiredException("Oturum sonlandırılmış.");
+			throw new BusinessException(ErrorCode.SESSION_EXPIRED);
 		}
 
 		UserEntity user = userService.findByEmail(email);
@@ -237,7 +234,7 @@ public class AuthService {
 	private void validateRedisValue(String key, String expectedValue) {
 		Object actualValue = redisTemplate.opsForValue().get(key);
 		if (actualValue == null || !actualValue.toString().equals(expectedValue)) {
-			throw new InvalidOtpException("Geçersiz veya süresi dolmuş kod!");
+			throw new BusinessException(ErrorCode.INVALID_OTP);
 		}
 	}
 

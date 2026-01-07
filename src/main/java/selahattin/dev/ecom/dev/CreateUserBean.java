@@ -14,7 +14,8 @@ import selahattin.dev.ecom.entity.auth.PermissionEntity;
 import selahattin.dev.ecom.entity.auth.RoleEntity;
 import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.entity.catalog.CategoryEntity;
-import selahattin.dev.ecom.exception.user.ResourceNotFoundException;
+import selahattin.dev.ecom.exception.BusinessException;
+import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.auth.PermissionRepository;
 import selahattin.dev.ecom.repository.auth.RoleRepository;
 import selahattin.dev.ecom.repository.auth.UserRepository;
@@ -118,7 +119,7 @@ public class CreateUserBean implements CommandLineRunner {
 
     private void createCustomers() {
         RoleEntity customerRole = roleRepository.findByName("customer")
-                .orElseThrow(() -> new ResourceNotFoundException("Sistem rolü bulunamadı: customer"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
         for (int i = 1; i <= 1000; i++) {
             try {
                 String email = "customer" + i + "@example.com";
@@ -148,7 +149,7 @@ public class CreateUserBean implements CommandLineRunner {
 
     private void createModerators() {
         RoleEntity modRole = roleRepository.findByName("product-manager")
-                .orElseThrow(() -> new ResourceNotFoundException("Sistem rolü bulunamadı: product-manager"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
         for (int i = 1; i <= 10; i++) {
             try {
                 String email = "moderator" + i + "@example.com";
