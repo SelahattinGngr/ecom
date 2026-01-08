@@ -3,6 +3,8 @@ package selahattin.dev.ecom.repository.auth;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -20,4 +22,11 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID> {
     boolean existsByPhoneNumberAndDeletedAtIsNull(String phoneNumber);
 
     boolean existsByRoles_Id(UUID roleId);
+
+    // Silinmemiş kullanıcıları sayfalayarak getir
+    Page<UserEntity> findAllByDeletedAtIsNull(Pageable pageable);
+
+    // ID ile silinmemiş kullanıcı getir (Zaten findById var ama deleted check için
+    // custom yazılabilir veya serviste filter yapılabilir)
+    Optional<UserEntity> findByIdAndDeletedAtIsNull(UUID id);
 }

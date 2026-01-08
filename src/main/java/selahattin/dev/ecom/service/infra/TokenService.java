@@ -1,7 +1,6 @@
 package selahattin.dev.ecom.service.infra;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -25,7 +24,7 @@ public class TokenService {
         // Rol isimlerini çek
         List<String> roleNames = user.getRoles().stream()
                 .map(RoleEntity::getName)
-                .collect(Collectors.toList());
+                .toList();
 
         SessionPayload payload = SessionPayload.builder()
                 .userId(user.getId().toString())

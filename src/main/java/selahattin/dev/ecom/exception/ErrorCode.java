@@ -51,6 +51,7 @@ public enum ErrorCode {
     ROLE_NOT_FOUND(5002, "Rol bulunamadı", HttpStatus.NOT_FOUND),
     SYSTEM_ROLE_MODIFICATION(5003, "Sistem rolleri değiştirilemez", HttpStatus.FORBIDDEN),
     DUPLICATE_ROLE_NAME(5004, "Bu isimde bir rol zaten mevcut", HttpStatus.CONFLICT),
+    CANNOT_DELETE_OWN_USER(5005, "Kendi kullanıcı hesabınızı silemezsiniz", HttpStatus.BAD_REQUEST),
 
     // --- MEDIA & STORAGE (6000-6999) ---
     FILE_UPLOAD_ERROR(6001, "Dosya yüklenemedi", HttpStatus.INTERNAL_SERVER_ERROR),

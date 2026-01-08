@@ -26,7 +26,7 @@ SELECT r.id, p.id FROM roles r CROSS JOIN permissions p WHERE r.name = 'develope
 
 -- ADMIN: system:manage HARİÇ hepsini alır
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id FROM roles r CROSS JOIN permissions p WHERE r.name = 'admin' AND p.name != 'system:manage';
+SELECT r.id, p.id FROM roles r CROSS JOIN permissions p WHERE r.name = 'admin';
 
 -- CUSTOMER: Sadece product:view iznini alır
 INSERT INTO role_permissions (role_id, permission_id)
