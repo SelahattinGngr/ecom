@@ -120,7 +120,7 @@ public class CreateUserBean implements CommandLineRunner {
     private void createCustomers() {
         RoleEntity customerRole = roleRepository.findByName("customer")
                 .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
-        for (int i = 1; i <= 1000; i++) {
+        for (int i = 1; i <= 36; i++) {
             try {
                 String email = "customer" + i + "@example.com";
 
