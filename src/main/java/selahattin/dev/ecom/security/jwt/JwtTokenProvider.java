@@ -91,8 +91,7 @@ public class JwtTokenProvider {
     }
 
     public List<String> extractRoles(String token) {
-        List<String> roles = extractAllClaims(token, getAccessSigningKey()).get("roles", List.class);
-        return roles;
+        return extractAllClaims(token, getAccessSigningKey()).get("roles", List.class);
     }
 
     public String extractUserId(String token) {

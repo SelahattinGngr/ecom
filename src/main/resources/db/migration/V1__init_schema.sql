@@ -138,29 +138,29 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_districts_id_city
 
 CREATE TABLE IF NOT EXISTS addresses
 (
-    id           UUID PRIMARY KEY,
+    id            UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
 
-    user_id      UUID        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user_id       UUID        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
 
-    country_id   INT         NOT NULL,
-    city_id      INT         NOT NULL,
-    district_id  INT,
-    
-    neighborhood TEXT,
-    street       TEXT,
-    building_no  TEXT,
-    apartment_no TEXT,
-    postal_code  TEXT,
+    country_id    INT         NOT NULL,
+    city_id       INT         NOT NULL,
+    district_id   INT,
 
-    title        TEXT,
-    full_address TEXT,
+    neighborhood  TEXT,
+    street        TEXT,
+    building_no   TEXT,
+    apartment_no  TEXT,
+    postal_code   TEXT,
 
-    contact_name  TEXT,       -- EKLENDİ (Teslim Alacak Kişi)
-    contact_phone TEXT,       -- EKLENDİ (İletişim Numarası)
+    title         TEXT,
+    full_address  TEXT,
 
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at   TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at   TIMESTAMPTZ,
+    contact_name  TEXT, -- EKLENDİ (Teslim Alacak Kişi)
+    contact_phone TEXT, -- EKLENDİ (İletişim Numarası)
+
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at    TIMESTAMPTZ,
 
     CONSTRAINT addresses_country_fk
         FOREIGN KEY (country_id)
@@ -253,12 +253,36 @@ CREATE TABLE IF NOT EXISTS product_images
     updated_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at    TIMESTAMPTZ
 );
-CREATE INDEX IF NOT EXISTS idx_images_product_id
-    ON product_images (product_id);
 CREATE UNIQUE INDEX IF NOT EXISTS ux_images_one_thumbnail_per_product
     ON product_images (product_id)
     WHERE is_thumbnail = TRUE AND deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_images_product_order
+    ON product_images (product_id, display_order)
+    WHERE deleted_at IS NULL;
 
+CREATE TABLE IF NOT EXISTS product_variant_images
+(
+    id                 UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
+
+    product_variant_id UUID        NOT NULL
+        REFERENCES product_variants (id) ON DELETE CASCADE,
+
+    url                TEXT        NOT NULL,
+    display_order      INT         NOT NULL DEFAULT 0,
+    is_thumbnail       BOOLEAN     NOT NULL DEFAULT FALSE,
+
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at         TIMESTAMPTZ
+);
+CREATE INDEX idx_variant_images_variant_id
+    ON product_variant_images (product_variant_id);
+CREATE UNIQUE INDEX ux_variant_images_one_thumbnail
+    ON product_variant_images (product_variant_id)
+    WHERE is_thumbnail = TRUE AND deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_variant_images_variant_order
+    ON product_variant_images (product_variant_id, display_order)
+    WHERE deleted_at IS NULL;
 
 CREATE TABLE IF NOT EXISTS carts
 (
@@ -437,3 +461,68 @@ CREATE INDEX IF NOT EXISTS idx_refund_items_order_item_id
 CREATE UNIQUE INDEX IF NOT EXISTS ux_refund_items_refund_order_item
     ON refund_items (refund_id, order_item_id)
     WHERE order_item_id IS NOT NULL;
+
+CREATE TABLE IF NOT EXISTS assets
+(
+    id               UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
+
+    -- storage bilgisi (local / s3 / r2 / minio vs.)
+    storage_provider TEXT        NOT NULL DEFAULT 'local',
+    bucket           TEXT,
+    object_key       TEXT        NOT NULL, -- örn: 'brand/logo.svg'
+    url              TEXT        NOT NULL, -- örn: 'https://cdn.site.com/brand/logo.svg'
+
+    -- içerik metadata
+    mime_type        TEXT,                 -- image/png, image/jpeg, image/svg+xml, application/pdf
+    bytes            BIGINT CHECK (bytes >= 0),
+    width            INT CHECK (width > 0),
+    height           INT CHECK (height > 0),
+    checksum_sha256  CHAR(64),             -- dedupe/validasyon
+
+    created_by       UUID        REFERENCES users (id) ON DELETE SET NULL,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at       TIMESTAMPTZ
+);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_assets_checksum_active
+    ON assets (checksum_sha256)
+    WHERE deleted_at IS NULL AND checksum_sha256 IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_assets_object_key_active
+    ON assets (object_key)
+    WHERE deleted_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS site_asset_slots
+(
+    slot_key   TEXT PRIMARY KEY, -- 'logo', 'logo_dark', 'favicon', 'og_image', 'homepage_hero'...
+    asset_id   UUID        REFERENCES assets (id) ON DELETE SET NULL,
+
+    alt_text   TEXT,
+    title      TEXT,
+
+    updated_by UUID        REFERENCES users (id) ON DELETE SET NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_site_asset_slots_asset_id
+    ON site_asset_slots (asset_id);
+
+CREATE TABLE IF NOT EXISTS site_settings
+(
+    setting_key TEXT PRIMARY KEY, -- 'site_name', 'support_email', 'theme', 'social_links'...
+    value_json  JSONB       NOT NULL,
+
+    updated_by  UUID        REFERENCES users (id) ON DELETE SET NULL,
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS site_config_audit
+(
+    id         UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
+    kind       TEXT        NOT NULL CHECK (kind IN ('ASSET_SLOT', 'SETTING')),
+    key        TEXT        NOT NULL, -- slot_key veya setting_key
+    old_value  JSONB,
+    new_value  JSONB,
+    changed_by UUID        REFERENCES users (id) ON DELETE SET NULL,
+    changed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_site_config_audit_kind_key_time
+    ON site_config_audit (kind, key, changed_at DESC);
