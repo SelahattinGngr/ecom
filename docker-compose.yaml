@@ -24,6 +24,8 @@ services:
     depends_on:
       - postgres
       - redis
+    volumes:
+      - ./docker-data/uploads:/app/assets/public/products
 
   postgres:
     image: "postgres:latest"
@@ -35,7 +37,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql
+      - ./docker-data/postgres:/var/lib/postgresql
 
   pgadmin:
     image: "dpage/pgadmin4:latest"
@@ -47,6 +49,8 @@ services:
     environment:
       - "PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}"
       - "PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}"
+    volumes:
+      - ./docker-data/pgadmin:/var/lib/pgadmin
 
   redis:
     image: redis:latest
@@ -54,8 +58,4 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - redis-data:/data
-
-volumes:
-  redis-data:
-  postgres-data:
+      - ./docker-data/redis:/data

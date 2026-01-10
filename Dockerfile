@@ -9,11 +9,18 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests
 
+# ====== RUNTIME STAGE ======
 FROM eclipse-temurin:21-jdk-alpine AS runtime
 
 WORKDIR /app
 
+# Kullanıcıyı oluştur
 RUN addgroup -S spring && adduser -S spring -G spring
+
+# Bu klasörü oluşturup sahibini 'spring' yapıyoruz.
+RUN mkdir -p assets/public/products && chown -R spring:spring assets
+
+# Kullanıcıya geç
 USER spring
 
 COPY --from=build /app/target/*.jar app.jar

@@ -36,3 +36,5 @@ build/
 ## assets içerisindeki test amaçlı eklenen ürün resimlerini ignore ettim 10 gb veri kaplıyordu.
 assets/public/products/*.png
 *.png
+
+docker-data
