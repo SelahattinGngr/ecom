@@ -9,5 +9,5 @@ import selahattin.dev.ecom.entity.order.CartItemEntity;
 
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItemEntity, UUID> {
-    
+
 }

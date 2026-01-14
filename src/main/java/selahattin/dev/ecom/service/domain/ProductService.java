@@ -30,6 +30,9 @@ import selahattin.dev.ecom.repository.catalog.ProductRepository;
 @RequiredArgsConstructor
 public class ProductService {
 
+	private static String variantAlias = "variants";
+	private static String deletedAtField = "deletedAt";
+
 	private final ProductRepository productRepository;
 
 	/**
@@ -39,9 +42,7 @@ public class ProductService {
 	@Transactional(readOnly = true)
 	public Page<ProductResponse> getProducts(ProductFilterRequest filter, Pageable pageable) {
 
-		Specification<ProductEntity> spec = Specification.where((root, q, cb) -> {
-			return cb.isNull(root.get("deletedAt"));
-		});
+		Specification<ProductEntity> spec = Specification.where((root, q, cb) -> cb.isNull(root.get(deletedAtField)));
 
 		// 1. Gelişmiş Arama (Kelime Bazlı: İsim + Açıklama + Kategori + Varyant Rengi +
 		// Varyant Özelliği)
@@ -52,7 +53,7 @@ public class ProductService {
 				query.distinct(true); // Duplicate önle
 
 				// Varyant tablosuna sol taraftan bağlan (Join)
-				Join<ProductEntity, ProductVariantEntity> variants = root.join("variants", JoinType.LEFT);
+				Join<ProductEntity, ProductVariantEntity> variants = root.join(variantAlias, JoinType.LEFT);
 
 				List<Predicate> predicates = new ArrayList<>();
 
@@ -98,10 +99,10 @@ public class ProductService {
 		if (StringUtils.hasText(filter.getSize())) {
 			spec = spec.and((root, query, cb) -> {
 				query.distinct(true);
-				Join<ProductEntity, ProductVariantEntity> variants = root.join("variants");
+				Join<ProductEntity, ProductVariantEntity> variants = root.join(variantAlias);
 				return cb.and(
 						cb.equal(variants.get("size"), filter.getSize()),
-						cb.isNull(variants.get("deletedAt")),
+						cb.isNull(variants.get(deletedAtField)),
 						cb.isTrue(variants.get("isActive")));
 			});
 		}
@@ -110,16 +111,16 @@ public class ProductService {
 		if (StringUtils.hasText(filter.getColor())) {
 			spec = spec.and((root, query, cb) -> {
 				query.distinct(true);
-				Join<ProductEntity, ProductVariantEntity> variants = root.join("variants");
+				Join<ProductEntity, ProductVariantEntity> variants = root.join(variantAlias);
 				return cb.and(
 						cb.equal(variants.get("color"), filter.getColor()),
-						cb.isNull(variants.get("deletedAt")),
+						cb.isNull(variants.get(deletedAtField)),
 						cb.isTrue(variants.get("isActive")));
 			});
 		}
 
 		// MAPPER'A 'FALSE' GÖNDERİYORUZ -> DETAY YOK
-		return productRepository.findAll(spec, pageable)
+		return (Page<ProductResponse>) productRepository.findAll(spec, pageable)
 				.map(entity -> mapToResponse(entity, false));
 	}
 

@@ -32,7 +32,7 @@ public class AdminUsersService {
 
     @Transactional(readOnly = true)
     public Page<AdminUserResponse> getAllUsers(Pageable pageable) {
-        return userRepository.findAllByDeletedAtIsNull(pageable)
+        return (Page<AdminUserResponse>) userRepository.findAllByDeletedAtIsNull(pageable)
                 .map(this::mapToResponse);
     }
 

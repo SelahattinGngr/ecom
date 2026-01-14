@@ -46,6 +46,12 @@ public enum ErrorCode {
     IMAGE_NOT_FOUND(4006, "Görsel bulunamadı", HttpStatus.NOT_FOUND),
     VARIANT_MISMATCH(4007, "Varyant bu ürüne ait değil", HttpStatus.BAD_REQUEST),
 
+    // --- CART (4500-4599) ---
+    CART_ITEM_NOT_FOUND(4501, "Sepetteki ürün bulunamadı", HttpStatus.NOT_FOUND),
+    INSUFFICIENT_STOCK(4502, "Yetersiz stok", HttpStatus.BAD_REQUEST),
+    MAX_CART_LIMIT_EXCEEDED(4503, "Sepet limiti aşıldı", HttpStatus.BAD_REQUEST),
+    PRODUCT_NOT_ACTIVE(4505, "Bu ürün şu an satışta değil", HttpStatus.BAD_REQUEST),
+
     // --- ADMIN & ROLES (5000-5999) ---
     ROLE_ASSIGNED_TO_USER(5001, "Bu rol bir kullanıcıya atanmış, silinemez", HttpStatus.BAD_REQUEST),
     ROLE_NOT_FOUND(5002, "Rol bulunamadı", HttpStatus.NOT_FOUND),
