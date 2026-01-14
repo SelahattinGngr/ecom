@@ -17,7 +17,7 @@ POST {{authUrl}}/public/signup HTTP/1.1
 Content-Type: application/json
 
 {
-  "email": "selahattingungor53@hotmail.com",
+  "email": "selahattingungor5313@hotmail.com",
   "firstName": "selahattin",
   "lastName": "gungor"
 }
@@ -35,7 +35,7 @@ POST {{authUrl}}/public/signup-verify HTTP/1.1
 Content-Type: application/json
 
 {
-  "token": "aab740ed-9c3e-4493-a835-4ccd072cf18b"
+  "token": "71c21390-3002-43f9-b46c-86e1a5b04cf9"
 }
 
 ### signin

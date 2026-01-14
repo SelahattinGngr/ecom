@@ -53,7 +53,6 @@ public class UserService {
                 .email(signupRequest.getEmail())
                 .firstName(signupRequest.getFirstName())
                 .lastName(signupRequest.getLastName())
-                .phoneNumber("") // TODO: NULL OLACAK
                 .roles(Set.of(customerRole))
                 .build();
 

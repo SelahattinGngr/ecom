@@ -38,7 +38,7 @@ public class UserEntity extends BaseEntity {
     @Column(name = "email_verified_at")
     private OffsetDateTime emailVerifiedAt;
 
-    @Column(name = "phone_number", nullable = false)
+    @Column(name = "phone_number", unique = true)
     private String phoneNumber;
 
     @Column(name = "phone_number_verified_at")

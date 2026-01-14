@@ -40,19 +40,25 @@ CREATE TABLE IF NOT EXISTS users
     email                    CITEXT      NOT NULL,
     email_verified_at        TIMESTAMPTZ,
 
-    phone_number             TEXT        NOT NULL,
+    phone_number             TEXT,
     phone_number_verified_at TIMESTAMPTZ,
 
     created_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at               TIMESTAMPTZ
+    deleted_at               TIMESTAMPTZ,
+
+    CONSTRAINT chk_users_email_not_empty
+        CHECK (email <> ''),
+    CONSTRAINT chk_users_phone_not_empty
+        CHECK (phone_number IS NULL OR phone_number <> '')
 );
 CREATE UNIQUE INDEX IF NOT EXISTS ux_users_email_active
     ON users (email)
     WHERE deleted_at IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS ux_users_phone_number_active
     ON users (phone_number)
-    WHERE deleted_at IS NULL;
+    WHERE deleted_at IS NULL
+        AND phone_number IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS roles
 (
