@@ -63,6 +63,10 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: ${REDIS_PORT}
       SERVER_PORT: ${SERVER_PORT}
+
+      CLIENT_FRONTEND_URL: ${CLIENT_FRONTEND_URL}
+      CLIENT_EMAIL_VERIFICATION_PATH: ${CLIENT_EMAIL_VERIFICATION_PATH}
+      CLIENT_CORS_ALLOWED_ORIGINS: ${CLIENT_CORS_ALLOWED_ORIGINS}
     depends_on:
       postgres:
         condition: service_healthy
