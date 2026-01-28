@@ -1,10 +1,14 @@
 package selahattin.dev.ecom.service.domain;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,8 +16,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.request.order.CheckoutRequest;
+import selahattin.dev.ecom.dto.request.order.ReturnOrderRequest;
 import selahattin.dev.ecom.dto.response.CartItemResponse;
 import selahattin.dev.ecom.dto.response.CartResponse;
+import selahattin.dev.ecom.dto.response.order.OrderDetailResponse;
+import selahattin.dev.ecom.dto.response.order.OrderItemResponse;
+import selahattin.dev.ecom.dto.response.order.OrderResponse;
 import selahattin.dev.ecom.dto.response.order.OrderSummaryResponse;
 import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.entity.catalog.ProductVariantEntity;
@@ -34,7 +42,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CartService cartService;
     private final UserService userService;
-    private final AddressRepository addressRepository; // [REFACTOR] Service yerine Repo kullanıldı refactor edilecek
+    private final AddressRepository addressRepository;
     private final ProductVariantRepository productVariantRepository;
     private final ObjectMapper objectMapper;
 
@@ -68,8 +76,6 @@ public class OrderService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.ADDRESS_NOT_FOUND, "Fatura adresi geçersiz"));
 
         // Stok Kontrolü ve Düşümü
-        // CartService'de eklerken kontrol ediyoruz ama checkout anında tekrar etmek
-        // şart.
         for (CartItemResponse item : cart.getItems()) {
             ProductVariantEntity variant = productVariantRepository.findById(item.getVariantId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.VARIANT_NOT_FOUND));
@@ -84,7 +90,7 @@ public class OrderService {
             productVariantRepository.save(variant);
         }
 
-        // Sipariş Oluştur (Hesaplamayı yap)
+        // Sipariş Oluştur
         OrderSummaryResponse summary = calculateOrderSummary(cart, null);
 
         OrderEntity order = OrderEntity.builder()
@@ -105,16 +111,13 @@ public class OrderService {
                 .items(new ArrayList<>())
                 .build();
 
-        // Order Itemları Oluştur
+        // Order Itemları Oluştur (Snapshot mantığı)
         List<OrderItemEntity> orderItems = cart.getItems().stream().map(cartItem -> {
-            // Varyant detaylarını snapshot olarak sakla (isim, renk, beden, resim)
             Map<String, Object> snapshot = Map.of(
                     "color", cartItem.getColor() != null ? cartItem.getColor() : "",
                     "size", cartItem.getSize() != null ? cartItem.getSize() : "",
                     "imageUrl", cartItem.getImageUrl() != null ? cartItem.getImageUrl() : "");
 
-            // Varyant referansını çek (Stock düşümü için yukarıda çekmiştik ama entity
-            // referansı lazım)
             ProductVariantEntity variantRef = productVariantRepository.getReferenceById(cartItem.getVariantId());
 
             return OrderItemEntity.builder()
@@ -131,6 +134,7 @@ public class OrderService {
         order.setItems(orderItems);
         OrderEntity savedOrder = orderRepository.save(order);
 
+        // Sepeti temizle
         cartService.clearCart();
 
         return OrderSummaryResponse.builder()
@@ -141,12 +145,115 @@ public class OrderService {
                 .build();
     }
 
-    // --- HELPER: Hesaplama Motoru ---
+    // --- GET MY ORDERS (LIST) ---
+    public Page<OrderResponse> getMyOrders(Pageable pageable) {
+        UserEntity user = userService.getCurrentUser();
+        Page<OrderEntity> orders = orderRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId(), pageable);
+        return orders.map(this::mapToOrderResponse);
+    }
+
+    // --- GET ORDER DETAIL ---
+    public OrderDetailResponse getOrderDetail(UUID orderId) {
+        UserEntity user = userService.getCurrentUser();
+        OrderEntity order = orderRepository.findByIdAndUserId(orderId, user.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        return mapToOrderDetailResponse(order);
+    }
+
+    // --- CANCEL ORDER ---
+    @Transactional
+    public void cancelOrder(UUID orderId) {
+        UserEntity user = userService.getCurrentUser();
+        OrderEntity order = orderRepository.findByIdAndUserId(orderId, user.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.PREPARING) {
+            throw new BusinessException(ErrorCode.ORDER_CANNOT_BE_CANCELLED,
+                    "Sadece beklemede veya hazırlanıyor aşamasındaki siparişler iptal edilebilir.");
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+
+        // Stokları geri yükle
+        for (OrderItemEntity item : order.getItems()) {
+            ProductVariantEntity variant = item.getProductVariant();
+            variant.setStockQuantity(variant.getStockQuantity() + item.getQuantity());
+            productVariantRepository.save(variant);
+        }
+
+        orderRepository.save(order);
+    }
+
+    // --- RETURN ORDER (IADE TALEBI) ---
+    @Transactional
+    public void createReturnRequest(UUID orderId, ReturnOrderRequest request) {
+        UserEntity user = userService.getCurrentUser();
+        OrderEntity order = orderRepository.findByIdAndUserId(orderId, user.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        if (order.getStatus() != OrderStatus.DELIVERED) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Sadece teslim edilmiş siparişler iade edilebilir.");
+        }
+
+        if (order.getStatus() == OrderStatus.RETURNED) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Bu sipariş zaten iade sürecinde.");
+        }
+
+        order.setReturnReason(request.getReason());
+        order.setReturnedAt(OffsetDateTime.now());
+
+        orderRepository.save(order);
+    }
+
+    // --- MAPPERS & HELPERS ---
+
+    private OrderResponse mapToOrderResponse(OrderEntity order) {
+        String firstItemName = order.getItems().isEmpty() ? "" : order.getItems().get(0).getProductNameAtPurchase();
+        if (order.getItems().size() > 1) {
+            firstItemName += " ve " + (order.getItems().size() - 1) + " ürün daha";
+        }
+
+        return OrderResponse.builder()
+                .id(order.getId())
+                .orderNumber(order.getId().toString().substring(0, 8).toUpperCase())
+                .createdAt(order.getCreatedAt())
+                .status(order.getStatus())
+                .totalAmount(order.getTotalAmount())
+                .itemCount(order.getItems().size())
+                .firstItemName(firstItemName)
+                .build();
+    }
+
+    private OrderDetailResponse mapToOrderDetailResponse(OrderEntity order) {
+        List<OrderItemResponse> items = order.getItems().stream().map(item -> OrderItemResponse.builder()
+                .id(item.getId())
+                .productId(item.getProductVariant().getProduct().getId())
+                .productName(item.getProductNameAtPurchase())
+                .sku(item.getSkuAtPurchase())
+                .unitPrice(item.getPriceAtPurchase())
+                .quantity(item.getQuantity())
+                .subTotal(item.getPriceAtPurchase().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .attributes(item.getVariantSnapshot())
+                .build()).toList();
+
+        return OrderDetailResponse.builder()
+                .id(order.getId())
+                .createdAt(order.getCreatedAt())
+                .status(order.getStatus())
+                .totalAmount(order.getTotalAmount())
+                .shippingAddress(order.getShippingAddress())
+                .billingAddress(order.getBillingAddress())
+                .recipientName(order.getShippingRecipientFirstName() + " " + order.getShippingRecipientLastName())
+                .recipientPhone(order.getShippingRecipientPhoneNumber())
+                .items(items)
+                .returnReason(order.getReturnReason())
+                .returnTrackingNo(order.getReturnTrackingNo())
+                .build();
+    }
+
     private OrderSummaryResponse calculateOrderSummary(CartResponse cart, String couponCode) {
         BigDecimal subTotal = cart.getTotalPrice();
-        // simdilik sadece ürün fiyatları üzerinden hesaplama yapılıyor
-        // ileride kargo, vergi, indirim vs eklenecek
-        // satıcı kişi ürünleri fiyatlandırırken bunları dikkate alabilir
         return OrderSummaryResponse.builder()
                 .items(cart.getItems())
                 .subTotal(subTotal)
