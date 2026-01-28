@@ -1,5 +1,5 @@
 package selahattin.dev.ecom.utils.enums;
 
 public enum PaymentProvider {
-    STRIPE, IYZICO, GARANTI
+    STRIPE, IYZICO, GARANTI, MOCK
 }

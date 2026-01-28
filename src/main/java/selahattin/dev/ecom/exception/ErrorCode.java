@@ -52,12 +52,21 @@ public enum ErrorCode {
     MAX_CART_LIMIT_EXCEEDED(4503, "Sepet limiti aşıldı", HttpStatus.BAD_REQUEST),
     PRODUCT_NOT_ACTIVE(4505, "Bu ürün şu an satışta değil", HttpStatus.BAD_REQUEST),
 
-    // --- ADMIN & ROLES (5000-5999) ---
+    // --- ADMIN & ROLES (5000-5499) ---
     ROLE_ASSIGNED_TO_USER(5001, "Bu rol bir kullanıcıya atanmış, silinemez", HttpStatus.BAD_REQUEST),
     ROLE_NOT_FOUND(5002, "Rol bulunamadı", HttpStatus.NOT_FOUND),
     SYSTEM_ROLE_MODIFICATION(5003, "Sistem rolleri değiştirilemez", HttpStatus.FORBIDDEN),
     DUPLICATE_ROLE_NAME(5004, "Bu isimde bir rol zaten mevcut", HttpStatus.CONFLICT),
     CANNOT_DELETE_OWN_USER(5005, "Kendi kullanıcı hesabınızı silemezsiniz", HttpStatus.BAD_REQUEST),
+
+    // --- ORDER & PAYMENT (5500-5999) ---
+    ORDER_NOT_FOUND(5501, "Sipariş bulunamadı", HttpStatus.NOT_FOUND),
+    CART_EMPTY(5502, "Sepetiniz boş, sipariş oluşturulamaz", HttpStatus.BAD_REQUEST),
+    ADDRESS_REQUIRED(5503, "Teslimat ve fatura adresi zorunludur", HttpStatus.BAD_REQUEST),
+    ORDER_CANNOT_BE_CANCELLED(5504, "Bu sipariş iptal edilemez", HttpStatus.BAD_REQUEST),
+    PAYMENT_ALREADY_COMPLETED(5505, "Bu sipariş zaten ödenmiş", HttpStatus.BAD_REQUEST),
+    PAYMENT_INIT_ERROR(5506, "Ödeme başlatılamadı", HttpStatus.INTERNAL_SERVER_ERROR),
+    PAYMENT_FAILED(5507, "Ödeme işlemi başarısız", HttpStatus.BAD_REQUEST),
 
     // --- MEDIA & STORAGE (6000-6999) ---
     FILE_UPLOAD_ERROR(6001, "Dosya yüklenemedi", HttpStatus.INTERNAL_SERVER_ERROR),
