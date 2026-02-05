@@ -4,23 +4,13 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
 import com.iyzipay.Options;
-import com.iyzipay.model.Address;
-import com.iyzipay.model.BasketItem;
-import com.iyzipay.model.BasketItemType;
-import com.iyzipay.model.Buyer;
-import com.iyzipay.model.Cancel;
-import com.iyzipay.model.CheckoutFormInitialize;
-import com.iyzipay.model.Currency;
-import com.iyzipay.model.Locale;
-import com.iyzipay.model.PaymentGroup;
-import com.iyzipay.model.Refund;
-import com.iyzipay.request.CreateCancelRequest;
-import com.iyzipay.request.CreateCheckoutFormInitializeRequest;
-import com.iyzipay.request.CreateRefundRequest;
+import com.iyzipay.model.*;
+import com.iyzipay.request.*;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,8 +44,7 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
     private Options getOptions() {
         PaymentProperties.Iyzico iyzicoProps = paymentProperties.getIyzico();
 
-        // Runtime kontrolü: Sadece Iyzico seçiliyken patlasın, uygulama ayağa kalkarken
-        // değil.
+        // FAIL-FAST: Eğer anahtarlar yoksa BusinessException fırlatıyoruz.
         if (iyzicoProps.getApiKey() == null || iyzicoProps.getSecretKey() == null) {
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "Iyzico API anahtarları konfigüre edilmemiş!");
         }
@@ -69,7 +58,15 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
 
     @Override
     public PaymentInitResponse initializePayment(PaymentEntity payment, PaymentInitRequest request) {
-        log.info("[IYZICO] Ödeme formu oluşturuluyor. Order ID: {}", payment.getOrder().getId());
+        // Önce seçenekleri alarak kontrolü en başta yapıyoruz (Testin geçmesi için
+        // kritik)
+        Options options = getOptions();
+
+        // Güvenli Loglama: payment veya order null olsa bile patlamaz.
+        String orderId = Optional.ofNullable(payment.getOrder())
+                .map(order -> order.getId().toString())
+                .orElse("UNKNOWN");
+        log.info("[IYZICO] Ödeme formu oluşturuluyor. Order ID: {}", orderId);
 
         OrderEntity order = payment.getOrder();
         UserEntity user = order.getUser();
@@ -83,10 +80,10 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
         iyzicoRequest.setCurrency(Currency.TRY.name());
         iyzicoRequest.setBasketId(order.getId().toString());
         iyzicoRequest.setPaymentGroup(PaymentGroup.PRODUCT.name());
-        iyzicoRequest.setCallbackUrl(iyzicoProps.getCallbackUrl()); // Properties'den
+        iyzicoRequest.setCallbackUrl(iyzicoProps.getCallbackUrl());
         iyzicoRequest.setEnabledInstallments(Arrays.asList(2, 3, 6, 9));
 
-        // 1. ALICI (BUYER)
+        // 1. BUYER
         Buyer buyer = new Buyer();
         buyer.setId(user.getId().toString());
         buyer.setName(user.getFirstName());
@@ -112,24 +109,17 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
         buyer.setCountry(country);
         iyzicoRequest.setBuyer(buyer);
 
-        // 2. ADRES
-        Address shippingAddress = new Address();
-        shippingAddress.setContactName(buyer.getName() + " " + buyer.getSurname());
-        shippingAddress.setCity(city);
-        shippingAddress.setCountry(country);
-        shippingAddress.setAddress(addressText);
-        shippingAddress.setZipCode("34000");
-        iyzicoRequest.setShippingAddress(shippingAddress);
+        // 2. ADDRESS
+        Address address = new Address();
+        address.setContactName(buyer.getName() + " " + buyer.getSurname());
+        address.setCity(city);
+        address.setCountry(country);
+        address.setAddress(addressText);
+        address.setZipCode("34000");
+        iyzicoRequest.setShippingAddress(address);
+        iyzicoRequest.setBillingAddress(address);
 
-        Address billingAddress = new Address();
-        billingAddress.setContactName(buyer.getName() + " " + buyer.getSurname());
-        billingAddress.setCity(city);
-        billingAddress.setCountry(country);
-        billingAddress.setAddress(addressText);
-        billingAddress.setZipCode("34000");
-        iyzicoRequest.setBillingAddress(billingAddress);
-
-        // 3. SEPET
+        // 3. BASKET
         List<BasketItem> basketItems = new ArrayList<>();
         for (OrderItemEntity item : order.getItems()) {
             BasketItem basketItem = new BasketItem();
@@ -143,7 +133,7 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
         iyzicoRequest.setBasketItems(basketItems);
 
         try {
-            CheckoutFormInitialize checkoutForm = CheckoutFormInitialize.create(iyzicoRequest, getOptions());
+            CheckoutFormInitialize checkoutForm = CheckoutFormInitialize.create(iyzicoRequest, options);
 
             if (!STATUS_SUCCESS.equals(checkoutForm.getStatus())) {
                 log.error("[IYZICO] Init Hatası: Code: {}, Msg: {}", checkoutForm.getErrorCode(),
@@ -160,6 +150,9 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
                     .htmlContent(checkoutForm.getCheckoutFormContent())
                     .build();
 
+        } catch (BusinessException be) {
+            // Kendi hatamızı tekrar fırlatıyoruz ki mesaj değişmesin
+            throw be;
         } catch (Exception e) {
             log.error("[IYZICO] Exception: ", e);
             throw new BusinessException(ErrorCode.PAYMENT_INIT_ERROR, "Iyzico bağlantı hatası");
@@ -168,13 +161,12 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
 
     @Override
     public void capturePayment(PaymentEntity payment) {
-        log.info("[IYZICO] Capture işlemi otomatik yapıldı (Checkout Form).");
+        log.info("[IYZICO] Capture işlemi otomatik yapıldı.");
     }
 
     @Override
     public void voidPayment(PaymentEntity payment) {
         log.info("[IYZICO] İptal (Cancel) işlemi. ID: {}", payment.getId());
-
         try {
             CreateCancelRequest request = new CreateCancelRequest();
             request.setLocale(Locale.TR.getValue());
@@ -183,16 +175,13 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
             request.setIp(DEFAULT_IP);
 
             Cancel cancel = Cancel.create(request, getOptions());
-
             if (!STATUS_SUCCESS.equals(cancel.getStatus())) {
                 throw new BusinessException(ErrorCode.PAYMENT_FAILED,
                         "Iyzico İptal Hatası: " + cancel.getErrorMessage());
             }
-
-            log.info("[IYZICO] İptal başarılı.");
-
+        } catch (BusinessException be) {
+            throw be;
         } catch (Exception e) {
-            log.error("[IYZICO] Void Exception: ", e);
             throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Iyzico iptal hatası: " + e.getMessage());
         }
     }
@@ -200,7 +189,6 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
     @Override
     public void refundPayment(PaymentEntity payment, BigDecimal refundAmount) {
         log.info("[IYZICO] İade (Refund) işlemi. ID: {}", payment.getId());
-
         try {
             CreateRefundRequest request = new CreateRefundRequest();
             request.setLocale(Locale.TR.getValue());
@@ -211,16 +199,13 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
             request.setCurrency(Currency.TRY.name());
 
             Refund refund = Refund.create(request, getOptions());
-
             if (!STATUS_SUCCESS.equals(refund.getStatus())) {
                 throw new BusinessException(ErrorCode.PAYMENT_FAILED,
                         "Iyzico İade Hatası: " + refund.getErrorMessage());
             }
-
-            log.info("[IYZICO] İade başarılı. Refund Payment ID: {}", refund.getPaymentId());
-
+        } catch (BusinessException be) {
+            throw be;
         } catch (Exception e) {
-            log.error("[IYZICO] Refund Exception: ", e);
             throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Iyzico iade hatası: " + e.getMessage());
         }
     }
