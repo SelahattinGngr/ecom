@@ -2,7 +2,6 @@ package selahattin.dev.ecom.service.domain;
 
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +16,8 @@ import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.order.OrderRepository;
 import selahattin.dev.ecom.repository.payment.PaymentRepository;
+import selahattin.dev.ecom.service.integration.payment.PaymentProviderStrategy;
+import selahattin.dev.ecom.service.integration.payment.PaymentStrategyFactory;
 import selahattin.dev.ecom.utils.enums.OrderStatus;
 import selahattin.dev.ecom.utils.enums.PaymentStatus;
 
@@ -27,9 +28,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final UserService userService;
-
-    @Value("${selahattin.dev.client.frontend-url:http://localhost:3000}")
-    private String frontendUrl;
+    private final PaymentStrategyFactory paymentStrategyFactory;
 
     @Transactional
     public PaymentInitResponse initPayment(PaymentInitRequest request) {
@@ -49,18 +48,11 @@ public class PaymentService {
                 .description("Sipariş ödemesi #" + order.getId())
                 .build();
 
-        paymentRepository.save(payment);
+        PaymentEntity savedPayment = paymentRepository.save(payment);
 
-        // MOCK URL Üretimi
-        // Kullanıcı bu linke tıkladığında Frontend'e gidecek, Frontend de
-        // "Ödeme Başarılı" sayfası gösterecek.
-        String mockRedirectUrl = frontendUrl + "/payment/mock-process?paymentId=" + payment.getId();
+        PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(request.getProvider());
 
-        return PaymentInitResponse.builder()
-                .paymentId(payment.getId())
-                .redirectUrl(mockRedirectUrl)
-                .htmlContent("<p>Redirecting to mock payment provider...</p>")
-                .build();
+        return strategy.initializePayment(savedPayment, request);
     }
 
     public PaymentResponse getPaymentDetail(UUID id) {
@@ -69,8 +61,6 @@ public class PaymentService {
         PaymentEntity payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Ödeme bulunamadı"));
 
-        // GÜVENLİK: Bu ödeme bu kullanıcıya mı ait?
-        // Payment -> Order -> User ilişkisinden kontrol ediyoruz.
         if (!payment.getOrder().getUser().getId().equals(user.getId())) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "Bu ödemeyi görüntüleme yetkiniz yok");
         }

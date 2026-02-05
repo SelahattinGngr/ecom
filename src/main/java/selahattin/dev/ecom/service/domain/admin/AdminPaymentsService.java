@@ -14,6 +14,8 @@ import selahattin.dev.ecom.entity.payment.PaymentEntity;
 import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.payment.PaymentRepository;
+import selahattin.dev.ecom.service.integration.payment.PaymentProviderStrategy;
+import selahattin.dev.ecom.service.integration.payment.PaymentStrategyFactory;
 import selahattin.dev.ecom.utils.enums.PaymentStatus;
 
 @Service
@@ -21,21 +23,19 @@ import selahattin.dev.ecom.utils.enums.PaymentStatus;
 public class AdminPaymentsService {
 
     private final PaymentRepository paymentRepository;
+    private final PaymentStrategyFactory paymentStrategyFactory;
 
-    // --- LIST ---
     public Page<AdminPaymentResponse> getAllPayments(Pageable pageable) {
         return paymentRepository.findAllByOrderByCreatedAtDesc(pageable)
                 .map(this::mapToAdminResponse);
     }
 
-    // --- DETAIL ---
     public AdminPaymentResponse getPaymentDetail(UUID id) {
         PaymentEntity payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Ödeme bulunamadı"));
         return mapToAdminResponse(payment);
     }
 
-    // --- CAPTURE (Manuel Tahsilat) ---
     @Transactional
     public void capturePayment(UUID id) {
         PaymentEntity payment = paymentRepository.findById(id)
@@ -45,19 +45,22 @@ public class AdminPaymentsService {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Bu ödeme zaten sonuçlanmış veya capture edilemez.");
         }
 
-        // TODO: Provider (Iyzico/Stripe) servisine git ve parayı çek (Capture)
+        PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(payment.getPaymentProvider());
+        
+        strategy.capturePayment(payment);
 
         payment.setStatus(PaymentStatus.SUCCEEDED);
         paymentRepository.save(payment);
     }
 
-    // --- VOID (İptal - Gün sonu öncesi) ---
     @Transactional
     public void voidPayment(UUID id) {
         PaymentEntity payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
 
-        // TODO: Provider servisine git ve işlemi iptal et (Void)
+        PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(payment.getPaymentProvider());
+
+        strategy.voidPayment(payment);
 
         payment.setStatus(PaymentStatus.CANCELLED);
         paymentRepository.save(payment);
@@ -66,7 +69,8 @@ public class AdminPaymentsService {
     // --- MAPPER ---
     private AdminPaymentResponse mapToAdminResponse(PaymentEntity payment) {
         UserEntity user = payment.getOrder().getUser();
-        String fullName = user.getFirstName() + " " + user.getLastName();
+        String fullName = (user.getFirstName() != null ? user.getFirstName() : "") + " " + 
+                          (user.getLastName() != null ? user.getLastName() : "");
 
         return AdminPaymentResponse.builder()
                 .id(payment.getId())
@@ -77,7 +81,7 @@ public class AdminPaymentsService {
                 .description(payment.getDescription())
                 .orderId(payment.getOrder().getId())
                 .orderNumber(payment.getOrder().getId().toString().substring(0, 8).toUpperCase())
-                .customerName(fullName)
+                .customerName(fullName.trim())
                 .customerEmail(user.getEmail())
                 .createdAt(payment.getCreatedAt())
                 .build();

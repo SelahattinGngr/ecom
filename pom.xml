@@ -162,6 +162,22 @@
 		</dependency>
 
 		<!-- ===========================
+		     PAYMENT PROVIDER SDKS
+		     =========================== -->
+
+		<dependency>
+			<groupId>com.iyzipay</groupId>
+			<artifactId>iyzipay-java</artifactId>
+			<version>2.0.141</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.stripe</groupId>
+			<artifactId>stripe-java</artifactId>
+			<version>24.16.0</version>
+		</dependency>
+
+		<!-- ===========================
 		     TESTING
 		     =========================== -->
 		<dependency>
