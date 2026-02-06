@@ -1,12 +1,16 @@
 package selahattin.dev.ecom.dev;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +18,9 @@ import selahattin.dev.ecom.entity.auth.PermissionEntity;
 import selahattin.dev.ecom.entity.auth.RoleEntity;
 import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.entity.catalog.CategoryEntity;
+import selahattin.dev.ecom.entity.catalog.ProductEntity;
+import selahattin.dev.ecom.entity.catalog.ProductImageEntity;
+import selahattin.dev.ecom.entity.catalog.ProductVariantEntity;
 import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.auth.PermissionRepository;
@@ -23,24 +30,27 @@ import selahattin.dev.ecom.repository.catalog.CategoryRepository;
 import selahattin.dev.ecom.repository.catalog.ProductImageRepository;
 import selahattin.dev.ecom.repository.catalog.ProductRepository;
 import selahattin.dev.ecom.repository.catalog.ProductVariantRepository;
+import selahattin.dev.ecom.utils.SlugUtils;
 
 @Slf4j
-@Order(1) // Diğer CommandLineRunner'lardan önce çalışsın
+@Order(1)
+@Component
 @RequiredArgsConstructor
 public class CreateUserBean implements CommandLineRunner {
-    // --- Auth ---
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
-
-    // --- Catalog ---
     private final CategoryRepository categoryRepository;
     private final ProductImageRepository productImageRepository;
     private final ProductRepository productRepository;
     private final ProductVariantRepository productVariantRepository;
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
+        log.info("🛠️ Dev ortamı veri yapılandırması başlatılıyor...");
+
         createAdmin();
         createCustomers();
         roleCreate();
@@ -49,176 +59,137 @@ public class CreateUserBean implements CommandLineRunner {
         createProducts();
         createProductVariants();
         createProductImages();
+
+        log.info("✅ Tüm sahte veriler başarıyla yüklendi.");
     }
 
     private void roleCreate() {
         String roleName = "product-manager";
-
-        if (roleRepository.findByName(roleName).isPresent()) {
-            log.info("Role zaten mevcut: " + roleName);
+        if (roleRepository.findByName(roleName).isPresent())
             return;
-        }
 
         try {
             List<String> desiredPermissions = List.of(
-                    "product:read",
-                    "product:create",
-                    "product:update",
-                    "category:manage",
-                    "dashboard:view");
+                    "product:read", "product:create", "product:update",
+                    "category:manage", "dashboard:view");
 
             Set<PermissionEntity> permissions = new HashSet<>(
                     permissionRepository.findByNameIn(desiredPermissions));
 
             RoleEntity modRole = RoleEntity.builder()
                     .name(roleName)
-                    .description("Moderator role with limited permissions (Product Focus)")
+                    .description("Moderator role (Product Focus)")
                     .isSystem(false)
                     .permissions(permissions)
                     .build();
 
             roleRepository.save(modRole);
-            log.info("✅ Custom rol oluşturuldu: " + roleName);
-
         } catch (Exception e) {
-            log.error("❌ Sahte rol oluşturulurken hata oluştu: " + e.getMessage());
+            log.error("❌ Rol hatası: " + e.getMessage());
         }
     }
 
     private void createAdmin() {
         String email = "selahattin_gungor53@hotmail.com";
-
-        if (userRepository.existsByEmailAndDeletedAtIsNull(email)) {
-            log.info("Developer kullanıcısı zaten mevcut, oluşturulmadı.");
+        if (userRepository.existsByEmailAndDeletedAtIsNull(email))
             return;
-        }
 
-        try {
-            RoleEntity developerRole = roleRepository.findByName("developer")
-                    .orElseThrow(() -> new RuntimeException(
-                            "HATA: 'developer' rolü veritabanında bulunamadı! init.sql çalıştı mı?"));
-
-            OffsetDateTime now = OffsetDateTime.now();
-            UserEntity adminUser = UserEntity.builder()
-                    .firstName("Selahattin")
-                    .lastName("Gungor")
-                    .email(email)
-                    .emailVerifiedAt(now)
-                    .phoneNumber("+905418275359")
-                    .phoneNumberVerifiedAt(now)
-                    .roles(Set.of(developerRole))
-                    .build();
-
-            userRepository.save(adminUser);
-            log.info("✅ Dev modunda Developer kullanıcısı başarıyla oluşturuldu.");
-
-        } catch (Exception e) {
-            log.error("❌ Sahte kullanıcı oluşturulurken hata: " + e.getMessage());
-        }
+        roleRepository.findByName("developer").ifPresent(role -> {
+            userRepository.save(UserEntity.builder()
+                    .firstName("Selahattin").lastName("Gungor").email(email)
+                    .emailVerifiedAt(OffsetDateTime.now())
+                    .roles(Set.of(role)).build());
+        });
     }
 
     private void createCustomers() {
-        RoleEntity customerRole = roleRepository.findByName("customer")
-                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
-        for (int i = 1; i <= 36; i++) {
-            try {
+        roleRepository.findByName("customer").ifPresent(role -> {
+            for (int i = 1; i <= 3; i++) {
                 String email = "customer" + i + "@example.com";
-
-                if (userRepository.existsByEmailAndDeletedAtIsNull(email)) {
+                if (userRepository.existsByEmailAndDeletedAtIsNull(email))
                     continue;
-                }
-
-                OffsetDateTime now = OffsetDateTime.now();
-                UserEntity customer = UserEntity.builder()
-                        .firstName("Customer" + i)
-                        .lastName("Test")
-                        .email(email)
-                        .emailVerifiedAt(now)
-                        .phoneNumber("+9000000000" + i)
-                        .phoneNumberVerifiedAt(now)
-                        .roles(Set.of(customerRole))
-                        .build();
-
-                userRepository.save(customer);
-                log.info("✅ Müşteri oluşturuldu: " + email);
-            } catch (Exception e) {
-                log.error("❌ Müşteri oluşturulurken hata: " + e.getMessage());
+                userRepository.save(UserEntity.builder()
+                        .firstName("Customer" + i).lastName("Test").email(email)
+                        .roles(Set.of(role)).build());
             }
-        }
+        });
     }
 
     private void createModerators() {
-        RoleEntity modRole = roleRepository.findByName("product-manager")
-                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
-        for (int i = 1; i <= 10; i++) {
-            try {
-                String email = "moderator" + i + "@example.com";
-
-                if (userRepository.existsByEmailAndDeletedAtIsNull(email)) {
-                    continue;
-                }
-
-                OffsetDateTime now = OffsetDateTime.now();
-                UserEntity moderator = UserEntity.builder()
-                        .firstName("Moderator" + i)
-                        .lastName("Test")
-                        .email(email)
-                        .emailVerifiedAt(now)
-                        .phoneNumber("+9011111111" + i)
-                        .phoneNumberVerifiedAt(now)
-                        .roles(Set.of(modRole))
-                        .build();
-
-                userRepository.save(moderator);
-                log.info("✅ Moderator oluşturuldu: " + email);
-            } catch (Exception e) {
-                log.error("❌ Moderator oluşturulurken hata: " + e.getMessage());
-            }
-        }
+        roleRepository.findByName("product-manager").ifPresent(role -> {
+            String email = "mod@example.com";
+            if (userRepository.existsByEmailAndDeletedAtIsNull(email))
+                return;
+            userRepository.save(UserEntity.builder()
+                    .firstName("Mod").lastName("Test").email(email)
+                    .roles(Set.of(role)).build());
+        });
     }
 
     private void createCategories() {
+        if (categoryRepository.count() > 0)
+            return;
+
+        CategoryEntity main = categoryRepository.save(CategoryEntity.builder()
+                .name("Elektronik").slug("elektronik").build());
+
+        categoryRepository.save(CategoryEntity.builder()
+                .name("Telefon").slug("telefon").parent(main).build());
+    }
+
+    private void createProducts() {
+        if (productRepository.count() > 0)
+            return;
+        List<CategoryEntity> categories = categoryRepository.findAll();
+
         for (int i = 1; i <= 5; i++) {
-            try {
-                String categoryName = "Category " + i;
+            String name = "Ürün " + i;
+            productRepository.save(ProductEntity.builder()
+                    .name(name)
+                    .slug(SlugUtils.toSlug(name) + "-" + UUID.randomUUID().toString().substring(0, 8))
+                    .description("Açıklama " + i)
+                    .basePrice(new BigDecimal("1000.00"))
+                    .category(categories.get(0))
+                    .build());
+        }
+    }
 
-                if (categoryRepository.existsByName(categoryName)) {
-                    continue;
-                }
+    private void createProductVariants() {
+        List<ProductEntity> products = productRepository.findAll();
 
-                OffsetDateTime now = OffsetDateTime.now();
-                CategoryEntity category = CategoryEntity.builder()
-                        .name(categoryName)
-                        .slug("category-" + i + "ABC")
-                        .createdAt(now)
-                        .updatedAt(now)
-                        .build();
+        for (ProductEntity product : products) {
+            // Unique SKU üretimi için Product ID ve random string ekliyoruz
+            String skuPrefix = product.getSlug().length() > 5 ? product.getSlug().substring(0, 5).toUpperCase()
+                    : "PROD";
+            String generatedSku = skuPrefix + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
-                categoryRepository.save(category);
-                CategoryEntity category2 = CategoryEntity.builder()
-                        .name(categoryName)
-                        .slug("category-" + i + "DEF")
-                        .parent(category)
-                        .createdAt(now)
-                        .updatedAt(now)
-                        .build();
-                categoryRepository.save(category2);
-                log.info("✅ Kategori oluşturuldu: " + categoryName);
-            } catch (Exception e) {
-                log.error("❌ Kategori oluşturulurken hata: " + e.getMessage());
+            // Sadece bu ürüne ait varyant yoksa oluştur
+            if (productVariantRepository.countByProductId(product.getId()) == 0) {
+                productVariantRepository.save(ProductVariantEntity.builder()
+                        .product(product)
+                        .sku(generatedSku)
+                        .size("Standart")
+                        .color("Siyah")
+                        .price(product.getBasePrice())
+                        .stockQuantity(100)
+                        .isActive(true)
+                        .build());
             }
         }
     }
 
-    private void createProducts() {
-        // Ürünler oluşturma kodu buraya gelecek
-    }
-
-    private void createProductVariants() {
-        // Ürün varyantları oluşturma kodu buraya gelecek
-    }
-
     private void createProductImages() {
-        // Ürün resimleri oluşturma kodu buraya gelecek
+        List<ProductEntity> products = productRepository.findAll();
+
+        for (ProductEntity product : products) {
+            if (productImageRepository.countByProductId(product.getId()) == 0) {
+                productImageRepository.save(ProductImageEntity.builder()
+                        .product(product)
+                        .url("https://picsum.photos/200")
+                        .displayOrder(1)
+                        .isThumbnail(true)
+                        .build());
+            }
+        }
     }
 }

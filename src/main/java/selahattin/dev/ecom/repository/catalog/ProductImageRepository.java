@@ -9,5 +9,5 @@ import selahattin.dev.ecom.entity.catalog.ProductImageEntity;
 
 @Repository
 public interface ProductImageRepository extends JpaRepository<ProductImageEntity, UUID> {
-    
+    long countByProductId(UUID productId);
 }

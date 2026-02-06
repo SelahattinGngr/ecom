@@ -9,5 +9,5 @@ import selahattin.dev.ecom.entity.catalog.ProductVariantEntity;
 
 @Repository
 public interface ProductVariantRepository extends JpaRepository<ProductVariantEntity, UUID> {
-
+    long countByProductId(UUID productId);
 }

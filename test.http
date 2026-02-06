@@ -1,0 +1,46 @@
+@baseUrl = http://localhost:5353/api/v1
+
+@authUrl = {{baseUrl}}/auth
+
+@cartUrl = {{baseUrl}}/api/v1/cart
+
+@productUrl = {{baseUrl}}/public/products
+
+# --- AUTHENTICATION ---
+
+### signin
+POST {{authUrl}}/public/signin HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "selahattin_gungor53@hotmail.com"
+}
+
+### verify-login-otp
+POST {{authUrl}}/public/signin-verify HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "selahattin_gungor53@hotmail.com",
+  "code": "981909"
+}
+
+### refresh-token
+POST {{authUrl}}/public/refresh-token HTTP/1.1
+
+# --- PRODUCTS ---
+
+### get-products
+GET {{productUrl}} HTTP/1.1
+
+
+# --- CART ---
+
+### add-to-cart
+POST {{cartUrl}}/items HTTP/1.1
+Content-Type: application/json
+
+{
+  "variantId": "123456",
+  "quantity": 2
+}
