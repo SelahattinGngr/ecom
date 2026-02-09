@@ -138,6 +138,9 @@ public class CartService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED);
         }
 
+        CartEntity cart = item.getCart();
+        cart.getItems().remove(item);
+
         cartItemRepository.delete(item);
 
         return refreshCart(user);

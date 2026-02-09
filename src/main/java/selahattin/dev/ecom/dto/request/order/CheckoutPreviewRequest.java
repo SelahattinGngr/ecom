@@ -9,15 +9,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CheckoutRequest {
-    @NotNull(message = "Teslimat adresi seçilmelidir")
-    private UUID shippingAddressId;
-
-    @NotNull(message = "Fatura adresi seçilmelidir")
-    private UUID billingAddressId;
+public class CheckoutPreviewRequest {
 
     @NotNull(message = "En az bir ürün seçilmelidir")
     private List<UUID> items;
 
-    // private String couponCode; // İleride eklenecek
 }

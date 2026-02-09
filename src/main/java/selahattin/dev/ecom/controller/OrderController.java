@@ -15,12 +15,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.dto.request.order.CheckoutPreviewRequest;
 import selahattin.dev.ecom.dto.request.order.CheckoutRequest;
 import selahattin.dev.ecom.dto.request.order.ReturnOrderRequest;
-import selahattin.dev.ecom.response.ApiResponse;
 import selahattin.dev.ecom.dto.response.order.OrderDetailResponse;
 import selahattin.dev.ecom.dto.response.order.OrderResponse;
 import selahattin.dev.ecom.dto.response.order.OrderSummaryResponse;
+import selahattin.dev.ecom.response.ApiResponse;
 import selahattin.dev.ecom.service.domain.OrderService;
 
 @RestController
@@ -33,7 +34,7 @@ public class OrderController {
     // --- CHECKOUT ---
     @PostMapping("/checkout/preview")
     public ResponseEntity<ApiResponse<OrderSummaryResponse>> checkoutPreview(
-            @Valid @RequestBody CheckoutRequest request) {
+            @Valid @RequestBody CheckoutPreviewRequest request) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Sipariş özeti oluşturuldu",
                 orderService.checkoutPreview(request)));

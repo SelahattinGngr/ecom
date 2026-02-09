@@ -63,6 +63,7 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(5501, "Sipariş bulunamadı", HttpStatus.NOT_FOUND),
     CART_EMPTY(5502, "Sepetiniz boş, sipariş oluşturulamaz", HttpStatus.BAD_REQUEST),
     ADDRESS_REQUIRED(5503, "Teslimat ve fatura adresi zorunludur", HttpStatus.BAD_REQUEST),
+    CHECKOUT_EMPTY_CART(5504, "Sipariş listesi boş, sipariş oluşturulamaz", HttpStatus.BAD_REQUEST),
     ORDER_CANNOT_BE_CANCELLED(5504, "Bu sipariş iptal edilemez", HttpStatus.BAD_REQUEST),
     PAYMENT_ALREADY_COMPLETED(5505, "Bu sipariş zaten ödenmiş", HttpStatus.BAD_REQUEST),
     PAYMENT_INIT_ERROR(5506, "Ödeme başlatılamadı", HttpStatus.INTERNAL_SERVER_ERROR),

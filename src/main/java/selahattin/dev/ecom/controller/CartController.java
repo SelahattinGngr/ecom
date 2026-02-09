@@ -50,6 +50,7 @@ public class CartController {
                 cartService.updateCartItem(id, request)));
     }
 
+    // TODO: sepetten ürün silme işlemi yapınca silmiyor :D
     @DeleteMapping("/items/{id}")
     public ResponseEntity<ApiResponse<CartResponse>> removeCartItem(@PathVariable UUID id) {
         return ResponseEntity.ok(ApiResponse.success(

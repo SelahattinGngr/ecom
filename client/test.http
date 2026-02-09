@@ -1,0 +1,98 @@
+@baseUrl = http://localhost:5353/api/v1
+
+@authUrl = {{baseUrl}}/auth
+
+@userUrl = {{baseUrl}}/users
+
+@cartUrl = {{baseUrl}}/cart
+
+@productUrl = {{baseUrl}}/public/products
+
+@orderUrl = {{baseUrl}}/orders
+
+# --- AUTHENTICATION ---
+
+### signin
+POST {{authUrl}}/public/signin HTTP/1.1
+Content-Type: application/json
+
+{
+    "email": "selahattin_gungor53@hotmail.com"
+}
+
+### verify-login-otp
+POST {{authUrl}}/public/signin-verify HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "selahattin_gungor53@hotmail.com",
+  "code": "981909"
+}
+
+### refresh-token
+POST {{authUrl}}/public/refresh-token HTTP/1.1
+
+# --- USERS ---
+
+### addresses
+GET {{userUrl}}/addresses HTTP/1.1
+
+# --- PRODUCTS ---
+
+### get-products
+GET {{productUrl}} HTTP/1.1
+
+### list-products (search-query)
+GET {{productUrl}}?query=iphone HTTP/1.1
+
+@slug = iphone-18-pro-max-plus-ultimate-megatron-x
+
+### get-product-by-slug
+GET {{productUrl}}/slug/{{slug}} HTTP/1.1
+
+# --- CART ---
+
+### add-to-cart
+POST {{cartUrl}}/items HTTP/1.1
+Content-Type: application/json
+
+{
+  "variantId": "a4d46113-9b02-4c4c-ae8a-999d1178738a",
+  "quantity": 1
+}
+
+### get-cart
+GET {{cartUrl}} HTTP/1.1
+
+@cartItemId = a05f6c8b-0fd5-4439-a40c-15b39727a097
+
+### update-cart-item
+PATCH {{cartUrl}}/items/{{cartItemId}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "quantity": 31
+}
+
+### remove-cart-item
+DELETE {{cartUrl}}/items/{{cartItemId}} HTTP/1.1
+
+# --- ORDER ---
+
+### checkout-preview
+POST {{orderUrl}}/checkout/preview HTTP/1.1
+Content-Type: application/json
+
+{
+  "items": ["a4d46113-9b02-4c4c-ae8a-999d1178738a"]
+}
+
+### checkout
+POST {{orderUrl}}/checkout HTTP/1.1
+Content-Type: application/json
+
+{
+  "shippingAddressId" : "c801a96c-553b-405d-9467-8cc6b2bdfde5",
+  "billingAddressId" : "c801a96c-553b-405d-9467-8cc6b2bdfde5",
+  "items": ["a4d46113-9b02-4c4c-ae8a-999d1178738a"]
+}

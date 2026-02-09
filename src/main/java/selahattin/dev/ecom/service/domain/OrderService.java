@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.dto.request.order.CheckoutPreviewRequest;
 import selahattin.dev.ecom.dto.request.order.CheckoutRequest;
 import selahattin.dev.ecom.dto.request.order.ReturnOrderRequest;
 import selahattin.dev.ecom.dto.response.CartItemResponse;
@@ -46,17 +48,14 @@ public class OrderService {
     private final ProductVariantRepository productVariantRepository;
     private final ObjectMapper objectMapper;
 
-    // --- PREVIEW ---
-    public OrderSummaryResponse checkoutPreview(CheckoutRequest request) {
+    public OrderSummaryResponse checkoutPreview(CheckoutPreviewRequest request) {
         CartResponse cart = cartService.getMyCart();
-        if (cart.getItems() == null || cart.getItems().isEmpty()) {
-            throw new BusinessException(ErrorCode.CART_EMPTY);
-        }
 
-        return calculateOrderSummary(cart, null);
+        List<CartItemResponse> selectedItems = filterSelectedItems(cart, request.getItems());
+
+        return calculateOrderSummary(selectedItems, null);
     }
 
-    // --- CHECKOUT (CREATE ORDER) ---
     @Transactional
     public OrderSummaryResponse checkout(CheckoutRequest request) {
         UserEntity user = userService.getCurrentUser();
@@ -66,7 +65,8 @@ public class OrderService {
             throw new BusinessException(ErrorCode.CART_EMPTY);
         }
 
-        // Adresleri Getir ve Doğrula
+        List<CartItemResponse> selectedItems = filterSelectedItems(cart, request.getItems());
+
         AddressEntity shippingAddress = addressRepository.findById(request.getShippingAddressId())
                 .filter(a -> a.getUser().getId().equals(user.getId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.ADDRESS_NOT_FOUND, "Teslimat adresi geçersiz"));
@@ -75,8 +75,7 @@ public class OrderService {
                 .filter(a -> a.getUser().getId().equals(user.getId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.ADDRESS_NOT_FOUND, "Fatura adresi geçersiz"));
 
-        // Stok Kontrolü ve Düşümü
-        for (CartItemResponse item : cart.getItems()) {
+        for (CartItemResponse item : selectedItems) {
             ProductVariantEntity variant = productVariantRepository.findById(item.getVariantId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.VARIANT_NOT_FOUND));
 
@@ -90,8 +89,7 @@ public class OrderService {
             productVariantRepository.save(variant);
         }
 
-        // Sipariş Oluştur
-        OrderSummaryResponse summary = calculateOrderSummary(cart, null);
+        OrderSummaryResponse summary = calculateOrderSummary(selectedItems, null);
 
         OrderEntity order = OrderEntity.builder()
                 .user(user)
@@ -111,8 +109,7 @@ public class OrderService {
                 .items(new ArrayList<>())
                 .build();
 
-        // Order Itemları Oluştur (Snapshot mantığı)
-        List<OrderItemEntity> orderItems = cart.getItems().stream().map(cartItem -> {
+        List<OrderItemEntity> orderItems = selectedItems.stream().map(cartItem -> {
             Map<String, Object> snapshot = Map.of(
                     "color", cartItem.getColor() != null ? cartItem.getColor() : "",
                     "size", cartItem.getSize() != null ? cartItem.getSize() : "",
@@ -134,25 +131,24 @@ public class OrderService {
         order.setItems(orderItems);
         OrderEntity savedOrder = orderRepository.save(order);
 
-        // Sepeti temizle
-        cartService.clearCart();
+        for (CartItemResponse item : selectedItems) {
+            cartService.removeCartItem(item.getId());
+        }
 
         return OrderSummaryResponse.builder()
                 .orderId(savedOrder.getId())
-                .items(cart.getItems())
+                .items(selectedItems)
                 .subTotal(summary.getSubTotal())
                 .totalAmount(summary.getTotalAmount())
                 .build();
     }
 
-    // --- GET MY ORDERS (LIST) ---
     public Page<OrderResponse> getMyOrders(Pageable pageable) {
         UserEntity user = userService.getCurrentUser();
         Page<OrderEntity> orders = orderRepository.findAllByUserIdOrderByCreatedAtDesc(user.getId(), pageable);
         return orders.map(this::mapToOrderResponse);
     }
 
-    // --- GET ORDER DETAIL ---
     public OrderDetailResponse getOrderDetail(UUID orderId) {
         UserEntity user = userService.getCurrentUser();
         OrderEntity order = orderRepository.findByIdAndUserId(orderId, user.getId())
@@ -161,7 +157,6 @@ public class OrderService {
         return mapToOrderDetailResponse(order);
     }
 
-    // --- CANCEL ORDER ---
     @Transactional
     public void cancelOrder(UUID orderId) {
         UserEntity user = userService.getCurrentUser();
@@ -185,7 +180,6 @@ public class OrderService {
         orderRepository.save(order);
     }
 
-    // --- RETURN ORDER (IADE TALEBI) ---
     @Transactional
     public void createReturnRequest(UUID orderId, ReturnOrderRequest request) {
         UserEntity user = userService.getCurrentUser();
@@ -252,10 +246,15 @@ public class OrderService {
                 .build();
     }
 
-    private OrderSummaryResponse calculateOrderSummary(CartResponse cart, String couponCode) {
-        BigDecimal subTotal = cart.getTotalPrice();
+    private OrderSummaryResponse calculateOrderSummary(List<CartItemResponse> items, String couponCode) {
+        BigDecimal subTotal = BigDecimal.ZERO;
+
+        for (CartItemResponse item : items) {
+            subTotal = subTotal.add(item.getSubTotal());
+        }
+
         return OrderSummaryResponse.builder()
-                .items(cart.getItems())
+                .items(items)
                 .subTotal(subTotal)
                 .totalAmount(subTotal)
                 .build();
@@ -267,5 +266,26 @@ public class OrderService {
         } catch (Exception e) {
             throw new RuntimeException("Adres verisi dönüştürülemedi");
         }
+    }
+
+    // --- Sepetten sadece seçili ürünleri ayıklar ---
+    private List<CartItemResponse> filterSelectedItems(CartResponse cart, List<UUID> selectedVariantIds) {
+        if (selectedVariantIds == null || selectedVariantIds.isEmpty()) {
+            throw new BusinessException(ErrorCode.CHECKOUT_EMPTY_CART, "En az bir ürün seçilmelidir.");
+        }
+
+        List<CartItemResponse> filtered = cart.getItems().stream()
+                .filter(item -> selectedVariantIds.contains(item.getVariantId())) // Variant ID'ye göre eşleştirme
+                .collect(Collectors.toList());
+
+        if (filtered.isEmpty()) {
+            throw new BusinessException(ErrorCode.CHECKOUT_EMPTY_CART, "Seçilen ürünler sepetinizde bulunamadı.");
+        }
+
+        // Opsiyonel: Seçilen ID sayısı ile bulunan ürün sayısı eşit mi kontrolü
+        // yapılabilir.
+        // Şimdilik sepette olanları alıp devam ediyoruz.
+
+        return filtered;
     }
 }
