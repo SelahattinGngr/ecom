@@ -62,7 +62,7 @@ POST {{cartUrl}}/items HTTP/1.1
 Content-Type: application/json
 
 {
-  "variantId":"eb760d6b-a80b-46d0-b758-d62e87b5a53a",
+  "variantId":"1fdf8b19-e637-449f-a97e-a5c2a7645024",
   "quantity": 1
 }
 
@@ -89,7 +89,7 @@ POST {{orderUrl}}/checkout/preview HTTP/1.1
 Content-Type: application/json
 
 {
-  "items": ["a4d46113-9b02-4c4c-ae8a-999d1178738a", "eb760d6b-a80b-46d0-b758-d62e87b5a53a"]
+  "items": ["eb760d6b-a80b-46d0-b758-d62e87b5a53a", "1fdf8b19-e637-449f-a97e-a5c2a7645024"]
 }
 
 ### checkout
@@ -99,13 +99,13 @@ Content-Type: application/json
 {
   "shippingAddressId" : "c801a96c-553b-405d-9467-8cc6b2bdfde5",
   "billingAddressId" : "c801a96c-553b-405d-9467-8cc6b2bdfde5",
-  "items": ["a4d46113-9b02-4c4c-ae8a-999d1178738a", "eb760d6b-a80b-46d0-b758-d62e87b5a53a"]
+  "items": ["1fdf8b19-e637-449f-a97e-a5c2a7645024"]
 }
 
 ### get-orders
 GET {{orderUrl}} HTTP/1.1
 
-@orderId = 3e703b41-e1b2-45dc-a1d9-b6e2ca5b4890
+@orderId = eea046a4-9f36-438b-b39f-07a3e91cd943
 
 ### get-order-by-id
 GET {{orderUrl}}/{{orderId}} HTTP/1.1
@@ -117,7 +117,6 @@ POST {{paymentUrl}} HTTP/1.1
 Content-Type: application/json
 
 {
-  "orderId": "3e703b41-e1b2-45dc-a1d9-b6e2ca5b4890",
-  "provider": "iyzico",
-  
+  "orderId": "eea046a4-9f36-438b-b39f-07a3e91cd943",
+  "callbackUrl": "http://localhost:3000/payment-callback"
 }

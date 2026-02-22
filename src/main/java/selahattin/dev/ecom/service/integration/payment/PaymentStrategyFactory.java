@@ -6,21 +6,19 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.utils.enums.PaymentProvider;
 
 @Component
-@RequiredArgsConstructor
 public class PaymentStrategyFactory {
 
-    private final Map<PaymentProvider, PaymentProviderStrategy> strategies = new EnumMap<>(PaymentProvider.class);
+    private final Map<PaymentProvider, PaymentProviderStrategy> strategies;
 
-    // TÜM sınıfları (Mock, Stripe, Iyzico...) bulup bu listeye otomatik doldurur.
     public PaymentStrategyFactory(List<PaymentProviderStrategy> strategyList) {
+        this.strategies = new EnumMap<>(PaymentProvider.class);
         for (PaymentProviderStrategy strategy : strategyList) {
-            strategies.put(strategy.getProviderName(), strategy);
+            this.strategies.put(strategy.getProviderName(), strategy);
         }
     }
 

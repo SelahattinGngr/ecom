@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.config.properties.PaymentProperties;
 import selahattin.dev.ecom.dto.request.payment.PaymentInitRequest;
 import selahattin.dev.ecom.dto.response.payment.PaymentInitResponse;
 import selahattin.dev.ecom.dto.response.payment.PaymentResponse;
@@ -19,6 +20,7 @@ import selahattin.dev.ecom.repository.payment.PaymentRepository;
 import selahattin.dev.ecom.service.integration.payment.PaymentProviderStrategy;
 import selahattin.dev.ecom.service.integration.payment.PaymentStrategyFactory;
 import selahattin.dev.ecom.utils.enums.OrderStatus;
+import selahattin.dev.ecom.utils.enums.PaymentProvider;
 import selahattin.dev.ecom.utils.enums.PaymentStatus;
 
 @Service
@@ -29,6 +31,7 @@ public class PaymentService {
     private final OrderRepository orderRepository;
     private final UserService userService;
     private final PaymentStrategyFactory paymentStrategyFactory;
+    private final PaymentProperties paymentProperties;
 
     @Transactional
     public PaymentInitResponse initPayment(PaymentInitRequest request) {
@@ -40,17 +43,19 @@ public class PaymentService {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Bu sipariş ödeme için uygun değil.");
         }
 
+        PaymentProvider activeProvider = paymentProperties.getActiveProvider();
+
         PaymentEntity payment = PaymentEntity.builder()
                 .order(order)
                 .amount(order.getTotalAmount())
-                .paymentProvider(request.getProvider())
+                .paymentProvider(activeProvider)
                 .status(PaymentStatus.PENDING)
                 .description("Sipariş ödemesi #" + order.getId())
                 .build();
 
         PaymentEntity savedPayment = paymentRepository.save(payment);
 
-        PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(request.getProvider());
+        PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(activeProvider);
 
         return strategy.initializePayment(savedPayment, request);
     }
