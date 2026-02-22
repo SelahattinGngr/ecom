@@ -73,7 +73,7 @@ public class OrderEntity {
     // JSONB Shipping Address
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "shipping_address", nullable = false, columnDefinition = "jsonb")
-    private Map<String, Object> shippingAddress; // Veya özel bir DTO class
+    private Map<String, Object> shippingAddress;
 
     // Location References
     @ManyToOne
@@ -95,6 +95,16 @@ public class OrderEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "billing_address", columnDefinition = "jsonb")
     private Map<String, Object> billingAddress;
+
+    // --- MANUEL KARGO TAKIP ALANLARI ---
+    @Column(name = "cargo_firm")
+    private String cargoFirm;
+
+    @Column(name = "tracking_code")
+    private String trackingCode;
+
+    @Column(name = "shipped_at")
+    private OffsetDateTime shippedAt;
 
     // Return Info
     @Column(name = "returned_at")

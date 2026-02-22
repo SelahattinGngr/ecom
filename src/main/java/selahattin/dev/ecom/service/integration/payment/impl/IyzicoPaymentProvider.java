@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.config.properties.PaymentProperties;
 import selahattin.dev.ecom.dto.request.payment.PaymentInitRequest;
+import selahattin.dev.ecom.dto.response.payment.PaymentCallbackResult;
 import selahattin.dev.ecom.dto.response.payment.PaymentInitResponse;
 import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.entity.order.OrderEntity;
@@ -25,6 +27,7 @@ import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.service.integration.payment.PaymentProviderStrategy;
 import selahattin.dev.ecom.utils.enums.PaymentProvider;
+import selahattin.dev.ecom.utils.enums.PaymentStatus;
 
 @Slf4j
 @Service
@@ -34,6 +37,7 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
     private final PaymentProperties paymentProperties;
 
     private static final String STATUS_SUCCESS = "success";
+    private static final String PAYMENT_STATUS_SUCCESS = "SUCCESS";
     private static final String DEFAULT_IP = "127.0.0.1";
 
     @Override
@@ -43,12 +47,9 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
 
     private Options getOptions() {
         PaymentProperties.Iyzico iyzicoProps = paymentProperties.getIyzico();
-
-        // FAIL-FAST: Eğer anahtarlar yoksa BusinessException fırlatıyoruz.
         if (iyzicoProps.getApiKey() == null || iyzicoProps.getSecretKey() == null) {
             throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "Iyzico API anahtarları konfigüre edilmemiş!");
         }
-
         Options options = new Options();
         options.setApiKey(iyzicoProps.getApiKey());
         options.setSecretKey(iyzicoProps.getSecretKey());
@@ -58,11 +59,8 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
 
     @Override
     public PaymentInitResponse initializePayment(PaymentEntity payment, PaymentInitRequest request) {
-        // Önce seçenekleri alarak kontrolü en başta yapıyoruz (Testin geçmesi için
-        // kritik)
         Options options = getOptions();
 
-        // Güvenli Loglama: payment veya order null olsa bile patlamaz.
         String orderId = Optional.ofNullable(payment.getOrder())
                 .map(order -> order.getId().toString())
                 .orElse("UNKNOWN");
@@ -83,7 +81,6 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
         iyzicoRequest.setCallbackUrl(iyzicoProps.getCallbackUrl());
         iyzicoRequest.setEnabledInstallments(Arrays.asList(2, 3, 6, 9));
 
-        // 1. BUYER
         Buyer buyer = new Buyer();
         buyer.setId(user.getId().toString());
         buyer.setName(user.getFirstName());
@@ -109,7 +106,6 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
         buyer.setCountry(country);
         iyzicoRequest.setBuyer(buyer);
 
-        // 2. ADDRESS
         Address address = new Address();
         address.setContactName(buyer.getName() + " " + buyer.getSurname());
         address.setCity(city);
@@ -119,7 +115,6 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
         iyzicoRequest.setShippingAddress(address);
         iyzicoRequest.setBillingAddress(address);
 
-        // 3. BASKET
         List<BasketItem> basketItems = new ArrayList<>();
         for (OrderItemEntity item : order.getItems()) {
             BasketItem basketItem = new BasketItem();
@@ -151,11 +146,49 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
                     .build();
 
         } catch (BusinessException be) {
-            // Kendi hatamızı tekrar fırlatıyoruz ki mesaj değişmesin
             throw be;
         } catch (Exception e) {
             log.error("[IYZICO] Exception: ", e);
             throw new BusinessException(ErrorCode.PAYMENT_INIT_ERROR, "Iyzico bağlantı hatası");
+        }
+    }
+
+    @Override
+    public PaymentCallbackResult processCallback(Map<String, String> payload) {
+        String token = payload.get("token");
+        if (token == null) {
+            log.error("[IYZICO] Callback isteğinde token bulunamadı!");
+            return PaymentCallbackResult.builder().status(PaymentStatus.FAILED).errorCode("NO_TOKEN").build();
+        }
+
+        try {
+            log.info("[IYZICO] Ödeme sonucu sorgulanıyor. Token: {}", token);
+            RetrieveCheckoutFormRequest request = new RetrieveCheckoutFormRequest();
+            request.setToken(token);
+
+            CheckoutForm form = CheckoutForm.retrieve(request, getOptions());
+
+            PaymentStatus finalStatus = PaymentStatus.FAILED;
+            if (STATUS_SUCCESS.equals(form.getStatus()) && PAYMENT_STATUS_SUCCESS.equals(form.getPaymentStatus())) {
+                finalStatus = PaymentStatus.SUCCEEDED;
+                log.info("[IYZICO] Ödeme BAŞARILI. Token: {}", token);
+            } else {
+                log.warn("[IYZICO] Ödeme BAŞARISIZ. Msg: {}", form.getErrorMessage());
+            }
+
+            return PaymentCallbackResult.builder()
+                    .transactionId(token)
+                    .status(finalStatus)
+                    .errorCode(form.getErrorCode() != null ? form.getErrorCode() : form.getErrorMessage())
+                    .build();
+
+        } catch (Exception e) {
+            log.error("[IYZICO] Callback Retrieve Exception: ", e);
+            return PaymentCallbackResult.builder()
+                    .transactionId(token)
+                    .status(PaymentStatus.FAILED)
+                    .errorCode("EXCEPTION_OCCURRED")
+                    .build();
         }
     }
 
@@ -166,6 +199,7 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
 
     @Override
     public void voidPayment(PaymentEntity payment) {
+        // İptal içeriği aynı kalacak (yer kaplamasın diye tam yazdım)
         log.info("[IYZICO] İptal (Cancel) işlemi. ID: {}", payment.getId());
         try {
             CreateCancelRequest request = new CreateCancelRequest();
@@ -188,6 +222,7 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
 
     @Override
     public void refundPayment(PaymentEntity payment, BigDecimal refundAmount) {
+        // İade içeriği aynı kalacak
         log.info("[IYZICO] İade (Refund) işlemi. ID: {}", payment.getId());
         try {
             CreateRefundRequest request = new CreateRefundRequest();

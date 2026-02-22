@@ -1,12 +1,14 @@
 package selahattin.dev.ecom.service.integration.payment.impl;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.dto.request.payment.PaymentInitRequest;
+import selahattin.dev.ecom.dto.response.payment.PaymentCallbackResult;
 import selahattin.dev.ecom.dto.response.payment.PaymentInitResponse;
 import selahattin.dev.ecom.entity.payment.PaymentEntity;
 import selahattin.dev.ecom.service.integration.payment.PaymentProviderStrategy;
@@ -53,5 +55,11 @@ public class MockPaymentProvider implements PaymentProviderStrategy {
     @Override
     public void refundPayment(PaymentEntity payment, BigDecimal refundAmount) {
         log.info("[MOCK] Ödeme İADE EDİLDİ (Refund). ID: {}, Tutar: {}", payment.getId(), refundAmount);
+    }
+
+    @Override
+    public PaymentCallbackResult processCallback(Map<String, String> payload) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'processCallback'");
     }
 }

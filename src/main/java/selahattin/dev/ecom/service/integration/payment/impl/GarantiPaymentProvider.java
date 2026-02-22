@@ -1,11 +1,13 @@
 package selahattin.dev.ecom.service.integration.payment.impl;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.dto.request.payment.PaymentInitRequest;
+import selahattin.dev.ecom.dto.response.payment.PaymentCallbackResult;
 import selahattin.dev.ecom.dto.response.payment.PaymentInitResponse;
 import selahattin.dev.ecom.entity.payment.PaymentEntity;
 import selahattin.dev.ecom.exception.BusinessException;
@@ -44,5 +46,11 @@ public class GarantiPaymentProvider implements PaymentProviderStrategy {
     @Override
     public void refundPayment(PaymentEntity payment, BigDecimal refundAmount) {
         log.info("[GARANTI] Refund işlemi");
+    }
+
+    @Override
+    public PaymentCallbackResult processCallback(Map<String, String> payload) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'processCallback'");
     }
 }

@@ -1,6 +1,7 @@
 package selahattin.dev.ecom.service.integration.payment.impl;
 
 import java.math.BigDecimal;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.config.properties.PaymentProperties;
 import selahattin.dev.ecom.dto.request.payment.PaymentInitRequest;
+import selahattin.dev.ecom.dto.response.payment.PaymentCallbackResult;
 import selahattin.dev.ecom.dto.response.payment.PaymentInitResponse;
 import selahattin.dev.ecom.entity.payment.PaymentEntity;
 import selahattin.dev.ecom.exception.BusinessException;
@@ -162,5 +164,11 @@ public class StripePaymentProvider implements PaymentProviderStrategy {
             log.error("[STRIPE] Refund Hatası: {}", e.getMessage(), e);
             throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Stripe iade hatası: " + e.getMessage());
         }
+    }
+
+    @Override
+    public PaymentCallbackResult processCallback(Map<String, String> payload) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'processCallback'");
     }
 }

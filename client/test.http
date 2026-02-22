@@ -19,7 +19,7 @@ POST {{authUrl}}/public/signin HTTP/1.1
 Content-Type: application/json
 
 {
-    "email": "selahattin_gungor53@hotmail.com"
+    "email": "fatihb469@gmail.com"
 }
 
 ### verify-login-otp
@@ -27,8 +27,8 @@ POST {{authUrl}}/public/signin-verify HTTP/1.1
 Content-Type: application/json
 
 {
-  "email": "selahattin_gungor53@hotmail.com",
-  "code": "658638"
+  "email": "fatihb469@gmail.com",
+  "code": "864683"
 }
 
 ### refresh-token
@@ -97,8 +97,8 @@ POST {{orderUrl}}/checkout HTTP/1.1
 Content-Type: application/json
 
 {
-  "shippingAddressId" : "c801a96c-553b-405d-9467-8cc6b2bdfde5",
-  "billingAddressId" : "c801a96c-553b-405d-9467-8cc6b2bdfde5",
+  "shippingAddressId" : "9f050d82-c9ac-4a44-964d-288792a9b350",
+  "billingAddressId" : "9f050d82-c9ac-4a44-964d-288792a9b350",
   "items": ["1fdf8b19-e637-449f-a97e-a5c2a7645024"]
 }
 
@@ -117,6 +117,9 @@ POST {{paymentUrl}} HTTP/1.1
 Content-Type: application/json
 
 {
-  "orderId": "eea046a4-9f36-438b-b39f-07a3e91cd943",
+  "orderId": "085614bc-4549-4582-9213-3355500d564d",
   "callbackUrl": "http://localhost:3000/payment-callback"
 }
+
+### get-payment-details
+GET {{paymentUrl}}/de220f3c-defd-445e-9311-230083d8768d HTTP/1.1

@@ -53,12 +53,20 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/public/**").permitAll() // Giriş yapmadan erişilebilecek endpointler
+                        // Public Endpoint'ler
+                        .requestMatchers("/api/v1/public/**").permitAll()
                         .requestMatchers("/api/v1/auth/public/**").permitAll()
+
+                        // Webhook'lar (Dış dünyadan JWT'siz gelecek)
+                        .requestMatchers("/api/v1/webhooks/**").permitAll()
+
+                        // Statik Dosyalar ve Dokümantasyon
                         .requestMatchers("/assets/public/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
+
+                        // Kalan tüm endpointler için yetki zorunlu
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -67,13 +75,26 @@ public class SecurityConfig {
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(clientProperties.getCorsAllowedOrigins());
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+        // 1. STANDART API CORS AYARLARI (Sadece senin Frontend'ine izin verir)
+        CorsConfiguration apiConfig = new CorsConfiguration();
+        apiConfig.setAllowedOrigins(clientProperties.getCorsAllowedOrigins());
+        apiConfig.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        apiConfig.setAllowedHeaders(List.of("*"));
+        apiConfig.setAllowCredentials(true);
+
+        // 2. WEBHOOK CORS AYARLARI (Iyzico, Stripe gibi yerlerden gelen POST'lara açık)
+        CorsConfiguration webhookConfig = new CorsConfiguration();
+        webhookConfig.setAllowedOrigins(List.of("*"));
+        webhookConfig.setAllowedMethods(List.of("POST", "OPTIONS"));
+        webhookConfig.setAllowedHeaders(List.of("*"));
+        webhookConfig.setAllowCredentials(false); // Wildcard origin kullanıldığı için false olmak zorunda
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        // Spring önce spesifik olanı kontrol eder. Webhook yollarına özel CORS:
+        source.registerCorsConfiguration("/api/v1/webhooks/**", webhookConfig);
+        // Geri kalan tüm API yollarına standart CORS:
+        source.registerCorsConfiguration("/**", apiConfig);
+
         return source;
     }
 }

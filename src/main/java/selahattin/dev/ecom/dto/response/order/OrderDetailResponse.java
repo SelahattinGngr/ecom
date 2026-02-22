@@ -26,6 +26,11 @@ public class OrderDetailResponse {
     private String recipientName;
     private String recipientPhone;
 
+    // --- MANUEL KARGO TAKIP ALANLARI ---
+    private String cargoFirm;
+    private String trackingCode;
+    private OffsetDateTime shippedAt;
+
     // Ürünler
     private List<OrderItemResponse> items;
 

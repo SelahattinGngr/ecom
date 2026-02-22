@@ -22,5 +22,10 @@ public class AdminOrderResponse {
     private String customerName; // firstName + lastName
     private String customerEmail;
 
+    // --- MANUEL KARGO TAKIP ALANLARI ---
+    private String cargoFirm;
+    private String trackingCode;
+    private OffsetDateTime shippedAt;
+
     private OffsetDateTime createdAt;
 }

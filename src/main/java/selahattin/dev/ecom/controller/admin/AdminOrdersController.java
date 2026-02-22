@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.dto.request.admin.ShipOrderRequest;
 import selahattin.dev.ecom.dto.request.admin.UpdateOrderStatusRequest;
 import selahattin.dev.ecom.response.ApiResponse;
 import selahattin.dev.ecom.dto.response.admin.AdminOrderResponse;
@@ -58,5 +60,15 @@ public class AdminOrdersController {
 
         adminOrdersService.updateOrderStatus(id, request);
         return ResponseEntity.ok(ApiResponse.success("Sipariş durumu güncellendi"));
+    }
+
+    @PostMapping("/{id}/ship")
+    @PreAuthorize("hasAuthority('order:update')")
+    public ResponseEntity<ApiResponse<Void>> shipOrder(
+            @PathVariable UUID id,
+            @Valid @RequestBody ShipOrderRequest request) {
+
+        adminOrdersService.shipOrder(id, request);
+        return ResponseEntity.ok(ApiResponse.success("Sipariş başarıyla kargolandı."));
     }
 }
