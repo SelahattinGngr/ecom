@@ -124,7 +124,7 @@ public class AdminProductsService {
         ProductVariantEntity variant = ProductVariantEntity.builder()
                 .product(product)
                 .sku(request.getSku())
-                .size(request.getSize())
+                .size(request.getProductSize())
                 .color(request.getColor())
                 .price(request.getPrice())
                 .stockQuantity(request.getStockQuantity())

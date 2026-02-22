@@ -11,7 +11,7 @@ public class ProductVariantRequest {
     @NotBlank(message = "SKU boş olamaz")
     private String sku;
 
-    private String size; // Örn: XL, 42
+    private String productSize; // Örn: XL, 42
     private String color; // Örn: Mavi, #0000FF
 
     @NotNull(message = "Fiyat boş olamaz")

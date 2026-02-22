@@ -2,7 +2,6 @@ package selahattin.dev.ecom.service.domain;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -16,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.dto.infra.AddressSummaryDto;
 import selahattin.dev.ecom.dto.request.order.CheckoutPreviewRequest;
 import selahattin.dev.ecom.dto.request.order.CheckoutRequest;
 import selahattin.dev.ecom.dto.request.order.ReturnOrderRequest;
@@ -69,24 +69,14 @@ public class OrderService {
 
         AddressEntity shippingAddress = addressRepository.findById(request.getShippingAddressId())
                 .filter(a -> a.getUser().getId().equals(user.getId()))
-                .orElseThrow(() -> new BusinessException(ErrorCode.ADDRESS_NOT_FOUND, "Teslimat adresi geçersiz"));
+                .orElseThrow(() -> new BusinessException(ErrorCode.ADDRESS_NOT_FOUND));
 
-        AddressEntity billingAddress = addressRepository.findById(request.getBillingAddressId())
-                .filter(a -> a.getUser().getId().equals(user.getId()))
-                .orElseThrow(() -> new BusinessException(ErrorCode.ADDRESS_NOT_FOUND, "Fatura adresi geçersiz"));
-
+        // Stok Kontrolü ve Atomik Güncelleme
         for (CartItemResponse item : selectedItems) {
-            ProductVariantEntity variant = productVariantRepository.findById(item.getVariantId())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.VARIANT_NOT_FOUND));
-
-            if (variant.getStockQuantity() < item.getQuantity()) {
-                throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK,
-                        variant.getProduct().getName() + " için stok yetersiz.");
+            int updatedRows = productVariantRepository.decreaseStock(item.getVariantId(), item.getQuantity());
+            if (updatedRows == 0) {
+                throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK, item.getProductName() + " stokta yok.");
             }
-
-            // Stoğu düş
-            variant.setStockQuantity(variant.getStockQuantity() - item.getQuantity());
-            productVariantRepository.save(variant);
         }
 
         OrderSummaryResponse summary = calculateOrderSummary(selectedItems, null);
@@ -103,43 +93,30 @@ public class OrderService {
                 .shippingCountry(shippingAddress.getCountry())
                 .shippingCity(shippingAddress.getCity())
                 .shippingDistrict(shippingAddress.getDistrict())
-                .shippingPostalCode(shippingAddress.getPostalCode())
                 .shippingAddress(convertAddressToMap(shippingAddress))
-                .billingAddress(convertAddressToMap(billingAddress))
-                .items(new ArrayList<>())
+                .billingAddress(convertAddressToMap(addressRepository.findById(request.getBillingAddressId()).get()))
                 .build();
 
         List<OrderItemEntity> orderItems = selectedItems.stream().map(cartItem -> {
-            Map<String, Object> snapshot = Map.of(
-                    "color", cartItem.getColor() != null ? cartItem.getColor() : "",
-                    "size", cartItem.getSize() != null ? cartItem.getSize() : "",
-                    "imageUrl", cartItem.getImageUrl() != null ? cartItem.getImageUrl() : "");
-
-            ProductVariantEntity variantRef = productVariantRepository.getReferenceById(cartItem.getVariantId());
-
             return OrderItemEntity.builder()
                     .order(order)
-                    .productVariant(variantRef)
+                    .productVariant(productVariantRepository.getReferenceById(cartItem.getVariantId()))
                     .quantity(cartItem.getQuantity())
                     .priceAtPurchase(cartItem.getUnitPrice())
                     .productNameAtPurchase(cartItem.getProductName())
                     .skuAtPurchase(cartItem.getSku())
-                    .variantSnapshot(snapshot)
+                    .variantSnapshot(Map.of("color", cartItem.getColor(), "size", cartItem.getSize()))
                     .build();
         }).toList();
 
         order.setItems(orderItems);
-        OrderEntity savedOrder = orderRepository.save(order);
+        orderRepository.save(order);
 
-        for (CartItemResponse item : selectedItems) {
-            cartService.removeCartItem(item.getId());
-        }
+        selectedItems.forEach(item -> cartService.removeCartItem(item.getId()));
 
         return OrderSummaryResponse.builder()
-                .orderId(savedOrder.getId())
-                .items(selectedItems)
-                .subTotal(summary.getSubTotal())
-                .totalAmount(summary.getTotalAmount())
+                .orderId(order.getId())
+                .totalAmount(order.getTotalAmount())
                 .build();
     }
 
@@ -223,6 +200,7 @@ public class OrderService {
         List<OrderItemResponse> items = order.getItems().stream().map(item -> OrderItemResponse.builder()
                 .id(item.getId())
                 .productId(item.getProductVariant().getProduct().getId())
+                .variantId(item.getProductVariant().getId())
                 .productName(item.getProductNameAtPurchase())
                 .sku(item.getSkuAtPurchase())
                 .unitPrice(item.getPriceAtPurchase())
@@ -262,10 +240,29 @@ public class OrderService {
 
     private Map<String, Object> convertAddressToMap(AddressEntity address) {
         try {
-            return objectMapper.convertValue(address, Map.class);
+            AddressSummaryDto summaryDto = mapToAddressSummary(address);
+
+            return objectMapper.convertValue(summaryDto, Map.class);
         } catch (Exception e) {
-            throw new RuntimeException("Adres verisi dönüştürülemedi");
+            throw new RuntimeException("Adres verisi dönüştürülemedi: " + e.getMessage());
         }
+    }
+
+    private AddressSummaryDto mapToAddressSummary(AddressEntity address) {
+        return AddressSummaryDto.builder()
+                .title(address.getTitle())
+                .contactName(address.getContactName())
+                .contactPhone(address.getContactPhone())
+                .country(address.getCountry() != null ? address.getCountry().getName() : "")
+                .city(address.getCity() != null ? address.getCity().getName() : "")
+                .district(address.getDistrict() != null ? address.getDistrict().getName() : "")
+                .neighborhood(address.getNeighborhood())
+                .street(address.getStreet())
+                .buildingNo(address.getBuildingNo())
+                .apartmentNo(address.getApartmentNo())
+                .postalCode(address.getPostalCode())
+                .fullAddress(address.getFullAddress())
+                .build();
     }
 
     // --- Sepetten sadece seçili ürünleri ayıklar ---

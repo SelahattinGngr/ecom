@@ -73,6 +73,7 @@ public class UserService {
 
     // --- USER PROFILE METHODS ---
 
+    // TODO - Cache mekanizması eklenebilir.
     public CurrentUserResponse getCurrentUserInfo() {
         UserEntity user = getCurrentUser();
         return mapToResponse(user);
@@ -131,11 +132,18 @@ public class UserService {
                 .map(RoleEntity::getName)
                 .toList();
 
+        List<String> permissions = user.getRoles().stream()
+                .flatMap(role -> role.getPermissions().stream())
+                .map(permission -> permission.getName())
+                .distinct()
+                .toList();
+
         return CurrentUserResponse.builder()
                 .email(user.getEmail())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .roles(roles)
+                .permissions(permissions)
                 .phoneNumber(user.getPhoneNumber())
                 .build();
     }

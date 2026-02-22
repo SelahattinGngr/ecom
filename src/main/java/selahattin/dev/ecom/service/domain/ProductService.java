@@ -96,12 +96,12 @@ public class ProductService {
 
 		// 5. Size (Beden/Özellik) Filtresi - (DTO'da ismini değiştirdiysen burayı
 		// güncelle: filter.getVariantSize())
-		if (StringUtils.hasText(filter.getSize())) {
+		if (StringUtils.hasText(filter.getProductSize())) {
 			spec = spec.and((root, query, cb) -> {
 				query.distinct(true);
 				Join<ProductEntity, ProductVariantEntity> variants = root.join(variantAlias);
 				return cb.and(
-						cb.equal(variants.get("size"), filter.getSize()),
+						cb.equal(variants.get("size"), filter.getProductSize()),
 						cb.isNull(variants.get(deletedAtField)),
 						cb.isTrue(variants.get("isActive")));
 			});

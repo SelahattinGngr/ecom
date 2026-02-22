@@ -17,5 +17,6 @@ public class CurrentUserResponse {
     private String lastName;
     private String phoneNumber;
     private String email;
+    private List<String> permissions;
     private List<String> roles;
 }

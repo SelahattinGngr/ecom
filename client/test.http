@@ -10,6 +10,8 @@
 
 @orderUrl = {{baseUrl}}/orders
 
+@paymentUrl = {{baseUrl}}/payments
+
 # --- AUTHENTICATION ---
 
 ### signin
@@ -26,13 +28,16 @@ Content-Type: application/json
 
 {
   "email": "selahattin_gungor53@hotmail.com",
-  "code": "981909"
+  "code": "658638"
 }
 
 ### refresh-token
 POST {{authUrl}}/public/refresh-token HTTP/1.1
 
 # --- USERS ---
+
+### me
+GET {{userUrl}}/me HTTP/1.1
 
 ### addresses
 GET {{userUrl}}/addresses HTTP/1.1
@@ -45,7 +50,7 @@ GET {{productUrl}} HTTP/1.1
 ### list-products (search-query)
 GET {{productUrl}}?query=iphone HTTP/1.1
 
-@slug = iphone-18-pro-max-plus-ultimate-megatron-x
+@slug = urun-2-2c60d725
 
 ### get-product-by-slug
 GET {{productUrl}}/slug/{{slug}} HTTP/1.1
@@ -57,7 +62,7 @@ POST {{cartUrl}}/items HTTP/1.1
 Content-Type: application/json
 
 {
-  "variantId": "a4d46113-9b02-4c4c-ae8a-999d1178738a",
+  "variantId":"eb760d6b-a80b-46d0-b758-d62e87b5a53a",
   "quantity": 1
 }
 
@@ -84,7 +89,7 @@ POST {{orderUrl}}/checkout/preview HTTP/1.1
 Content-Type: application/json
 
 {
-  "items": ["a4d46113-9b02-4c4c-ae8a-999d1178738a"]
+  "items": ["a4d46113-9b02-4c4c-ae8a-999d1178738a", "eb760d6b-a80b-46d0-b758-d62e87b5a53a"]
 }
 
 ### checkout
@@ -94,5 +99,25 @@ Content-Type: application/json
 {
   "shippingAddressId" : "c801a96c-553b-405d-9467-8cc6b2bdfde5",
   "billingAddressId" : "c801a96c-553b-405d-9467-8cc6b2bdfde5",
-  "items": ["a4d46113-9b02-4c4c-ae8a-999d1178738a"]
+  "items": ["a4d46113-9b02-4c4c-ae8a-999d1178738a", "eb760d6b-a80b-46d0-b758-d62e87b5a53a"]
+}
+
+### get-orders
+GET {{orderUrl}} HTTP/1.1
+
+@orderId = 3e703b41-e1b2-45dc-a1d9-b6e2ca5b4890
+
+### get-order-by-id
+GET {{orderUrl}}/{{orderId}} HTTP/1.1
+
+# --- PAYMENT ---
+
+### create-payment-intent
+POST {{paymentUrl}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "orderId": "3e703b41-e1b2-45dc-a1d9-b6e2ca5b4890",
+  "provider": "iyzico",
+  
 }

@@ -24,7 +24,6 @@ public class ProductController {
     public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProducts(
             @ModelAttribute ProductFilterRequest filter,
             @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC, size = 50) Pageable pageable) {
-
         return ResponseEntity.ok(ApiResponse.success(
                 "Ürünler listelendi",
                 productService.getProducts(filter, pageable)));

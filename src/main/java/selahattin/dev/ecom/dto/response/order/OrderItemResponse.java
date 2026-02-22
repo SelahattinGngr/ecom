@@ -11,6 +11,7 @@ import lombok.Getter;
 public class OrderItemResponse {
     private UUID id;
     private UUID productId;
+    private UUID variantId;
     private String productName;
     private String sku;
     private BigDecimal unitPrice;

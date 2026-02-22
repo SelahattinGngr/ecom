@@ -12,6 +12,6 @@ public class ProductFilterRequest {
 	Integer categoryId;
 	BigDecimal minPrice;
 	BigDecimal maxPrice;
-	String size;
+	String productSize;
 	String color;
 }
