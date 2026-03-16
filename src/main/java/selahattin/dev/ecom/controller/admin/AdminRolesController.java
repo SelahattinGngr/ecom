@@ -1,8 +1,9 @@
 package selahattin.dev.ecom.controller.admin;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,9 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.request.auth.CreateRoleRequest;
 import selahattin.dev.ecom.dto.request.auth.UpdateRoleRequest;
 import selahattin.dev.ecom.dto.response.auth.RoleResponse;
@@ -33,27 +31,65 @@ public class AdminRolesController {
     @GetMapping
     @PreAuthorize("hasAuthority('system:manage')")
     public ResponseEntity<ApiResponse<List<RoleResponse>>> getAllRoles() {
-        return ResponseEntity.ok(ApiResponse.success(
+        return ResponseEntity.ok(
+            ApiResponse.success(
                 "Roller listelendi",
-                adminRoleService.getAllRoles()));
+                adminRoleService.getAllRoles()
+            )
+        );
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('system:manage')")
+    public ResponseEntity<ApiResponse<RoleResponse>> getRoleById(
+        @PathVariable UUID id
+    ) {
+        return ResponseEntity.ok(
+            ApiResponse.success(
+                "Rol getirildi",
+                adminRoleService.getRoleById(id)
+            )
+        );
+    }
+
+    @GetMapping("/by-name/{name}")
+    @PreAuthorize("hasAuthority('system:manage')")
+    public ResponseEntity<ApiResponse<RoleResponse>> getRoleByName(
+        @PathVariable String name
+    ) {
+        return ResponseEntity.ok(
+            ApiResponse.success(
+                "Rol getirildi",
+                adminRoleService.getRoleByName(name)
+            )
+        );
     }
 
     @PostMapping
     @PreAuthorize("hasAuthority('system:manage')")
-    public ResponseEntity<ApiResponse<RoleResponse>> createRole(@Valid @RequestBody CreateRoleRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(
+    public ResponseEntity<ApiResponse<RoleResponse>> createRole(
+        @Valid @RequestBody CreateRoleRequest request
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+            ApiResponse.success(
                 "Rol oluşturuldu",
-                adminRoleService.createRole(request)));
+                adminRoleService.createRole(request)
+            )
+        );
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasAuthority('system:manage')")
     public ResponseEntity<ApiResponse<RoleResponse>> updateRole(
-            @PathVariable UUID id,
-            @RequestBody UpdateRoleRequest request) {
-        return ResponseEntity.ok(ApiResponse.success(
+        @PathVariable UUID id,
+        @RequestBody UpdateRoleRequest request
+    ) {
+        return ResponseEntity.ok(
+            ApiResponse.success(
                 "Rol güncellendi",
-                adminRoleService.updateRole(id, request)));
+                adminRoleService.updateRole(id, request)
+            )
+        );
     }
 
     @DeleteMapping("/{id}")

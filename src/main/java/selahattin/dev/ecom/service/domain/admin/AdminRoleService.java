@@ -7,12 +7,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.request.auth.CreateRoleRequest;
 import selahattin.dev.ecom.dto.request.auth.UpdateRoleRequest;
 import selahattin.dev.ecom.dto.response.auth.PermissionResponse;
@@ -28,15 +26,34 @@ import selahattin.dev.ecom.service.domain.UserService;
 @Service
 @RequiredArgsConstructor
 public class AdminRoleService {
+
     private final UserService userService;
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
 
     @Transactional(readOnly = true)
     public List<RoleResponse> getAllRoles() {
-        return roleRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .toList();
+        return roleRepository
+            .findAll()
+            .stream()
+            .map(this::mapToResponse)
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public RoleResponse getRoleById(UUID id) {
+        RoleEntity role = roleRepository
+            .findById(id)
+            .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
+        return mapToResponse(role);
+    }
+
+    @Transactional(readOnly = true)
+    public RoleResponse getRoleByName(String name) {
+        RoleEntity role = roleRepository
+            .findByName(name)
+            .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
+        return mapToResponse(role);
     }
 
     @Transactional
@@ -47,33 +64,47 @@ public class AdminRoleService {
 
         // Permission ID'lerini Entity Set'ine çevir
         Set<PermissionEntity> permissions = new HashSet<>();
-        if (request.getPermissionIds() != null && !request.getPermissionIds().isEmpty()) {
-            permissions.addAll(permissionRepository.findAllById(request.getPermissionIds()));
+        if (
+            request.getPermissionIds() != null &&
+            !request.getPermissionIds().isEmpty()
+        ) {
+            permissions.addAll(
+                permissionRepository.findAllById(request.getPermissionIds())
+            );
         }
 
         RoleEntity role = RoleEntity.builder()
-                .name(request.getName())
-                .description(request.getDescription())
-                .isSystem(false) // API ile oluşturulan hiçbir rol SİSTEM rolü olamaz
-                .permissions(permissions)
-                .createdAt(OffsetDateTime.now())
-                .build();
+            .name(request.getName())
+            .description(request.getDescription())
+            .isSystem(false) // API ile oluşturulan hiçbir rol SİSTEM rolü olamaz
+            .permissions(permissions)
+            .createdAt(OffsetDateTime.now())
+            .build();
 
         return mapToResponse(roleRepository.save(role));
     }
 
     @Transactional
     public RoleResponse updateRole(UUID id, UpdateRoleRequest request) {
-        RoleEntity role = roleRepository.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
+        RoleEntity role = roleRepository
+            .findById(id)
+            .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
 
         // İsim değişikliğine sadece sistem olmayan rollerde izin verelim.
         if (StringUtils.hasText(request.getName())) {
-            if (Boolean.TRUE.equals(role.getIsSystem()) && !role.getName().equals(request.getName())) {
-                throw new BusinessException(ErrorCode.SYSTEM_ROLE_MODIFICATION,
-                        "Sistem rollerinin adı değiştirilemez.");
+            if (
+                Boolean.TRUE.equals(role.getIsSystem()) &&
+                !role.getName().equals(request.getName())
+            ) {
+                throw new BusinessException(
+                    ErrorCode.SYSTEM_ROLE_MODIFICATION,
+                    "Sistem rollerinin adı değiştirilemez."
+                );
             }
-            if (!role.getName().equals(request.getName()) && roleRepository.existsByName(request.getName())) {
+            if (
+                !role.getName().equals(request.getName()) &&
+                roleRepository.existsByName(request.getName())
+            ) {
                 throw new BusinessException(ErrorCode.DUPLICATE_ROLE_NAME);
             }
             role.setName(request.getName());
@@ -85,7 +116,8 @@ public class AdminRoleService {
 
         if (request.getPermissionIds() != null) {
             Set<PermissionEntity> newPermissions = new HashSet<>(
-                    permissionRepository.findAllById(request.getPermissionIds()));
+                permissionRepository.findAllById(request.getPermissionIds())
+            );
             role.setPermissions(newPermissions);
         }
 
@@ -94,8 +126,9 @@ public class AdminRoleService {
 
     @Transactional
     public void deleteRole(UUID id) {
-        RoleEntity role = roleRepository.findById(id)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
+        RoleEntity role = roleRepository
+            .findById(id)
+            .orElseThrow(() -> new BusinessException(ErrorCode.ROLE_NOT_FOUND));
 
         if (Boolean.TRUE.equals(role.getIsSystem())) {
             throw new BusinessException(ErrorCode.SYSTEM_ROLE_MODIFICATION);
@@ -112,22 +145,27 @@ public class AdminRoleService {
     }
 
     private RoleResponse mapToResponse(RoleEntity entity) {
-        Set<PermissionResponse> permissionResponses = (entity.getPermissions() == null)
+        Set<PermissionResponse> permissionResponses =
+            (entity.getPermissions() == null)
                 ? Collections.emptySet()
-                : entity.getPermissions().stream()
-                        .map(p -> PermissionResponse.builder()
-                                .id(p.getId())
-                                .name(p.getName())
-                                .description(p.getDescription())
-                                .build())
-                        .collect(Collectors.toSet());
+                : entity
+                      .getPermissions()
+                      .stream()
+                      .map(p ->
+                          PermissionResponse.builder()
+                              .id(p.getId())
+                              .name(p.getName())
+                              .description(p.getDescription())
+                              .build()
+                      )
+                      .collect(Collectors.toSet());
 
         return RoleResponse.builder()
-                .id(entity.getId())
-                .name(entity.getName())
-                .description(entity.getDescription())
-                .isSystem(entity.getIsSystem())
-                .permissions(permissionResponses)
-                .build();
+            .id(entity.getId())
+            .name(entity.getName())
+            .description(entity.getDescription())
+            .isSystem(entity.getIsSystem())
+            .permissions(permissionResponses)
+            .build();
     }
 }

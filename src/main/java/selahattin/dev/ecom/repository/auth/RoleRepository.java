@@ -2,10 +2,8 @@ package selahattin.dev.ecom.repository.auth;
 
 import java.util.Optional;
 import java.util.UUID;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 import selahattin.dev.ecom.entity.auth.RoleEntity;
 
 @Repository
