@@ -3,19 +3,23 @@ package selahattin.dev.ecom.utils.enums;
 import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum UserStatus {
-    ACTIVE,
-    DELETED,
-    ALL;
+    ACTIVE("active"),
+    DELETED("deleted"),
+    ALL("all");
+
+    private final String value;
+
+    UserStatus(String value) {
+        this.value = value;
+    }
 
     @JsonCreator
-    public static UserStatus fromString(String value) {
-        if (value == null || value.trim().isBlank()) {
-            return UserStatus.ACTIVE;
+    public static UserStatus fromValue(String value) {
+        for (UserStatus status : UserStatus.values()) {
+            if (status.value.equalsIgnoreCase(value)) {
+                return status;
+            }
         }
-        try {
-            return UserStatus.valueOf(value.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Geçersiz UserStatus değeri: " + value);
-        }
+        throw new IllegalArgumentException("Invalid user status: " + value);
     }
 }

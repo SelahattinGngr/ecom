@@ -18,4 +18,5 @@ public class AdminUserResponse {
     private boolean isPhoneVerified;
     private List<String> roles;
     private OffsetDateTime createdAt;
+    private OffsetDateTime deletedAt;
 }

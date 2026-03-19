@@ -1,7 +1,9 @@
 package selahattin.dev.ecom.dto.response.auth;
 
+import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
+
 import lombok.Builder;
 import lombok.Getter;
 
@@ -13,4 +15,5 @@ public class RoleResponse {
     private String description;
     private Boolean isSystem;
     private Set<PermissionResponse> permissions;
+    private OffsetDateTime createdAt;
 }

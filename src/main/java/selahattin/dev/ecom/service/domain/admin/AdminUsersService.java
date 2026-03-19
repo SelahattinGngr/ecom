@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.dto.request.admin.AdminUserFilterRequest;
 import selahattin.dev.ecom.dto.request.admin.UpdateUserRolesRequest;
 import selahattin.dev.ecom.dto.response.admin.AdminUserResponse;
 import selahattin.dev.ecom.entity.auth.RoleEntity;
@@ -20,6 +21,7 @@ import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.auth.RoleRepository;
 import selahattin.dev.ecom.repository.auth.UserRepository;
+import selahattin.dev.ecom.repository.auth.spec.UserSpecification;
 import selahattin.dev.ecom.service.infra.TokenService;
 
 @Service
@@ -31,8 +33,8 @@ public class AdminUsersService {
     private final TokenService tokenService;
 
     @Transactional(readOnly = true)
-    public Page<AdminUserResponse> getAllUsers(Pageable pageable) {
-        return (Page<AdminUserResponse>) userRepository.findAllByDeletedAtIsNull(pageable)
+    public Page<AdminUserResponse> getAllUsers(Pageable pageable, AdminUserFilterRequest filter) {
+        return userRepository.findAll(UserSpecification.withFilter(filter), pageable)
                 .map(this::mapToResponse);
     }
 
@@ -105,6 +107,7 @@ public class AdminUsersService {
                 .isPhoneVerified(user.getPhoneNumberVerifiedAt() != null)
                 .roles(roleNames)
                 .createdAt(user.getCreatedAt())
+                .deletedAt(user.getDeletedAt())
                 .build();
     }
 }

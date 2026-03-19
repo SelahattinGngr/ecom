@@ -63,7 +63,7 @@ User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 
 {
   "email": "selahattin_gungor53@hotmail.com",
-  "code": "023457"
+  "code": "914122"
 }
 
 ### signout
@@ -265,3 +265,10 @@ Content-Type: application/json
   "cargoFirm": "Yurtiçi Kargo",
   "trackingCode": "YRT1234567890"
 }
+
+### admin
+# get-all-users
+GET {{baseUrl}}/admin/users?page=0&size=10&status=all&search=selahattin HTTP/1.1
+
+### get-role
+GET {{baseUrl}}/admin/roles/by-name/developer HTTP/1.1
