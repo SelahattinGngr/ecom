@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ import selahattin.dev.ecom.dto.request.admin.UpdateUserRolesRequest;
 import selahattin.dev.ecom.dto.response.admin.AdminUserResponse;
 import selahattin.dev.ecom.response.ApiResponse;
 import selahattin.dev.ecom.service.domain.admin.AdminUsersService;
+import selahattin.dev.ecom.dto.request.admin.AdminUserFilterRequest;
 
 @RestController
 @RequiredArgsConstructor
@@ -32,10 +34,11 @@ public class AdminUsersController {
     @GetMapping
     @PreAuthorize("hasAuthority('user:read')")
     public ResponseEntity<ApiResponse<Page<AdminUserResponse>>> getAllUsers(
-            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
+            @PageableDefault(size = 20, sort = "createdAt") Pageable pageable,
+            @ModelAttribute AdminUserFilterRequest filter) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Kullanıcılar listelendi",
-                adminUsersService.getAllUsers(pageable)));
+                adminUsersService.getAllUsers(pageable, filter)));
     }
 
     @GetMapping("/{id}")
