@@ -38,3 +38,5 @@ assets/public/products/*.png
 *.png
 
 docker-data
+
+claude.md

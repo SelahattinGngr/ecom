@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.infra.AddressSummaryDto;
+import selahattin.dev.ecom.dto.infra.EmailMessageDto;
 import selahattin.dev.ecom.dto.request.order.CheckoutPreviewRequest;
 import selahattin.dev.ecom.dto.request.order.CheckoutRequest;
 import selahattin.dev.ecom.dto.request.order.ReturnOrderRequest;
@@ -35,6 +36,7 @@ import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.catalog.ProductVariantRepository;
 import selahattin.dev.ecom.repository.location.AddressRepository;
 import selahattin.dev.ecom.repository.order.OrderRepository;
+import selahattin.dev.ecom.service.infra.RedisQueueService;
 import selahattin.dev.ecom.utils.enums.OrderStatus;
 
 @Service
@@ -47,12 +49,11 @@ public class OrderService {
     private final AddressRepository addressRepository;
     private final ProductVariantRepository productVariantRepository;
     private final ObjectMapper objectMapper;
+    private final RedisQueueService redisQueueService;
 
     public OrderSummaryResponse checkoutPreview(CheckoutPreviewRequest request) {
         CartResponse cart = cartService.getMyCart();
-
         List<CartItemResponse> selectedItems = filterSelectedItems(cart, request.getItems());
-
         return calculateOrderSummary(selectedItems, null);
     }
 
@@ -71,7 +72,6 @@ public class OrderService {
                 .filter(a -> a.getUser().getId().equals(user.getId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.ADDRESS_NOT_FOUND));
 
-        // Stok Kontrolü ve Atomik Güncelleme
         for (CartItemResponse item : selectedItems) {
             int updatedRows = productVariantRepository.decreaseStock(item.getVariantId(), item.getQuantity());
             if (updatedRows == 0) {
@@ -97,17 +97,15 @@ public class OrderService {
                 .billingAddress(convertAddressToMap(addressRepository.findById(request.getBillingAddressId()).get()))
                 .build();
 
-        List<OrderItemEntity> orderItems = selectedItems.stream().map(cartItem -> {
-            return OrderItemEntity.builder()
-                    .order(order)
-                    .productVariant(productVariantRepository.getReferenceById(cartItem.getVariantId()))
-                    .quantity(cartItem.getQuantity())
-                    .priceAtPurchase(cartItem.getUnitPrice())
-                    .productNameAtPurchase(cartItem.getProductName())
-                    .skuAtPurchase(cartItem.getSku())
-                    .variantSnapshot(Map.of("color", cartItem.getColor(), "size", cartItem.getSize()))
-                    .build();
-        }).toList();
+        List<OrderItemEntity> orderItems = selectedItems.stream().map(cartItem -> OrderItemEntity.builder()
+                .order(order)
+                .productVariant(productVariantRepository.getReferenceById(cartItem.getVariantId()))
+                .quantity(cartItem.getQuantity())
+                .priceAtPurchase(cartItem.getUnitPrice())
+                .productNameAtPurchase(cartItem.getProductName())
+                .skuAtPurchase(cartItem.getSku())
+                .variantSnapshot(Map.of("color", cartItem.getColor(), "size", cartItem.getSize()))
+                .build()).toList();
 
         order.setItems(orderItems);
         orderRepository.save(order);
@@ -130,7 +128,6 @@ public class OrderService {
         UserEntity user = userService.getCurrentUser();
         OrderEntity order = orderRepository.findByIdAndUserId(orderId, user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
-
         return mapToOrderDetailResponse(order);
     }
 
@@ -147,7 +144,6 @@ public class OrderService {
 
         order.setStatus(OrderStatus.CANCELLED);
 
-        // Stokları geri yükle
         for (OrderItemEntity item : order.getItems()) {
             ProductVariantEntity variant = item.getProductVariant();
             variant.setStockQuantity(variant.getStockQuantity() + item.getQuantity());
@@ -164,23 +160,45 @@ public class OrderService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
         if (order.getStatus() != OrderStatus.DELIVERED) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Sadece teslim edilmiş siparişler iade edilebilir.");
+            throw new BusinessException(ErrorCode.INVALID_REQUEST,
+                    "Sadece teslim edilmiş siparişler iade edilebilir.");
         }
 
-        if (order.getStatus() == OrderStatus.RETURNED) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Bu sipariş zaten iade sürecinde.");
-        }
+        // İade takip kodu üret: "RET-" + orderId'nin ilk 8 karakteri büyük harf
+        String returnCode = "RET-" + order.getId().toString().substring(0, 8).toUpperCase();
 
+        order.setStatus(OrderStatus.RETURN_REQUESTED);
         order.setReturnReason(request.getReason());
         order.setReturnedAt(OffsetDateTime.now());
+        order.setReturnCode(returnCode);
 
         orderRepository.save(order);
+
+        // Kullanıcıya iade bilgi maili gönder
+        String customerName = user.getFirstName() != null ? user.getFirstName() : "Değerli Müşterimiz";
+        EmailMessageDto email = EmailMessageDto.builder()
+                .to(user.getEmail())
+                .subject("İade Talebiniz Alındı - Takip Kodunuz: " + returnCode)
+                .content(String.format(
+                        "Merhaba %s,%n%n" +
+                                "İade talebiniz alınmıştır.%n%n" +
+                                "İade Takip Kodunuz: %s%n%n" +
+                                "Bu kodu kargo paketinin üzerine yazmanızı rica ederiz. " +
+                                "Paketiniz tarafımıza ulaştıktan sonra inceleme yapılacak " +
+                                "ve iade işleminiz başlatılacaktır.%n%n" +
+                                "İade Nedeniniz: %s%n%n" +
+                                "Teşekkürler.",
+                        customerName, returnCode, request.getReason()))
+                .build();
+
+        redisQueueService.enqueueEmail(email);
     }
 
     // --- MAPPERS & HELPERS ---
 
     private OrderResponse mapToOrderResponse(OrderEntity order) {
-        String firstItemName = order.getItems().isEmpty() ? "" : order.getItems().get(0).getProductNameAtPurchase();
+        String firstItemName = order.getItems().isEmpty() ? ""
+                : order.getItems().get(0).getProductNameAtPurchase();
         if (order.getItems().size() > 1) {
             firstItemName += " ve " + (order.getItems().size() - 1) + " ürün daha";
         }
@@ -218,19 +236,21 @@ public class OrderService {
                 .billingAddress(order.getBillingAddress())
                 .recipientName(order.getShippingRecipientFirstName() + " " + order.getShippingRecipientLastName())
                 .recipientPhone(order.getShippingRecipientPhoneNumber())
+                .cargoFirm(order.getCargoFirm())
+                .trackingCode(order.getTrackingCode())
+                .shippedAt(order.getShippedAt())
                 .items(items)
                 .returnReason(order.getReturnReason())
+                .returnCode(order.getReturnCode())
                 .returnTrackingNo(order.getReturnTrackingNo())
                 .build();
     }
 
     private OrderSummaryResponse calculateOrderSummary(List<CartItemResponse> items, String couponCode) {
         BigDecimal subTotal = BigDecimal.ZERO;
-
         for (CartItemResponse item : items) {
             subTotal = subTotal.add(item.getSubTotal());
         }
-
         return OrderSummaryResponse.builder()
                 .items(items)
                 .subTotal(subTotal)
@@ -241,7 +261,6 @@ public class OrderService {
     private Map<String, Object> convertAddressToMap(AddressEntity address) {
         try {
             AddressSummaryDto summaryDto = mapToAddressSummary(address);
-
             return objectMapper.convertValue(summaryDto, Map.class);
         } catch (Exception e) {
             throw new RuntimeException("Adres verisi dönüştürülemedi: " + e.getMessage());
@@ -265,23 +284,18 @@ public class OrderService {
                 .build();
     }
 
-    // --- Sepetten sadece seçili ürünleri ayıklar ---
     private List<CartItemResponse> filterSelectedItems(CartResponse cart, List<UUID> selectedVariantIds) {
         if (selectedVariantIds == null || selectedVariantIds.isEmpty()) {
             throw new BusinessException(ErrorCode.CHECKOUT_EMPTY_CART, "En az bir ürün seçilmelidir.");
         }
 
         List<CartItemResponse> filtered = cart.getItems().stream()
-                .filter(item -> selectedVariantIds.contains(item.getVariantId())) // Variant ID'ye göre eşleştirme
+                .filter(item -> selectedVariantIds.contains(item.getVariantId()))
                 .collect(Collectors.toList());
 
         if (filtered.isEmpty()) {
             throw new BusinessException(ErrorCode.CHECKOUT_EMPTY_CART, "Seçilen ürünler sepetinizde bulunamadı.");
         }
-
-        // Opsiyonel: Seçilen ID sayısı ile bulunan ürün sayısı eşit mi kontrolü
-        // yapılabilir.
-        // Şimdilik sepette olanları alıp devam ediyoruz.
 
         return filtered;
     }

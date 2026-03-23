@@ -23,6 +23,7 @@ import selahattin.dev.ecom.entity.order.OrderEntity;
 import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.order.OrderRepository;
+import selahattin.dev.ecom.service.domain.PaymentService;
 import selahattin.dev.ecom.service.infra.RedisQueueService;
 import selahattin.dev.ecom.utils.enums.OrderStatus;
 
@@ -33,8 +34,8 @@ public class AdminOrdersService {
 
     private final OrderRepository orderRepository;
     private final RedisQueueService redisQueueService;
+    private final PaymentService paymentService;
 
-    // --- LIST ORDERS (Filtreli) ---
     public Page<AdminOrderResponse> getAllOrders(OrderStatus status, Pageable pageable) {
         Page<OrderEntity> orders;
 
@@ -47,15 +48,12 @@ public class AdminOrdersService {
         return orders.map(this::mapToAdminOrderResponse);
     }
 
-    // --- GET ORDER DETAIL ---
     public OrderDetailResponse getOrderDetail(UUID id) {
         OrderEntity order = orderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
-
         return mapToOrderDetailResponse(order);
     }
 
-    // --- UPDATE STATUS ---
     @Transactional
     public void updateOrderStatus(UUID id, UpdateOrderStatusRequest request) {
         OrderEntity order = orderRepository.findById(id)
@@ -64,10 +62,9 @@ public class AdminOrdersService {
         order.setStatus(request.getStatus());
         orderRepository.save(order);
 
-        log.info("[ADMIN] Sipariş durumu güncellendi. Order ID: {}, Yeni Durum: {}", order.getId(), order.getStatus());
+        log.info("[ADMIN] Sipariş durumu güncellendi. Order ID: {}, Yeni Durum: {}", id, request.getStatus());
     }
 
-    // --- SHIP ORDER ---
     @Transactional
     public void shipOrder(UUID id, ShipOrderRequest request) {
         OrderEntity order = orderRepository.findById(id)
@@ -82,23 +79,96 @@ public class AdminOrdersService {
         order.setTrackingCode(request.getTrackingCode());
         order.setShippedAt(OffsetDateTime.now());
         order.setStatus(OrderStatus.SHIPPED);
-
         orderRepository.save(order);
 
-        log.info("[ADMIN] Sipariş kargolandı. Order ID: {}, Firma: {}, Takip Kodu: {}", order.getId(),
-                request.getCargoFirm(), request.getTrackingCode());
-        // TODO: Atılan maillerde daha profesyonel bir template kullanılacak, firma
-        // isimleri verilecek. Şimdilik basit bir metin mail atıyoruz.
-        EmailMessageDto emailMessage = createEmailMessage(
+        log.info("[ADMIN] Sipariş kargolandı. Order ID: {}, Firma: {}, Takip: {}",
+                id, request.getCargoFirm(), request.getTrackingCode());
+
+        String customerName = order.getUser().getFirstName() != null
+                ? order.getUser().getFirstName()
+                : "Değerli Müşterimiz";
+
+        redisQueueService.enqueueEmail(createEmailMessage(
                 order.getUser().getEmail(),
                 "Siparişiniz Kargolandı - Takip Bilgileri",
                 String.format(
-                        "Merhaba %s,%n%nSiparişiniz kargoya verildi!%n%nKargo Firması: %s%nTakip Kodu: %s%n%nTeşekkürler!",
-                        order.getUser().getFirstName() != null ? order.getUser().getFirstName() : "Değerli Müşterimiz",
-                        request.getCargoFirm(),
-                        request.getTrackingCode()));
+                        "Merhaba %s,%n%nSiparişiniz kargoya verildi!%n%n" +
+                                "Kargo Firması: %s%nTakip Kodu: %s%n%nTeşekkürler!",
+                        customerName, request.getCargoFirm(), request.getTrackingCode())));
+    }
 
-        redisQueueService.enqueueEmail(emailMessage);
+    /**
+     * İade talebi onaylandı:
+     * 1. Hangi provider ile ödeme yapıldıysa o provider üzerinden iade başlatılır.
+     * 2. Sipariş durumu RETURNED yapılır.
+     * 3. Kullanıcıya bilgi maili gider.
+     */
+    @Transactional
+    public void approveReturn(UUID id) {
+        OrderEntity order = orderRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        if (order.getStatus() != OrderStatus.RETURN_REQUESTED) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST,
+                    "Sadece iade bekleyen siparişler onaylanabilir.");
+        }
+
+        // Provider'dan bağımsız iade — PaymentService hangi provider olduğunu bilir
+        paymentService.refundByOrderId(order.getId());
+
+        order.setStatus(OrderStatus.RETURNED);
+        orderRepository.save(order);
+
+        log.info("[ADMIN] İade onaylandı. Order ID: {}", id);
+
+        String customerName = order.getUser().getFirstName() != null
+                ? order.getUser().getFirstName()
+                : "Değerli Müşterimiz";
+
+        redisQueueService.enqueueEmail(createEmailMessage(
+                order.getUser().getEmail(),
+                "İade Talebiniz Onaylandı",
+                String.format(
+                        "Merhaba %s,%n%nİade talebiniz onaylandı. " +
+                                "Ödemeniz en kısa sürede hesabınıza aktarılacaktır.%n%n" +
+                                "İade Kodu: %s%n%nTeşekkürler!",
+                        customerName,
+                        order.getReturnCode() != null ? order.getReturnCode() : "-")));
+    }
+
+    /**
+     * İade talebi reddedildi:
+     * Sipariş PAID durumuna geri döner, kullanıcıya bilgi maili gider.
+     */
+    @Transactional
+    public void rejectReturn(UUID id, String reason) {
+        OrderEntity order = orderRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        if (order.getStatus() != OrderStatus.RETURN_REQUESTED) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST,
+                    "Sadece iade bekleyen siparişler reddedilebilir.");
+        }
+
+        order.setStatus(OrderStatus.PAID);
+        order.setReturnReason(null);
+        order.setReturnedAt(null);
+        order.setReturnCode(null);
+        orderRepository.save(order);
+
+        log.info("[ADMIN] İade reddedildi. Order ID: {}, Neden: {}", id, reason);
+
+        String customerName = order.getUser().getFirstName() != null
+                ? order.getUser().getFirstName()
+                : "Değerli Müşterimiz";
+
+        redisQueueService.enqueueEmail(createEmailMessage(
+                order.getUser().getEmail(),
+                "İade Talebiniz Reddedildi",
+                String.format(
+                        "Merhaba %s,%n%nİade talebiniz incelendi ancak onaylanamadı.%n%n" +
+                                "Red Nedeni: %s%n%nDetaylı bilgi için bizimle iletişime geçebilirsiniz.%n%nTeşekkürler!",
+                        customerName, reason != null ? reason : "-")));
     }
 
     // --- MAPPERS ---
@@ -150,6 +220,7 @@ public class AdminOrdersService {
                 .shippedAt(order.getShippedAt())
                 .items(items)
                 .returnReason(order.getReturnReason())
+                .returnCode(order.getReturnCode())
                 .returnTrackingNo(order.getReturnTrackingNo())
                 .build();
     }

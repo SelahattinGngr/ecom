@@ -13,6 +13,7 @@ import selahattin.dev.ecom.dto.response.payment.PaymentInitResponse;
 import selahattin.dev.ecom.entity.payment.PaymentEntity;
 import selahattin.dev.ecom.service.integration.payment.PaymentProviderStrategy;
 import selahattin.dev.ecom.utils.enums.PaymentProvider;
+import selahattin.dev.ecom.utils.enums.PaymentStatus;
 
 @Slf4j
 @Service
@@ -30,7 +31,6 @@ public class MockPaymentProvider implements PaymentProviderStrategy {
     public PaymentInitResponse initializePayment(PaymentEntity payment, PaymentInitRequest request) {
         log.info("[MOCK] Ödeme başlatılıyor. Tutar: {}", payment.getAmount());
 
-        // Mock Redirect URL
         String redirectUrl = frontendUrl + "/payment/mock-process?paymentId=" + payment.getId();
 
         return PaymentInitResponse.builder()
@@ -41,10 +41,28 @@ public class MockPaymentProvider implements PaymentProviderStrategy {
     }
 
     @Override
+    public PaymentCallbackResult processCallback(Map<String, String> payload) {
+        // Mock için callback payload'da "success" veya "fail" beklenir.
+        // Frontend /payment/mock-process sayfasından yönlendirir.
+        String result = payload.getOrDefault("result", "success");
+        String paymentId = payload.getOrDefault("paymentId", null);
+
+        PaymentStatus status = "success".equalsIgnoreCase(result)
+                ? PaymentStatus.SUCCEEDED
+                : PaymentStatus.FAILED;
+
+        log.info("[MOCK] Callback alındı. PaymentId: {}, Sonuç: {}", paymentId, status);
+
+        return PaymentCallbackResult.builder()
+                .transactionId(paymentId)
+                .status(status)
+                .errorCode(status == PaymentStatus.FAILED ? "MOCK_FAILURE" : null)
+                .build();
+    }
+
+    @Override
     public void capturePayment(PaymentEntity payment) {
         log.info("[MOCK] Ödeme TAHSİL EDİLDİ (Capture). ID: {}, Tutar: {}", payment.getId(), payment.getAmount());
-        // Gerçekte bankaya istek atılır, hata varsa Exception fırlatılır.
-        // Mock olduğu için başarılı sayıyoruz.
     }
 
     @Override
@@ -55,11 +73,5 @@ public class MockPaymentProvider implements PaymentProviderStrategy {
     @Override
     public void refundPayment(PaymentEntity payment, BigDecimal refundAmount) {
         log.info("[MOCK] Ödeme İADE EDİLDİ (Refund). ID: {}, Tutar: {}", payment.getId(), refundAmount);
-    }
-
-    @Override
-    public PaymentCallbackResult processCallback(Map<String, String> payload) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'processCallback'");
     }
 }

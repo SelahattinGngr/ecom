@@ -62,7 +62,12 @@ public class PaymentService {
         PaymentEntity savedPayment = paymentRepository.save(payment);
         PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(activeProvider);
 
-        return strategy.initializePayment(savedPayment, request);
+        PaymentInitResponse response = strategy.initializePayment(savedPayment, request);
+
+        // Iyzico token'ı initializePayment içinde savedPayment'a set eder, kaydet.
+        paymentRepository.save(savedPayment);
+
+        return response;
     }
 
     public PaymentResponse getPaymentDetail(UUID id) {
@@ -75,16 +80,7 @@ public class PaymentService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "Bu ödemeyi görüntüleme yetkiniz yok");
         }
 
-        return PaymentResponse.builder()
-                .id(payment.getId())
-                .orderId(payment.getOrder().getId())
-                .provider(payment.getPaymentProvider())
-                .amount(payment.getAmount())
-                .status(payment.getStatus())
-                .transactionId(payment.getPaymentTransactionId())
-                .description(payment.getDescription())
-                .createdAt(payment.getCreatedAt())
-                .build();
+        return toPaymentResponse(payment);
     }
 
     @Transactional
@@ -95,15 +91,13 @@ public class PaymentService {
         String frontendUrl = clientProperties.getFrontendUrl();
 
         if (result.getTransactionId() == null) {
-            log.error("[WEBHOOK] Transaction ID bulunamadı.");
+            log.error("[WEBHOOK] Transaction ID bulunamadı. Provider: {}", provider);
             return frontendUrl + "/checkout/failure?error=invalid_payload";
         }
 
-        // DİKKAT: PaymentRepository'ye findByPaymentTransactionId metodunu eklediğinden
-        // emin ol.
         PaymentEntity payment = paymentRepository.findByPaymentTransactionId(result.getTransactionId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
-                        "Ödeme kaydı bulunamadı. Token: " + result.getTransactionId()));
+                        "Ödeme kaydı bulunamadı. TransactionId: " + result.getTransactionId()));
 
         payment.setStatus(result.getStatus());
 
@@ -111,13 +105,52 @@ public class PaymentService {
             payment.getOrder().setStatus(OrderStatus.PAID);
             paymentRepository.save(payment);
             orderRepository.save(payment.getOrder());
+            log.info("[WEBHOOK] Ödeme BAŞARILI. OrderId: {}", payment.getOrder().getId());
             return frontendUrl + "/checkout/success?orderId=" + payment.getOrder().getId();
         } else {
             payment.getOrder().setStatus(OrderStatus.CANCELLED);
             paymentRepository.save(payment);
             orderRepository.save(payment.getOrder());
-            return frontendUrl + "/checkout/failure?orderId=" + payment.getOrder().getId() + "&errorCode="
-                    + result.getErrorCode();
+            log.warn("[WEBHOOK] Ödeme BAŞARISIZ. OrderId: {}, ErrorCode: {}",
+                    payment.getOrder().getId(), result.getErrorCode());
+            return frontendUrl + "/checkout/failure?orderId=" + payment.getOrder().getId()
+                    + "&errorCode=" + result.getErrorCode();
         }
+    }
+
+    /**
+     * Siparişin başarılı ödemesini bulup hangi provider ile yapıldıysa
+     * o provider üzerinden iade başlatır. Admin iade onayı buradan çağrılır.
+     */
+    @Transactional
+    public void refundByOrderId(UUID orderId) {
+        PaymentEntity payment = paymentRepository
+                .findByOrderIdAndStatus(orderId, PaymentStatus.SUCCEEDED)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
+                        "Bu sipariş için başarılı bir ödeme kaydı bulunamadı."));
+
+        PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(payment.getPaymentProvider());
+
+        strategy.refundPayment(payment, payment.getAmount());
+
+        payment.setStatus(PaymentStatus.REFUNDED);
+        paymentRepository.save(payment);
+
+        log.info("[REFUND] İade başarılı. OrderId: {}, Provider: {}, Tutar: {}",
+                orderId, payment.getPaymentProvider(), payment.getAmount());
+    }
+
+    // --- MAPPER ---
+    private PaymentResponse toPaymentResponse(PaymentEntity payment) {
+        return PaymentResponse.builder()
+                .id(payment.getId())
+                .orderId(payment.getOrder().getId())
+                .provider(payment.getPaymentProvider())
+                .amount(payment.getAmount())
+                .status(payment.getStatus())
+                .transactionId(payment.getPaymentTransactionId())
+                .description(payment.getDescription())
+                .createdAt(payment.getCreatedAt())
+                .build();
     }
 }

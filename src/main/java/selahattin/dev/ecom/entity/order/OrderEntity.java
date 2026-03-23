@@ -96,7 +96,7 @@ public class OrderEntity {
     @Column(name = "billing_address", columnDefinition = "jsonb")
     private Map<String, Object> billingAddress;
 
-    // --- MANUEL KARGO TAKIP ALANLARI ---
+    // Kargo Takip
     @Column(name = "cargo_firm")
     private String cargoFirm;
 
@@ -115,6 +115,9 @@ public class OrderEntity {
 
     @Column(name = "return_tracking_no")
     private String returnTrackingNo;
+
+    @Column(name = "return_code", length = 20)
+    private String returnCode;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)

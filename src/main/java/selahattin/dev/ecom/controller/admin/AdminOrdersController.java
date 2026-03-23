@@ -71,4 +71,21 @@ public class AdminOrdersController {
         adminOrdersService.shipOrder(id, request);
         return ResponseEntity.ok(ApiResponse.success("Sipariş başarıyla kargolandı."));
     }
+
+    @PostMapping("/{id}/return/approve")
+    @PreAuthorize("hasAuthority('order:update')")
+    public ResponseEntity<ApiResponse<Void>> approveReturn(@PathVariable UUID id) {
+        adminOrdersService.approveReturn(id);
+        return ResponseEntity.ok(ApiResponse.success("İade onaylandı, ödeme iadesi başlatıldı."));
+    }
+
+    @PostMapping("/{id}/return/reject")
+    @PreAuthorize("hasAuthority('order:update')")
+    public ResponseEntity<ApiResponse<Void>> rejectReturn(
+            @PathVariable UUID id,
+            @RequestParam(required = false) String reason) {
+
+        adminOrdersService.rejectReturn(id, reason);
+        return ResponseEntity.ok(ApiResponse.success("İade talebi reddedildi."));
+    }
 }

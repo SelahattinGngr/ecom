@@ -16,6 +16,7 @@ import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.payment.PaymentRepository;
 import selahattin.dev.ecom.service.integration.payment.PaymentProviderStrategy;
 import selahattin.dev.ecom.service.integration.payment.PaymentStrategyFactory;
+import selahattin.dev.ecom.utils.enums.OrderStatus;
 import selahattin.dev.ecom.utils.enums.PaymentStatus;
 
 @Service
@@ -41,15 +42,17 @@ public class AdminPaymentsService {
         PaymentEntity payment = paymentRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
 
-        if (payment.getStatus() != PaymentStatus.REQUIRES_ACTION && payment.getStatus() != PaymentStatus.PENDING) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Bu ödeme zaten sonuçlanmış veya capture edilemez.");
+        if (payment.getStatus() != PaymentStatus.REQUIRES_ACTION
+                && payment.getStatus() != PaymentStatus.PENDING) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST,
+                    "Bu ödeme zaten sonuçlanmış veya capture edilemez.");
         }
 
         PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(payment.getPaymentProvider());
-        
         strategy.capturePayment(payment);
 
         payment.setStatus(PaymentStatus.SUCCEEDED);
+        payment.getOrder().setStatus(OrderStatus.PAID);
         paymentRepository.save(payment);
     }
 
@@ -59,18 +62,18 @@ public class AdminPaymentsService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
 
         PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(payment.getPaymentProvider());
-
         strategy.voidPayment(payment);
 
         payment.setStatus(PaymentStatus.CANCELLED);
+        payment.getOrder().setStatus(OrderStatus.CANCELLED);
         paymentRepository.save(payment);
     }
 
     // --- MAPPER ---
     private AdminPaymentResponse mapToAdminResponse(PaymentEntity payment) {
         UserEntity user = payment.getOrder().getUser();
-        String fullName = (user.getFirstName() != null ? user.getFirstName() : "") + " " + 
-                          (user.getLastName() != null ? user.getLastName() : "");
+        String fullName = (user.getFirstName() != null ? user.getFirstName() : "") + " "
+                + (user.getLastName() != null ? user.getLastName() : "");
 
         return AdminPaymentResponse.builder()
                 .id(payment.getId())

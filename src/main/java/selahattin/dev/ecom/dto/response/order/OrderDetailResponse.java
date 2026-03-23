@@ -37,4 +37,5 @@ public class OrderDetailResponse {
     // İade Bilgileri (Varsa)
     private String returnReason;
     private String returnTrackingNo;
+    private String returnCode;
 }

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import selahattin.dev.ecom.entity.payment.PaymentEntity;
+import selahattin.dev.ecom.utils.enums.PaymentStatus;
 
 @Repository
 public interface PaymentRepository extends JpaRepository<PaymentEntity, UUID> {
@@ -16,4 +17,8 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, UUID> {
     Page<PaymentEntity> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     Optional<PaymentEntity> findByPaymentTransactionId(String paymentTransactionId);
+
+    // Siparişin başarılı ödemesini bul (iade için)
+    Optional<PaymentEntity> findByOrderIdAndStatus(UUID orderId, PaymentStatus status);
+
 }

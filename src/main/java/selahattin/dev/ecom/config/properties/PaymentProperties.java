@@ -16,21 +16,12 @@ import selahattin.dev.ecom.utils.enums.PaymentProvider;
 @ConfigurationProperties(prefix = "selahattin.dev.payment")
 public class PaymentProperties {
 
-    /**
-     * Aktif ödeme sağlayıcısı (MOCK, STRIPE, IYZICO, GARANTI)
-     * (Bu backend'in development varsayılanıdır, runtime'da request belirler)
-     */
     private PaymentProvider activeProvider = PaymentProvider.MOCK;
 
-    /**
-     * Frontend'de gösterilecek aktif ödeme yöntemleri listesi.
-     * application.properties üzerinden yönetilir.
-     */
     private List<PaymentProvider> enabledProviders = new ArrayList<>(List.of(PaymentProvider.MOCK));
 
     private Stripe stripe = new Stripe();
     private Iyzico iyzico = new Iyzico();
-    private Garanti garanti = new Garanti();
 
     @Data
     public static class Stripe {
@@ -43,18 +34,6 @@ public class PaymentProperties {
     public static class Iyzico {
         private String apiKey;
         private String secretKey;
-        private String baseUrl;
-        private String callbackUrl;
-    }
-
-    @Data
-    public static class Garanti {
-        private String merchantId;
-        private String merchantPassword;
-        private String terminalId;
-        private String storeKey;
-        private String provisionUser;
-        private String provisionPassword;
         private String baseUrl;
         private String callbackUrl;
     }
