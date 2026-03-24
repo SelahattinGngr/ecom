@@ -39,7 +39,7 @@ public interface PaymentRepository extends JpaRepository<PaymentEntity, UUID> {
     @Query("SELECT COUNT(p) FROM PaymentEntity p WHERE p.createdAt >= :from AND p.createdAt < :to")
     Long countByPeriod(@Param("from") OffsetDateTime from, @Param("to") OffsetDateTime to);
 
-    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p WHERE p.status = 'PAID' AND p.createdAt >= :from AND p.createdAt < :to")
+    @Query("SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p WHERE p.status = 'SUCCEEDED' AND p.createdAt >= :from AND p.createdAt < :to")
     java.math.BigDecimal sumRevenueByPeriod(@Param("from") OffsetDateTime from, @Param("to") OffsetDateTime to);
 
     @Query("SELECT COALESCE(SUM(p.amount), 0) FROM PaymentEntity p WHERE p.status = 'REFUNDED' AND p.createdAt >= :from AND p.createdAt < :to")

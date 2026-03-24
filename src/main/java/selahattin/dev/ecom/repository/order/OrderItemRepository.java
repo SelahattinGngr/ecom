@@ -21,16 +21,28 @@ public interface OrderItemRepository extends JpaRepository<OrderItemEntity, UUID
             FROM order_items oi
             JOIN orders o ON oi.order_id = o.id
             WHERE o.created_at >= :from AND o.created_at < :to
-              AND o.status != 'CANCELLED'
+              AND o.status != 'CANCELLED'::order_status
             GROUP BY oi.product_name_at_purchase
             ORDER BY total_qty DESC
             LIMIT 10
             """, nativeQuery = true)
     List<Object[]> findTopProductsByPeriod(@Param("from") OffsetDateTime from, @Param("to") OffsetDateTime to);
 
-    @Query("SELECT COALESCE(SUM(oi.quantity), 0) FROM OrderItemEntity oi WHERE oi.order.createdAt >= :from AND oi.order.createdAt < :to AND oi.order.status != selahattin.dev.ecom.utils.enums.OrderStatus.CANCELLED")
+    @Query(value = """
+            SELECT COALESCE(SUM(oi.quantity), 0)
+            FROM order_items oi
+            JOIN orders o ON oi.order_id = o.id
+            WHERE o.created_at >= :from AND o.created_at < :to
+              AND o.status != 'CANCELLED'::order_status
+            """, nativeQuery = true)
     Long sumItemsSoldByPeriod(@Param("from") OffsetDateTime from, @Param("to") OffsetDateTime to);
 
-    @Query("SELECT COALESCE(SUM(oi.quantity * oi.priceAtPurchase), 0) FROM OrderItemEntity oi WHERE oi.order.createdAt >= :from AND oi.order.createdAt < :to AND oi.order.status != selahattin.dev.ecom.utils.enums.OrderStatus.CANCELLED")
+    @Query(value = """
+            SELECT COALESCE(SUM(oi.quantity * oi.price_at_purchase), 0)
+            FROM order_items oi
+            JOIN orders o ON oi.order_id = o.id
+            WHERE o.created_at >= :from AND o.created_at < :to
+              AND o.status != 'CANCELLED'::order_status
+            """, nativeQuery = true)
     java.math.BigDecimal sumProductRevenueByPeriod(@Param("from") OffsetDateTime from, @Param("to") OffsetDateTime to);
 }
