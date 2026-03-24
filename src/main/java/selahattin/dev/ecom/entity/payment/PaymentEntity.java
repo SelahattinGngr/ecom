@@ -54,6 +54,10 @@ public class PaymentEntity {
     @Column(name = "payment_transaction_id")
     private String paymentTransactionId;
 
+    /** Iyzico'nun numeric paymentId'si — callback sonrası set edilir, iade/iptal için kullanılır */
+    @Column(name = "provider_payment_id")
+    private String providerPaymentId;
+
     @Column(nullable = false)
     private BigDecimal amount;
 

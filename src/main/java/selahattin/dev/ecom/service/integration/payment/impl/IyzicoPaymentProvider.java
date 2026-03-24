@@ -180,6 +180,7 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
                     .transactionId(token)
                     .status(finalStatus)
                     .errorCode(form.getErrorCode() != null ? form.getErrorCode() : form.getErrorMessage())
+                    .providerPaymentId(form.getPaymentId())
                     .build();
 
         } catch (Exception e) {
@@ -199,13 +200,14 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
 
     @Override
     public void voidPayment(PaymentEntity payment) {
-        // İptal içeriği aynı kalacak (yer kaplamasın diye tam yazdım)
-        log.info("[IYZICO] İptal (Cancel) işlemi. ID: {}", payment.getId());
+        log.info("[IYZICO] İptal (Cancel) işlemi. Payment ID: {}", payment.getId());
         try {
+            String numericPaymentId = resolveNumericPaymentId(payment);
+
             CreateCancelRequest request = new CreateCancelRequest();
             request.setLocale(Locale.TR.getValue());
             request.setConversationId(payment.getId().toString());
-            request.setPaymentId(payment.getPaymentTransactionId());
+            request.setPaymentId(numericPaymentId);
             request.setIp(DEFAULT_IP);
 
             Cancel cancel = Cancel.create(request, getOptions());
@@ -222,26 +224,72 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
 
     @Override
     public void refundPayment(PaymentEntity payment, BigDecimal refundAmount) {
-        // İade içeriği aynı kalacak
-        log.info("[IYZICO] İade (Refund) işlemi. ID: {}", payment.getId());
+        log.info("[IYZICO] İade (Refund) işlemi. Payment ID: {}", payment.getId());
         try {
-            CreateRefundRequest request = new CreateRefundRequest();
-            request.setLocale(Locale.TR.getValue());
-            request.setConversationId(payment.getId().toString());
-            request.setPaymentTransactionId(payment.getPaymentTransactionId());
-            request.setPrice(refundAmount);
-            request.setIp(DEFAULT_IP);
-            request.setCurrency(Currency.TRY.name());
-
-            Refund refund = Refund.create(request, getOptions());
-            if (!STATUS_SUCCESS.equals(refund.getStatus())) {
+            // Ödeme kalemlerinin numeric paymentTransactionId'lerini al
+            List<PaymentItem> paymentItems = resolvePaymentItems(payment);
+            if (paymentItems == null || paymentItems.isEmpty()) {
                 throw new BusinessException(ErrorCode.PAYMENT_FAILED,
-                        "Iyzico İade Hatası: " + refund.getErrorMessage());
+                        "Iyzico iade: ödeme kalemleri bulunamadı");
+            }
+
+            // Her ödeme kalemi için ayrı iade isteği gönder
+            for (PaymentItem item : paymentItems) {
+                CreateRefundRequest request = new CreateRefundRequest();
+                request.setLocale(Locale.TR.getValue());
+                request.setConversationId(payment.getId().toString());
+                request.setPaymentTransactionId(item.getPaymentTransactionId());
+                request.setPrice(new BigDecimal(item.getPaidPrice()));
+                request.setIp(DEFAULT_IP);
+                request.setCurrency(Currency.TRY.name());
+
+                Refund refund = Refund.create(request, getOptions());
+                if (!STATUS_SUCCESS.equals(refund.getStatus())) {
+                    throw new BusinessException(ErrorCode.PAYMENT_FAILED,
+                            "Iyzico İade Hatası (item: " + item.getPaymentTransactionId() + "): "
+                                    + refund.getErrorMessage());
+                }
+                log.info("[IYZICO] Kalem iade edildi. paymentTransactionId: {}",
+                        item.getPaymentTransactionId());
             }
         } catch (BusinessException be) {
             throw be;
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Iyzico iade hatası: " + e.getMessage());
         }
+    }
+
+    /**
+     * Iyzico'nun numeric paymentId'sini döner.
+     * Önce entity'de kayıtlı providerPaymentId'ye bakar;
+     * yoksa token ile Iyzico'ya sorgu atar.
+     */
+    private String resolveNumericPaymentId(PaymentEntity payment) {
+        if (payment.getProviderPaymentId() != null) {
+            return payment.getProviderPaymentId();
+        }
+        // providerPaymentId henüz kaydedilmemişse (eski kayıtlar) token ile retrieve et
+        CheckoutForm form = retrieveByToken(payment.getPaymentTransactionId());
+        return form.getPaymentId();
+    }
+
+    /**
+     * Iyzico'nun PaymentItem listesini döner (her biri numeric paymentTransactionId içerir).
+     * Token ile retrieve eder.
+     */
+    private List<PaymentItem> resolvePaymentItems(PaymentEntity payment) {
+        CheckoutForm form = retrieveByToken(payment.getPaymentTransactionId());
+        return form.getPaymentItems();
+    }
+
+    private CheckoutForm retrieveByToken(String token) {
+        RetrieveCheckoutFormRequest retrieveRequest = new RetrieveCheckoutFormRequest();
+        retrieveRequest.setToken(token);
+        CheckoutForm form = CheckoutForm.retrieve(retrieveRequest, getOptions());
+        if (!STATUS_SUCCESS.equals(form.getStatus())) {
+            throw new BusinessException(ErrorCode.PAYMENT_FAILED,
+                    "Iyzico ödeme detayı alınamadı: " + form.getErrorMessage());
+        }
+        return form;
     }
 }

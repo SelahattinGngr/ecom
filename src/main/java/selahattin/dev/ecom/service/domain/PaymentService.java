@@ -100,6 +100,9 @@ public class PaymentService {
                         "Ödeme kaydı bulunamadı. TransactionId: " + result.getTransactionId()));
 
         payment.setStatus(result.getStatus());
+        if (result.getProviderPaymentId() != null) {
+            payment.setProviderPaymentId(result.getProviderPaymentId());
+        }
 
         if (result.getStatus() == PaymentStatus.SUCCEEDED) {
             payment.getOrder().setStatus(OrderStatus.PAID);

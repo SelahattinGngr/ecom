@@ -10,4 +10,6 @@ public class PaymentCallbackResult {
     private String transactionId;
     private PaymentStatus status;
     private String errorCode;
+    /** Iyzico'nun numeric paymentId'si — Cancel/Refund işlemleri için gerekli */
+    private String providerPaymentId;
 }
