@@ -1,18 +1,13 @@
 package selahattin.dev.ecom.dto.response.site;
 
-import java.util.List;
+import java.util.Map;
 
 import lombok.Builder;
 import lombok.Getter;
-import selahattin.dev.ecom.utils.enums.PaymentProvider;
 
 @Getter
 @Builder
 public class SiteConfigResponse {
-    private String siteName;
-    private String siteDescription;
-    private List<PaymentProvider> activePaymentMethods;
-
-    // Stripe Frontend Key (Eğer Stripe aktifse Frontend'e lazım olabilir)
-    private String stripePublishableKey;
+    private Map<String, String> settings;
+    private Map<String, AssetSlotResponse> assets;
 }

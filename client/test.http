@@ -8,6 +8,11 @@
 @paymentUrl = {{baseUrl}}/payments
 @adminOrderUrl = {{baseUrl}}/admin/orders
 @adminPaymentUrl = {{baseUrl}}/admin/payments
+@adminRefundUrl = {{baseUrl}}/admin/refunds
+@adminSiteUrl = {{baseUrl}}/admin
+@siteConfigUrl = {{baseUrl}}/public/site-config
+@refundUrl = {{baseUrl}}/refunds
+@analyticsUrl = {{baseUrl}}/admin/analytics
 
 # --- AUTHENTICATION ---
 
@@ -107,6 +112,9 @@ GET {{orderUrl}} HTTP/1.1
 ### get-order-by-id
 GET {{orderUrl}}/{{orderId}} HTTP/1.1
 
+### get-order-payment
+GET {{orderUrl}}/{{orderId}}/payment HTTP/1.1
+
 ### cancel-order (sadece PENDING veya PREPARING siparişler)
 POST {{orderUrl}}/{{orderId}}/cancel HTTP/1.1
 
@@ -125,13 +133,22 @@ POST {{paymentUrl}} HTTP/1.1
 Content-Type: application/json
 
 {
-  "orderId": "2a141ff1-6b1e-4096-a802-400904f74b0a",
-  "callbackUrl": "http://localhost:3000/payment-callback"
+  "orderId": "2a141ff1-6b1e-4096-a802-400904f74b0a"
 }
 
 ### get-payment-details
 @paymentId = 44227b12-85d9-4309-8832-7c80af334b5a
 GET {{paymentUrl}}/{{paymentId}} HTTP/1.1
+
+# --- REFUNDS ---
+
+### get-my-refunds
+GET {{refundUrl}} HTTP/1.1
+
+@refundId = 00000000-0000-0000-0000-000000000000
+
+### get-my-refund-by-id
+GET {{refundUrl}}/{{refundId}} HTTP/1.1
 
 # --- ADMIN - ORDERS ---
 
@@ -181,3 +198,77 @@ POST {{adminPaymentUrl}}/{{paymentId}}/capture HTTP/1.1
 
 ### admin-void-payment
 POST {{adminPaymentUrl}}/{{paymentId}}/void HTTP/1.1
+
+# --- ADMIN - REFUNDS ---
+
+### admin-get-all-refunds
+GET {{adminRefundUrl}} HTTP/1.1
+
+### admin-update-refund-status
+PATCH {{adminRefundUrl}}/{{refundId}}/status HTTP/1.1
+Content-Type: application/json
+
+{
+  "status": "SUCCEEDED"
+}
+
+# --- PUBLIC SITE CONFIG ---
+
+### get-site-config
+GET {{siteConfigUrl}} HTTP/1.1
+
+# --- ADMIN - SITE CONFIG ---
+
+### admin-upload-asset
+POST {{adminSiteUrl}}/assets/upload HTTP/1.1
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="logo.svg"
+Content-Type: image/svg+xml
+
+<svg>...</svg>
+--boundary--
+
+@uploadedAssetId = 00000000-0000-0000-0000-000000000000
+
+### admin-update-site-setting
+PATCH {{adminSiteUrl}}/site-settings/site_name HTTP/1.1
+Content-Type: application/json
+
+{
+  "value": "My Awesome Shop"
+}
+
+### admin-update-site-asset-slot (logo)
+PATCH {{adminSiteUrl}}/site-assets/logo HTTP/1.1
+Content-Type: application/json
+
+{
+  "assetId": "{{uploadedAssetId}}"
+}
+
+# --- ANALYTICS ---
+
+### analytics-dashboard
+GET {{analyticsUrl}}/dashboard?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&tz=Europe/Istanbul HTTP/1.1
+
+### analytics-orders
+GET {{analyticsUrl}}/orders?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&tz=Europe/Istanbul HTTP/1.1
+
+### analytics-payments
+GET {{analyticsUrl}}/payments?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&tz=Europe/Istanbul HTTP/1.1
+
+### analytics-products
+GET {{analyticsUrl}}/products?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&tz=Europe/Istanbul HTTP/1.1
+
+### analytics-users
+GET {{analyticsUrl}}/users?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&tz=Europe/Istanbul HTTP/1.1
+
+# --- AUDIT LOGS ---
+
+### admin-audit-logs
+GET {{baseUrl}}/admin/logs/audit HTTP/1.1
+
+### admin-audit-logs-filtered-by-user
+GET {{baseUrl}}/admin/logs/audit?entityType=ORDER&action=ORDER_STATUS_UPDATED HTTP/1.1

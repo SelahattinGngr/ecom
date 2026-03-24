@@ -1,0 +1,491 @@
+### ============================================================
+### ADMIN FLOW — Ürün/Kategori/Sipariş/İade/Site Yönetimi
+### Admin veya developer rolünde giriş yapılmış olmalı.
+### Her adımı sırayla çalıştır.
+### ============================================================
+
+@baseUrl            = http://localhost:5353/api/v1
+@authUrl            = {{baseUrl}}/auth
+@adminProductUrl    = {{baseUrl}}/admin/products
+@adminCategoryUrl   = {{baseUrl}}/admin/categories
+@adminOrderUrl      = {{baseUrl}}/admin/orders
+@adminPaymentUrl    = {{baseUrl}}/admin/payments
+@adminRefundUrl     = {{baseUrl}}/admin/refunds
+@adminUserUrl       = {{baseUrl}}/admin/users
+@adminRoleUrl       = {{baseUrl}}/admin/roles
+@adminSiteUrl       = {{baseUrl}}/admin
+@analyticsUrl       = {{baseUrl}}/admin/analytics
+@auditUrl           = {{baseUrl}}/admin/logs
+
+
+# ============================================================
+# 1. ADMIN GİRİŞİ
+# ============================================================
+
+### 1a — Giriş isteği
+POST {{authUrl}}/public/signin HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "admin@example.com"
+}
+
+###
+
+### 1b — OTP doğrula
+POST {{authUrl}}/public/signin-verify HTTP/1.1
+Content-Type: application/json
+
+{
+  "email": "admin@example.com",
+  "code": "BURAYA_OTP_KOD"
+}
+
+###
+
+### 1c — Token yenile
+POST {{authUrl}}/public/refresh-token HTTP/1.1
+
+
+# ============================================================
+# 2. KATEGORİ YÖNETİMİ
+# ============================================================
+
+### 2a — Kategori oluştur
+# Response'dan id'yi al → @categoryId
+POST {{adminCategoryUrl}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Elektronik",
+  "parentId": null
+}
+
+###
+
+@categoryId = RESPONSE_DAN_CATEGORY_ID
+
+### 2b — Alt kategori oluştur
+POST {{adminCategoryUrl}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Akıllı Telefonlar",
+  "parentId": "{{categoryId}}"
+}
+
+###
+
+### 2c — Kategori güncelle
+PATCH {{adminCategoryUrl}}/{{categoryId}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Elektronik & Teknoloji"
+}
+
+###
+
+### 2d — Tüm kategoriler (public)
+GET {{baseUrl}}/public/categories HTTP/1.1
+
+###
+
+### 2e — Kategori sil
+# DELETE {{adminCategoryUrl}}/{{categoryId}} HTTP/1.1
+
+
+# ============================================================
+# 3. ÜRÜN YÖNETİMİ
+# ============================================================
+
+### 3a — Ürün oluştur (multipart — resimli)
+# test.png dosyasını client/ klasörüne koymalısın
+POST {{adminProductUrl}} HTTP/1.1
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="data"
+Content-Type: application/json
+
+{
+  "categoryId": "{{categoryId}}",
+  "name": "Test Ürünü Pro Max",
+  "description": "Bu bir test ürünüdür. Yüksek kaliteli, dayanıklı.",
+  "basePrice": 1299.99
+}
+--boundary
+Content-Disposition: form-data; name="images"; filename="test.png"
+Content-Type: image/png
+
+< ./test.png
+--boundary--
+
+###
+
+@productId = RESPONSE_DAN_PRODUCT_ID
+
+### 3b — Ürün güncelle (fiyat/açıklama)
+PATCH {{adminProductUrl}}/{{productId}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Test Ürünü Pro Max (Güncel)",
+  "basePrice": 999.99,
+  "description": "Güncellenmiş açıklama."
+}
+
+###
+
+### 3c — Varyant ekle
+POST {{adminProductUrl}}/{{productId}}/variants HTTP/1.1
+Content-Type: application/json
+
+{
+  "sku": "TEST-KIRMIZI-M",
+  "size": "M",
+  "color": "Kırmızı",
+  "price": 1299.99,
+  "stockQuantity": 50,
+  "isActive": true
+}
+
+###
+
+@variantId = RESPONSE_DAN_VARIANT_ID
+
+### 3d — İkinci varyant (farklı beden)
+POST {{adminProductUrl}}/{{productId}}/variants HTTP/1.1
+Content-Type: application/json
+
+{
+  "sku": "TEST-KIRMIZI-XL",
+  "size": "XL",
+  "color": "Kırmızı",
+  "price": 1399.99,
+  "stockQuantity": 30,
+  "isActive": true
+}
+
+###
+
+### 3e — Ürüne URL'li görsel ekle
+POST {{adminProductUrl}}/{{productId}}/images HTTP/1.1
+Content-Type: application/json
+
+{
+  "url": "https://via.placeholder.com/800x800.png?text=Test+Urun",
+  "displayOrder": 1,
+  "isThumbnail": true
+}
+
+###
+
+@imageId = RESPONSE_DAN_IMAGE_ID
+
+### 3f — Görseli sil
+DELETE {{adminProductUrl}}/{{productId}}/images/{{imageId}} HTTP/1.1
+
+###
+
+### 3g — Varyant sil
+# DELETE {{adminProductUrl}}/{{productId}}/variants/{{variantId}} HTTP/1.1
+
+###
+
+### 3h — Ürün sil (soft delete)
+# DELETE {{adminProductUrl}}/{{productId}} HTTP/1.1
+
+
+# ============================================================
+# 4. SİPARİŞ YÖNETİMİ
+# ============================================================
+
+### 4a — Tüm siparişleri listele
+GET {{adminOrderUrl}}?page=0&size=20 HTTP/1.1
+
+###
+
+### 4b — Duruma göre filtrele
+GET {{adminOrderUrl}}?status=PENDING HTTP/1.1
+
+###
+
+### 4c — İade bekleyenleri filtrele
+GET {{adminOrderUrl}}?status=RETURN_REQUESTED HTTP/1.1
+
+###
+
+@orderId = RESPONSE_DAN_ORDER_ID
+
+### 4d — Sipariş detayı
+GET {{adminOrderUrl}}/{{orderId}} HTTP/1.1
+
+###
+
+### 4e — Sipariş durumunu güncelle → PREPARING
+PATCH {{adminOrderUrl}}/{{orderId}}/status HTTP/1.1
+Content-Type: application/json
+
+{
+  "status": "PREPARING"
+}
+
+###
+
+### 4f — Siparişi kargola → SHIPPED
+POST {{adminOrderUrl}}/{{orderId}}/ship HTTP/1.1
+Content-Type: application/json
+
+{
+  "cargoFirm": "Yurtiçi Kargo",
+  "trackingCode": "YK123456789TR"
+}
+
+###
+
+### 4g — Sipariş durumunu güncelle → DELIVERED
+PATCH {{adminOrderUrl}}/{{orderId}}/status HTTP/1.1
+Content-Type: application/json
+
+{
+  "status": "DELIVERED"
+}
+
+
+# ============================================================
+# 5. İADE YÖNETİMİ
+# ============================================================
+
+### 5a — İade talep eden siparişleri listele
+GET {{adminOrderUrl}}?status=RETURN_REQUESTED HTTP/1.1
+
+###
+
+### 5b — İade onayla (Iyzico'ya gerçek iade isteği gider)
+POST {{adminOrderUrl}}/{{orderId}}/return/approve HTTP/1.1
+
+###
+
+### 5c — İade reddet
+POST {{adminOrderUrl}}/{{orderId}}/return/reject?reason=Ürün%20hasarlı%20gönderilmiş HTTP/1.1
+
+###
+
+### 5d — Tüm iade kayıtlarını listele
+GET {{adminRefundUrl}} HTTP/1.1
+
+###
+
+@refundId = RESPONSE_DAN_REFUND_ID
+
+### 5e — İade durumunu manuel güncelle
+PATCH {{adminRefundUrl}}/{{refundId}}/status HTTP/1.1
+Content-Type: application/json
+
+{
+  "status": "SUCCEEDED"
+}
+
+
+# ============================================================
+# 6. ÖDEME YÖNETİMİ
+# ============================================================
+
+### 6a — Tüm ödemeleri listele
+GET {{adminPaymentUrl}} HTTP/1.1
+
+###
+
+@paymentId = RESPONSE_DAN_PAYMENT_ID
+
+### 6b — Ödeme detayı
+GET {{adminPaymentUrl}}/{{paymentId}} HTTP/1.1
+
+###
+
+### 6c — Ödemeyi capture et (REQUIRES_ACTION → SUCCEEDED)
+POST {{adminPaymentUrl}}/{{paymentId}}/capture HTTP/1.1
+
+###
+
+### 6d — Ödemeyi iptal et (void)
+POST {{adminPaymentUrl}}/{{paymentId}}/void HTTP/1.1
+
+
+# ============================================================
+# 7. KULLANICI YÖNETİMİ
+# ============================================================
+
+### 7a — Tüm kullanıcılar
+GET {{adminUserUrl}}?page=0&size=20 HTTP/1.1
+
+###
+
+### 7b — Arama + filtre
+GET {{adminUserUrl}}?search=test&page=0&size=10 HTTP/1.1
+
+###
+
+@userId = RESPONSE_DAN_USER_ID
+
+### 7c — Kullanıcı detayı
+GET {{adminUserUrl}}/{{userId}} HTTP/1.1
+
+###
+
+### 7d — Kullanıcı rollerini güncelle
+# Önce 7e'den rol ID'lerini al
+PATCH {{adminUserUrl}}/{{userId}}/roles HTTP/1.1
+Content-Type: application/json
+
+{
+  "roleIds": ["ROLE_ID_BURAYA"]
+}
+
+###
+
+### 7e — Kullanıcıyı sil (soft delete)
+# DELETE {{adminUserUrl}}/{{userId}} HTTP/1.1
+
+
+# ============================================================
+# 8. ROL & YETKİ YÖNETİMİ
+# ============================================================
+
+### 8a — Tüm rolleri listele
+GET {{adminRoleUrl}} HTTP/1.1
+
+###
+
+### 8b — Rol detayı (id ile)
+GET {{adminRoleUrl}}/ROLE_ID_BURAYA HTTP/1.1
+
+###
+
+### 8c — Rol detayı (isim ile)
+GET {{adminRoleUrl}}/by-name/customer HTTP/1.1
+
+###
+
+### 8d — Tüm yetkiler
+GET {{baseUrl}}/admin/permissions HTTP/1.1
+
+
+# ============================================================
+# 9. SİTE KONFİGÜRASYONU
+# ============================================================
+
+### 9a — Public site config'i görüntüle
+GET {{baseUrl}}/public/site-config HTTP/1.1
+
+###
+
+### 9b — Logo yükle
+POST {{adminSiteUrl}}/assets/upload HTTP/1.1
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="logo.svg"
+Content-Type: image/svg+xml
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🛍️</text></svg>
+--boundary--
+
+###
+
+@uploadedAssetId = RESPONSE_DAN_ASSET_ID
+
+### 9c — Logo slotuna ata
+PATCH {{adminSiteUrl}}/site-assets/logo HTTP/1.1
+Content-Type: application/json
+
+{
+  "assetId": "{{uploadedAssetId}}"
+}
+
+###
+
+### 9d — Favicon slotuna ata
+PATCH {{adminSiteUrl}}/site-assets/favicon HTTP/1.1
+Content-Type: application/json
+
+{
+  "assetId": "{{uploadedAssetId}}"
+}
+
+###
+
+### 9e — Site adını güncelle
+PATCH {{adminSiteUrl}}/site-settings/site_name HTTP/1.1
+Content-Type: application/json
+
+{
+  "value": "Benim Mağazam"
+}
+
+###
+
+### 9f — Destek e-postasını güncelle
+PATCH {{adminSiteUrl}}/site-settings/support_email HTTP/1.1
+Content-Type: application/json
+
+{
+  "value": "destek@benimmağazam.com"
+}
+
+
+# ============================================================
+# 10. ANALİTİK
+# ============================================================
+
+### 10a — Dashboard (bu ay)
+GET {{analyticsUrl}}/dashboard?from=2026-03-01T00:00:00Z&to=2026-03-31T23:59:59Z&tz=Europe/Istanbul HTTP/1.1
+
+###
+
+### 10b — Sipariş analitiği (bu yıl)
+GET {{analyticsUrl}}/orders?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&tz=Europe/Istanbul HTTP/1.1
+
+###
+
+### 10c — Ödeme analitiği
+GET {{analyticsUrl}}/payments?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&tz=Europe/Istanbul HTTP/1.1
+
+###
+
+### 10d — Ürün analitiği (en çok satanlar)
+GET {{analyticsUrl}}/products?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&tz=Europe/Istanbul HTTP/1.1
+
+###
+
+### 10e — Kullanıcı analitiği
+GET {{analyticsUrl}}/users?from=2026-01-01T00:00:00Z&to=2026-12-31T23:59:59Z&tz=Europe/Istanbul HTTP/1.1
+
+
+# ============================================================
+# 11. DENETİM LOGU
+# ============================================================
+
+### 11a — Tüm audit logları
+GET {{auditUrl}}/audit?page=0&size=20 HTTP/1.1
+
+###
+
+### 11b — Sipariş durum değişikliklerini filtrele
+GET {{auditUrl}}/audit?entityType=ORDER&action=ORDER_STATUS_UPDATED HTTP/1.1
+
+###
+
+### 11c — İade onay/red logları
+GET {{auditUrl}}/audit?entityType=ORDER&action=RETURN_APPROVED HTTP/1.1
+
+###
+
+### 11d — Belirli admin'in işlemleri
+GET {{auditUrl}}/audit?userId={{userId}} HTTP/1.1
+
+###
+
+### 11e — Ürün silme logları
+GET {{auditUrl}}/audit?entityType=PRODUCT&action=PRODUCT_DELETED HTTP/1.1

@@ -21,6 +21,7 @@ import selahattin.dev.ecom.dto.request.order.ReturnOrderRequest;
 import selahattin.dev.ecom.dto.response.order.OrderDetailResponse;
 import selahattin.dev.ecom.dto.response.order.OrderResponse;
 import selahattin.dev.ecom.dto.response.order.OrderSummaryResponse;
+import selahattin.dev.ecom.dto.response.payment.PaymentResponse;
 import selahattin.dev.ecom.response.ApiResponse;
 import selahattin.dev.ecom.service.domain.OrderService;
 
@@ -62,6 +63,13 @@ public class OrderController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Sipariş detayı getirildi",
                 orderService.getOrderDetail(id)));
+    }
+
+    @GetMapping("/{id}/payment")
+    public ResponseEntity<ApiResponse<PaymentResponse>> getOrderPayment(@PathVariable UUID id) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Sipariş ödeme bilgisi getirildi",
+                orderService.getOrderPayment(id)));
     }
 
     // --- ACTIONS ---

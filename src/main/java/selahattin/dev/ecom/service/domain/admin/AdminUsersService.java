@@ -3,6 +3,7 @@ package selahattin.dev.ecom.service.domain.admin;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -31,6 +32,7 @@ public class AdminUsersService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final TokenService tokenService;
+    private final AuditLogService auditLogService;
 
     @Transactional(readOnly = true)
     public Page<AdminUserResponse> getAllUsers(Pageable pageable, AdminUserFilterRequest filter) {
@@ -61,11 +63,15 @@ public class AdminUsersService {
             throw new BusinessException(ErrorCode.ROLE_NOT_FOUND, "Seçilen bazı roller sistemde bulunamadı.");
         }
 
+        List<String> roleNames = roles.stream().map(RoleEntity::getName).toList();
         user.setRoles(new HashSet<>(roles));
         UserEntity savedUser = userRepository.save(user);
 
         // Yeni yetkilerini alabilmesi icin kullanıcının tüm oturumlarını kapat
         tokenService.deleteAllTokens(user.getEmail());
+
+        auditLogService.log("USER_ROLES_UPDATED", "USER", userId,
+                Map.of("assignedRoles", roleNames));
 
         return mapToResponse(savedUser);
     }

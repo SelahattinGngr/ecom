@@ -3,6 +3,7 @@ package selahattin.dev.ecom.service.domain.admin;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -35,14 +36,15 @@ public class AdminOrdersService {
     private final OrderRepository orderRepository;
     private final RedisQueueService redisQueueService;
     private final PaymentService paymentService;
+    private final AuditLogService auditLogService;
 
     public Page<AdminOrderResponse> getAllOrders(OrderStatus status, Pageable pageable) {
         Page<OrderEntity> orders;
 
         if (status != null) {
-            orders = orderRepository.findAllByStatusOrderByCreatedAtDesc(status, pageable);
+            orders = orderRepository.findAllWithDetailsByStatus(status, pageable);
         } else {
-            orders = orderRepository.findAllByOrderByCreatedAtDesc(pageable);
+            orders = orderRepository.findAllWithDetails(pageable);
         }
 
         return orders.map(this::mapToAdminOrderResponse);
@@ -59,8 +61,12 @@ public class AdminOrdersService {
         OrderEntity order = orderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
+        OrderStatus previousStatus = order.getStatus();
         order.setStatus(request.getStatus());
         orderRepository.save(order);
+
+        auditLogService.log("ORDER_STATUS_UPDATED", "ORDER", id,
+                Map.of("previousStatus", previousStatus.name(), "newStatus", request.getStatus().name()));
 
         log.info("[ADMIN] Sipariş durumu güncellendi. Order ID: {}, Yeni Durum: {}", id, request.getStatus());
     }
@@ -119,6 +125,9 @@ public class AdminOrdersService {
         order.setStatus(OrderStatus.RETURNED);
         orderRepository.save(order);
 
+        auditLogService.log("RETURN_APPROVED", "ORDER", id,
+                Map.of("returnCode", order.getReturnCode() != null ? order.getReturnCode() : ""));
+
         log.info("[ADMIN] İade onaylandı. Order ID: {}", id);
 
         String customerName = order.getUser().getFirstName() != null
@@ -155,6 +164,9 @@ public class AdminOrdersService {
         order.setReturnedAt(null);
         order.setReturnCode(null);
         orderRepository.save(order);
+
+        auditLogService.log("RETURN_REJECTED", "ORDER", id,
+                Map.of("reason", reason != null ? reason : ""));
 
         log.info("[ADMIN] İade reddedildi. Order ID: {}, Neden: {}", id, reason);
 

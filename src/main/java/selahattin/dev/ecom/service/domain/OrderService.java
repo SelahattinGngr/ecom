@@ -26,16 +26,19 @@ import selahattin.dev.ecom.dto.response.order.OrderDetailResponse;
 import selahattin.dev.ecom.dto.response.order.OrderItemResponse;
 import selahattin.dev.ecom.dto.response.order.OrderResponse;
 import selahattin.dev.ecom.dto.response.order.OrderSummaryResponse;
+import selahattin.dev.ecom.dto.response.payment.PaymentResponse;
 import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.entity.catalog.ProductVariantEntity;
 import selahattin.dev.ecom.entity.location.AddressEntity;
 import selahattin.dev.ecom.entity.order.OrderEntity;
 import selahattin.dev.ecom.entity.order.OrderItemEntity;
+import selahattin.dev.ecom.entity.payment.PaymentEntity;
 import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.catalog.ProductVariantRepository;
 import selahattin.dev.ecom.repository.location.AddressRepository;
 import selahattin.dev.ecom.repository.order.OrderRepository;
+import selahattin.dev.ecom.repository.payment.PaymentRepository;
 import selahattin.dev.ecom.service.infra.RedisQueueService;
 import selahattin.dev.ecom.utils.enums.OrderStatus;
 
@@ -44,6 +47,7 @@ import selahattin.dev.ecom.utils.enums.OrderStatus;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final PaymentRepository paymentRepository;
     private final CartService cartService;
     private final UserService userService;
     private final AddressRepository addressRepository;
@@ -129,6 +133,27 @@ public class OrderService {
         OrderEntity order = orderRepository.findByIdAndUserId(orderId, user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
         return mapToOrderDetailResponse(order);
+    }
+
+    public PaymentResponse getOrderPayment(UUID orderId) {
+        UserEntity user = userService.getCurrentUser();
+        orderRepository.findByIdAndUserId(orderId, user.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
+
+        PaymentEntity payment = paymentRepository.findTopByOrderIdOrderByCreatedAtDesc(orderId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
+                        "Bu siparişe ait ödeme kaydı bulunamadı"));
+
+        return PaymentResponse.builder()
+                .id(payment.getId())
+                .orderId(orderId)
+                .provider(payment.getPaymentProvider())
+                .amount(payment.getAmount())
+                .status(payment.getStatus())
+                .transactionId(payment.getPaymentTransactionId())
+                .description(payment.getDescription())
+                .createdAt(payment.getCreatedAt())
+                .build();
     }
 
     @Transactional

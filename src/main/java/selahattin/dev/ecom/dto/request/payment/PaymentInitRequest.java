@@ -10,7 +10,4 @@ import lombok.Setter;
 public class PaymentInitRequest {
     @NotNull
     private UUID orderId;
-
-    @NotNull
-    private String callbackUrl; // Frontend'in ödeme bitince döneceği yer
 }

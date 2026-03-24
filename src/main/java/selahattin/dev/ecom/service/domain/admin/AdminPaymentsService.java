@@ -27,7 +27,7 @@ public class AdminPaymentsService {
     private final PaymentStrategyFactory paymentStrategyFactory;
 
     public Page<AdminPaymentResponse> getAllPayments(Pageable pageable) {
-        return paymentRepository.findAllByOrderByCreatedAtDesc(pageable)
+        return paymentRepository.findAllWithOrderAndUser(pageable)
                 .map(this::mapToAdminResponse);
     }
 

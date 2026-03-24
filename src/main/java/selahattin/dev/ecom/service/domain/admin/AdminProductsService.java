@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.request.product.CreateImageRequest;
 import selahattin.dev.ecom.dto.request.product.CreateProductRequest;
@@ -39,6 +41,7 @@ public class AdminProductsService {
     private final ProductVariantRepository variantRepository;
     private final ProductImageRepository imageRepository;
     private final FileStorageService fileStorageService;
+    private final AuditLogService auditLogService;
 
     // --- PRODUCT CRUD ---
 
@@ -107,10 +110,12 @@ public class AdminProductsService {
     @Transactional
     public void deleteProduct(UUID id) {
         ProductEntity product = findProduct(id);
+        String productName = product.getName();
         product.setDeletedAt(OffsetDateTime.now()); // Soft Delete
         productRepository.save(product);
 
-        // TODO İlişkili varyantlar da soft delete yapılabilir
+        auditLogService.log("PRODUCT_DELETED", "PRODUCT", id,
+                Map.of("productName", productName, "slug", product.getSlug()));
     }
 
     // --- VARIANT MANAGEMENT ---

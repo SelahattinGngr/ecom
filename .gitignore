@@ -40,3 +40,4 @@ assets/public/products/*.png
 docker-data
 
 claude.md
+.claude
