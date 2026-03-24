@@ -2,6 +2,7 @@ package selahattin.dev.ecom.entity.payment;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -54,9 +55,14 @@ public class PaymentEntity {
     @Column(name = "payment_transaction_id")
     private String paymentTransactionId;
 
-    /** Iyzico'nun numeric paymentId'si — callback sonrası set edilir, iade/iptal için kullanılır */
+    /** Iyzico'nun numeric paymentId'si — callback sonrası set edilir, iptal (Cancel) için kullanılır */
     @Column(name = "provider_payment_id")
     private String providerPaymentId;
+
+    /** Iyzico'nun per-item paymentTransactionId listesi — callback sonrası set edilir, iade (Refund) için kullanılır */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "provider_item_transaction_ids", columnDefinition = "jsonb")
+    private List<String> providerItemTransactionIds;
 
     @Column(nullable = false)
     private BigDecimal amount;

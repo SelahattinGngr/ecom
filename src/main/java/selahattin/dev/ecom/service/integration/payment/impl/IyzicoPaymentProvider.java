@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -176,11 +177,21 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
                 log.warn("[IYZICO] Ödeme BAŞARISIZ. Msg: {}", form.getErrorMessage());
             }
 
+            // Başarılı ödemede iade için gerekli per-item transaction ID'leri topla
+            List<String> itemTransactionIds = null;
+            if (finalStatus == PaymentStatus.SUCCEEDED && form.getPaymentItems() != null) {
+                itemTransactionIds = form.getPaymentItems().stream()
+                        .map(com.iyzipay.model.PaymentItem::getPaymentTransactionId)
+                        .filter(id -> id != null && !id.isBlank())
+                        .toList();
+            }
+
             return PaymentCallbackResult.builder()
                     .transactionId(token)
                     .status(finalStatus)
                     .errorCode(form.getErrorCode() != null ? form.getErrorCode() : form.getErrorMessage())
                     .providerPaymentId(form.getPaymentId())
+                    .itemTransactionIds(itemTransactionIds)
                     .build();
 
         } catch (Exception e) {
@@ -226,31 +237,31 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
     public void refundPayment(PaymentEntity payment, BigDecimal refundAmount) {
         log.info("[IYZICO] İade (Refund) işlemi. Payment ID: {}", payment.getId());
         try {
-            // Ödeme kalemlerinin numeric paymentTransactionId'lerini al
-            List<PaymentItem> paymentItems = resolvePaymentItems(payment);
-            if (paymentItems == null || paymentItems.isEmpty()) {
+            List<String> itemTxIds = payment.getProviderItemTransactionIds();
+            if (itemTxIds == null || itemTxIds.isEmpty()) {
                 throw new BusinessException(ErrorCode.PAYMENT_FAILED,
-                        "Iyzico iade: ödeme kalemleri bulunamadı");
+                        "Iyzico iade için ödeme kalemi transaction ID'leri bulunamadı. " +
+                        "Bu ödeme webhook callback'i işlenirken kaydedilmemiş olabilir.");
             }
 
             // Her ödeme kalemi için ayrı iade isteği gönder
-            for (PaymentItem item : paymentItems) {
+            for (String itemTxId : itemTxIds) {
                 CreateRefundRequest request = new CreateRefundRequest();
                 request.setLocale(Locale.TR.getValue());
                 request.setConversationId(payment.getId().toString());
-                request.setPaymentTransactionId(item.getPaymentTransactionId());
-                request.setPrice(new BigDecimal(item.getPaidPrice()));
+                request.setPaymentTransactionId(itemTxId);
+                request.setPrice(refundAmount.divide(
+                        java.math.BigDecimal.valueOf(itemTxIds.size()),
+                        2, java.math.RoundingMode.HALF_UP));
                 request.setIp(DEFAULT_IP);
                 request.setCurrency(Currency.TRY.name());
 
                 Refund refund = Refund.create(request, getOptions());
                 if (!STATUS_SUCCESS.equals(refund.getStatus())) {
                     throw new BusinessException(ErrorCode.PAYMENT_FAILED,
-                            "Iyzico İade Hatası (item: " + item.getPaymentTransactionId() + "): "
-                                    + refund.getErrorMessage());
+                            "Iyzico İade Hatası (item: " + itemTxId + "): " + refund.getErrorMessage());
                 }
-                log.info("[IYZICO] Kalem iade edildi. paymentTransactionId: {}",
-                        item.getPaymentTransactionId());
+                log.info("[IYZICO] Kalem iade edildi. paymentTransactionId: {}", itemTxId);
             }
         } catch (BusinessException be) {
             throw be;
@@ -260,36 +271,15 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
     }
 
     /**
-     * Iyzico'nun numeric paymentId'sini döner.
-     * Önce entity'de kayıtlı providerPaymentId'ye bakar;
-     * yoksa token ile Iyzico'ya sorgu atar.
+     * Iyzico'nun numeric paymentId'sini döner (Cancel işlemi için).
+     * providerPaymentId callback'te kaydedilir.
      */
     private String resolveNumericPaymentId(PaymentEntity payment) {
         if (payment.getProviderPaymentId() != null) {
             return payment.getProviderPaymentId();
         }
-        // providerPaymentId henüz kaydedilmemişse (eski kayıtlar) token ile retrieve et
-        CheckoutForm form = retrieveByToken(payment.getPaymentTransactionId());
-        return form.getPaymentId();
-    }
-
-    /**
-     * Iyzico'nun PaymentItem listesini döner (her biri numeric paymentTransactionId içerir).
-     * Token ile retrieve eder.
-     */
-    private List<PaymentItem> resolvePaymentItems(PaymentEntity payment) {
-        CheckoutForm form = retrieveByToken(payment.getPaymentTransactionId());
-        return form.getPaymentItems();
-    }
-
-    private CheckoutForm retrieveByToken(String token) {
-        RetrieveCheckoutFormRequest retrieveRequest = new RetrieveCheckoutFormRequest();
-        retrieveRequest.setToken(token);
-        CheckoutForm form = CheckoutForm.retrieve(retrieveRequest, getOptions());
-        if (!STATUS_SUCCESS.equals(form.getStatus())) {
-            throw new BusinessException(ErrorCode.PAYMENT_FAILED,
-                    "Iyzico ödeme detayı alınamadı: " + form.getErrorMessage());
-        }
-        return form;
+        throw new BusinessException(ErrorCode.PAYMENT_FAILED,
+                "Iyzico iptal için provider_payment_id bulunamadı. " +
+                "Bu ödeme webhook callback'i işlenirken kaydedilmemiş olabilir.");
     }
 }

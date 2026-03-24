@@ -103,6 +103,9 @@ public class PaymentService {
         if (result.getProviderPaymentId() != null) {
             payment.setProviderPaymentId(result.getProviderPaymentId());
         }
+        if (result.getItemTransactionIds() != null && !result.getItemTransactionIds().isEmpty()) {
+            payment.setProviderItemTransactionIds(result.getItemTransactionIds());
+        }
 
         if (result.getStatus() == PaymentStatus.SUCCEEDED) {
             payment.getOrder().setStatus(OrderStatus.PAID);
