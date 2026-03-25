@@ -79,6 +79,7 @@ public class AdminOrdersController {
         return ResponseEntity.ok(ApiResponse.success("İade onaylandı, ödeme iadesi başlatıldı."));
     }
 
+    // FIXME: reason parametresi body içerisinde olsun
     @PostMapping("/{id}/return/reject")
     @PreAuthorize("hasAuthority('order:update')")
     public ResponseEntity<ApiResponse<Void>> rejectReturn(

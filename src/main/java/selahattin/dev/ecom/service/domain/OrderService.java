@@ -162,13 +162,19 @@ public class OrderService {
         OrderEntity order = orderRepository.findByIdAndUserId(orderId, user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
-        if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.PREPARING) {
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Bu sipariş zaten iptal edilmiş.");
+        }
+
+        if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.PREPARING
+                && order.getStatus() != OrderStatus.PAID) {
             throw new BusinessException(ErrorCode.ORDER_CANNOT_BE_CANCELLED,
                     "Sadece beklemede veya hazırlanıyor aşamasındaki siparişler iptal edilebilir.");
         }
 
         order.setStatus(OrderStatus.CANCELLED);
-
+        // TODO: Eğer ödeme yapıldıysa, ödeme iadesi işlemini başlat (bu örnekte ödeme
+        // entegrasyonu olmadığı için atlanıyor)
         for (OrderItemEntity item : order.getItems()) {
             ProductVariantEntity variant = item.getProductVariant();
             variant.setStockQuantity(variant.getStockQuantity() + item.getQuantity());
@@ -203,11 +209,11 @@ public class OrderService {
         String customerName = user.getFirstName() != null ? user.getFirstName() : "Değerli Müşterimiz";
         EmailMessageDto email = EmailMessageDto.builder()
                 .to(user.getEmail())
-                .subject("İade Talebiniz Alındı - Takip Kodunuz: " + returnCode)
+                .subject("İade Talebiniz Alındı - İade Kodunuz: " + returnCode)
                 .content(String.format(
                         "Merhaba %s,%n%n" +
                                 "İade talebiniz alınmıştır.%n%n" +
-                                "İade Takip Kodunuz: %s%n%n" +
+                                "İade Kodunuz: %s%n%n" +
                                 "Bu kodu kargo paketinin üzerine yazmanızı rica ederiz. " +
                                 "Paketiniz tarafımıza ulaştıktan sonra inceleme yapılacak " +
                                 "ve iade işleminiz başlatılacaktır.%n%n" +

@@ -1,5 +1,6 @@
 package selahattin.dev.ecom.service.domain;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -171,6 +172,15 @@ public class ProductService {
 							.toList();
 		}
 
+		// Aktif variantların minimum fiyatı — listing'de "başlangıç fiyatı" olarak göster
+		BigDecimal displayPrice = entity.getVariants() == null ? entity.getBasePrice()
+				: entity.getVariants().stream()
+						.filter(v -> v.getDeletedAt() == null && Boolean.TRUE.equals(v.getIsActive())
+								&& v.getPrice() != null)
+						.map(v -> v.getPrice())
+						.min(BigDecimal::compareTo)
+						.orElse(entity.getBasePrice());
+
 		List<ImageResponse> images = (entity.getImages() == null) ? Collections.emptyList()
 				: entity.getImages().stream()
 						.filter(img -> img.getDeletedAt() == null)
@@ -186,7 +196,7 @@ public class ProductService {
 				.id(entity.getId())
 				.name(entity.getName())
 				.slug(entity.getSlug())
-				.basePrice(entity.getBasePrice()) // Listelemede Fiyat Lazım
+				.basePrice(displayPrice) // Aktif variantların min fiyatı
 				.images(images) // Listelemede Resim Lazım
 
 				// Aşağıdakiler isDetailMode=false ise NULL döner (Trafik tasarrufu)

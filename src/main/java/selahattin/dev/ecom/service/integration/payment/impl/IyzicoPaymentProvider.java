@@ -241,7 +241,7 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
             if (itemTxIds == null || itemTxIds.isEmpty()) {
                 throw new BusinessException(ErrorCode.PAYMENT_FAILED,
                         "Iyzico iade için ödeme kalemi transaction ID'leri bulunamadı. " +
-                        "Bu ödeme webhook callback'i işlenirken kaydedilmemiş olabilir.");
+                                "Bu ödeme webhook callback'i işlenirken kaydedilmemiş olabilir.");
             }
 
             // Her ödeme kalemi için ayrı iade isteği gönder
@@ -276,10 +276,11 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
      */
     private String resolveNumericPaymentId(PaymentEntity payment) {
         if (payment.getProviderPaymentId() != null) {
+            // LOG BAS
             return payment.getProviderPaymentId();
         }
         throw new BusinessException(ErrorCode.PAYMENT_FAILED,
                 "Iyzico iptal için provider_payment_id bulunamadı. " +
-                "Bu ödeme webhook callback'i işlenirken kaydedilmemiş olabilir.");
+                        "Bu ödeme webhook callback'i işlenirken kaydedilmemiş olabilir.");
     }
 }
