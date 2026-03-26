@@ -36,12 +36,11 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final CookieService cookieService;
     private final HttpServletRequest request;
+
     // --- AUTHENTICATION FLOW METHODS ---
 
     @Transactional
     public UserEntity signup(SignupRequest signupRequest) {
-        // Sadece AKTİF kullanıcı var mı diye bakıyoruz.
-        // Silinmiş kullanıcı varsa, yeni kayıt oluşturulmasına izin veriyoruz.
         if (userRepository.existsByEmailAndDeletedAtIsNull(signupRequest.getEmail())) {
             throw new BusinessException(ErrorCode.USER_ALREADY_EXISTS, signupRequest.getEmail());
         }
@@ -66,14 +65,18 @@ public class UserService {
         userRepository.save(user);
     }
 
+    /**
+     * Kullanıcıyı e-posta ile yükler. Roller ve izinler JOIN FETCH ile tek sorguda
+     * getirilir — auth akışında (OTP doğrulama, session oluşturma) lazy loading
+     * hatası yaşanmaması için fetch-join versiyonu kullanılır.
+     */
     public UserEntity findByEmail(String email) {
-        return userRepository.findByEmailAndDeletedAtIsNull(email)
+        return userRepository.findByEmailAndDeletedAtIsNullFetchRoles(email)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND, email));
     }
 
     // --- USER PROFILE METHODS ---
 
-    // TODO - Cache mekanizması eklenebilir.
     public CurrentUserResponse getCurrentUserInfo() {
         UserEntity user = getCurrentUser();
         return mapToResponse(user);
@@ -95,7 +98,6 @@ public class UserService {
             String newPhone = request.getPhoneNumber();
             String oldPhone = currentUser.getPhoneNumber();
 
-            // Başka bir aktif kullanıcı bu numarayı kullanıyor mu?
             if (!newPhone.equals(oldPhone) && userRepository.existsByPhoneNumberAndDeletedAtIsNull(newPhone)) {
                 throw new BusinessException(ErrorCode.USER_PHONE_ALREADY_EXISTS, newPhone);
             }
@@ -111,7 +113,6 @@ public class UserService {
     public List<SessionResponse> getCurrentUserSessions() {
         UserEntity currentUser = getCurrentUser();
         String currentDeviceId = cookieService.extractDeviceId(request);
-
         return tokenService.getUserSessions(currentUser.getEmail(), currentDeviceId);
     }
 
@@ -148,6 +149,11 @@ public class UserService {
                 .build();
     }
 
+    /**
+     * SecurityContext'teki kullanıcı ID'sinden DB'deki güncel kaydı getirir.
+     * Roller ve izinler JOIN FETCH ile tek sorguda yüklenir; lazy loading hatası
+     * olmaz ve downstream mapToResponse() çağrıları güvenle çalışır.
+     */
     public UserEntity getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -158,13 +164,10 @@ public class UserService {
         Object principal = authentication.getPrincipal();
 
         if (principal instanceof CustomUserDetails userDetails) {
-            // Context'teki user ID'yi alıp DB'den en güncel halini (ve ilişkilerini)
-            // çekiyoruz.
-            // Lazy loading hatası almamak ve transaction bütünlüğü için bu daha güvenli.
             UUID userId = userDetails.getUser().getId();
-            return userRepository.findById(userId)
+            return userRepository.findByIdFetchRoles(userId)
                     .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND,
-                            "email: " + userDetails.getUser().getEmail()));
+                            "id: " + userId));
         }
 
         throw new BusinessException(ErrorCode.AUTH_CONTEXT_ERROR);

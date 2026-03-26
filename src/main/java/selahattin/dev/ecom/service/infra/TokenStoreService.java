@@ -6,8 +6,9 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -28,6 +29,7 @@ public class TokenStoreService {
 
     private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
+
     private static final String TOKEN_PREFIX = "auth:refresh:";
 
     private String buildKey(String username, String deviceId) {
@@ -41,8 +43,6 @@ public class TokenStoreService {
         String rawToken = payload.getHashedRefreshToken();
         String finalHash = hashToken(rawToken);
         payload.setHashedRefreshToken(finalHash);
-
-        // Son aktiflik zamanını güncelle
         payload.setLastActiveAt(System.currentTimeMillis());
 
         try {
@@ -77,44 +77,43 @@ public class TokenStoreService {
      */
     public boolean validateToken(String username, String deviceId, String rawToken) {
         SessionPayload session = getSession(username, deviceId);
-
         if (session == null) {
             return false;
         }
-
         String incomingHash = hashToken(rawToken);
-
         session.setLastActiveAt(System.currentTimeMillis());
         return session.getHashedRefreshToken().equals(incomingHash);
     }
 
     /**
-     * Kullanıcının Tüm Oturumlarını Listele
+     * Kullanıcının Tüm Oturumlarını Listele.
+     * Blokaj yaratan KEYS yerine non-blocking SCAN kullanır.
      */
     public List<SessionResponse> getUserSessions(String email, String currentDeviceId) {
         String pattern = TOKEN_PREFIX + email + ":*";
-        Set<String> keys = redisTemplate.keys(pattern);
+        List<String> keys = scanKeys(pattern);
         List<SessionResponse> sessions = new ArrayList<>();
 
-        if (keys == null || keys.isEmpty())
+        if (keys.isEmpty()) {
             return sessions;
+        }
 
         List<String> values = redisTemplate.opsForValue().multiGet(keys);
-
-        if (values == null)
+        if (values == null) {
             return sessions;
+        }
 
-        int i = 0;
-        for (String key : keys) {
-            String jsonValue = values.get(i++);
-            if (jsonValue == null)
+        for (int i = 0; i < keys.size(); i++) {
+            String jsonValue = values.get(i);
+            if (jsonValue == null) {
                 continue;
+            }
 
+            String key = keys.get(i);
             String deviceId = key.substring(key.lastIndexOf(":") + 1);
 
             try {
                 SessionPayload stored = objectMapper.readValue(jsonValue, SessionPayload.class);
-
                 sessions.add(SessionResponse.builder()
                         .deviceId(deviceId)
                         .ipAddress(stored.getIpAddress())
@@ -122,9 +121,8 @@ public class TokenStoreService {
                         .lastActiveAt(stored.getLastActiveAt())
                         .isCurrent(deviceId.equals(currentDeviceId))
                         .build());
-
             } catch (JsonProcessingException e) {
-                log.error("Session listeleme hatası", e);
+                log.error("Session listeleme hatası. Key: {}", key, e);
             }
         }
         return sessions;
@@ -134,19 +132,42 @@ public class TokenStoreService {
         redisTemplate.delete(buildKey(username, deviceId));
     }
 
+    /**
+     * Kullanıcının tüm oturumlarını sil.
+     * Blokaj yaratan KEYS yerine non-blocking SCAN kullanır.
+     */
     public void deleteAllTokensForUser(String username) {
-        Set<String> keys = redisTemplate.keys(TOKEN_PREFIX + username + ":*");
-        if (keys != null && !keys.isEmpty()) {
+        List<String> keys = scanKeys(TOKEN_PREFIX + username + ":*");
+        if (!keys.isEmpty()) {
             redisTemplate.delete(keys);
         }
     }
 
-    // SHA-256 Hashing Helper
+    /**
+     * Redis SCAN komutu ile verilen pattern'a uyan key'leri döner.
+     *
+     * KEYS komutu O(N) ve single-threaded Redis'i tamamen kilitler.
+     * SCAN ise cursor tabanlı, non-blocking ve iteratif çalışır —
+     * count(100) her adımda yaklaşık 100 key işler ve control'ü geri verir.
+     */
+    private List<String> scanKeys(String pattern) {
+        List<String> keys = new ArrayList<>();
+        ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
+        try (Cursor<String> cursor = redisTemplate.scan(options)) {
+            cursor.forEachRemaining(keys::add);
+        } catch (Exception e) {
+            log.error("Redis SCAN hatası. Pattern: {}", pattern, e);
+        }
+        return keys;
+    }
+
+    // --- SHA-256 Hashing Helper ---
+
     private String hashToken(String token) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] encodedhash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
-            return bytesToHex(encodedhash);
+            byte[] encodedHash = digest.digest(token.getBytes(StandardCharsets.UTF_8));
+            return bytesToHex(encodedHash);
         } catch (NoSuchAlgorithmException e) {
             throw new BusinessException(ErrorCode.CRYPTO_ERROR, "Hashing algoritması bulunamadı.");
         }
@@ -156,8 +177,9 @@ public class TokenStoreService {
         StringBuilder hexString = new StringBuilder(2 * hash.length);
         for (byte b : hash) {
             String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1)
+            if (hex.length() == 1) {
                 hexString.append('0');
+            }
             hexString.append(hex);
         }
         return hexString.toString();

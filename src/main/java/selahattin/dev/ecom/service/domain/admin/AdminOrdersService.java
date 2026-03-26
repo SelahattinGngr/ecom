@@ -2,8 +2,10 @@ package selahattin.dev.ecom.service.domain.admin;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -38,6 +40,23 @@ public class AdminOrdersService {
     private final PaymentService paymentService;
     private final AuditLogService auditLogService;
 
+    /**
+     * H-07 — State Machine geçiş tablosu.
+     *
+     * Sadece iş akışında anlamlı olan geçişlere izin verilir.
+     * RETURN_REQUESTED, RETURNED, CANCELLED terminal/özel durumlardır:
+     *   - RETURN_REQUESTED → approveReturn() / rejectReturn() ile yönetilir.
+     *   - RETURNED ve CANCELLED terminal durumlardır, geri dönüş olmaz.
+     *
+     * EnumSet, enum değerleri için HashSet'ten daha verimlidir (bit-vector tabanlı).
+     */
+    private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED_TRANSITIONS = Map.of(
+            OrderStatus.PENDING,   EnumSet.of(OrderStatus.PREPARING, OrderStatus.CANCELLED),
+            OrderStatus.PAID,      EnumSet.of(OrderStatus.PREPARING, OrderStatus.CANCELLED),
+            OrderStatus.PREPARING, EnumSet.of(OrderStatus.SHIPPED,   OrderStatus.CANCELLED),
+            OrderStatus.SHIPPED,   EnumSet.of(OrderStatus.DELIVERED)
+    );
+
     public Page<AdminOrderResponse> getAllOrders(OrderStatus status, Pageable pageable) {
         Page<OrderEntity> orders;
 
@@ -56,19 +75,36 @@ public class AdminOrdersService {
         return mapToOrderDetailResponse(order);
     }
 
+    /**
+     * Sipariş durumunu günceller.
+     *
+     * H-07: Geçiş, ALLOWED_TRANSITIONS state machine ile doğrulanır.
+     * Geçersiz geçişler (örn. CANCELLED → PAID, SHIPPED → PENDING) reddedilir.
+     * approveReturn / rejectReturn gibi özel iş akışları kendi metodlarını kullanır.
+     */
     @Transactional
     public void updateOrderStatus(UUID id, UpdateOrderStatusRequest request) {
         OrderEntity order = orderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
-        OrderStatus previousStatus = order.getStatus();
-        order.setStatus(request.getStatus());
+        OrderStatus currentStatus = order.getStatus();
+        OrderStatus targetStatus = request.getStatus();
+
+        Set<OrderStatus> allowedTargets = ALLOWED_TRANSITIONS.get(currentStatus);
+        if (allowedTargets == null || !allowedTargets.contains(targetStatus)) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST,
+                    "Geçersiz durum geçişi: " + currentStatus + " → " + targetStatus +
+                            ". Bu durumdaki sipariş için geçerli hedefler: " +
+                            (allowedTargets != null ? allowedTargets : "yok (terminal durum)"));
+        }
+
+        order.setStatus(targetStatus);
         orderRepository.save(order);
 
         auditLogService.log("ORDER_STATUS_UPDATED", "ORDER", id,
-                Map.of("previousStatus", previousStatus.name(), "newStatus", request.getStatus().name()));
+                Map.of("previousStatus", currentStatus.name(), "newStatus", targetStatus.name()));
 
-        log.info("[ADMIN] Sipariş durumu güncellendi. Order ID: {}, Yeni Durum: {}", id, request.getStatus());
+        log.info("[ADMIN] Sipariş durumu güncellendi. OrderId: {}, {} → {}", id, currentStatus, targetStatus);
     }
 
     @Transactional
@@ -87,7 +123,7 @@ public class AdminOrdersService {
         order.setStatus(OrderStatus.SHIPPED);
         orderRepository.save(order);
 
-        log.info("[ADMIN] Sipariş kargolandı. Order ID: {}, Firma: {}, Takip: {}",
+        log.info("[ADMIN] Sipariş kargolandı. OrderId: {}, Firma: {}, Takip: {}",
                 id, request.getCargoFirm(), request.getTrackingCode());
 
         String customerName = order.getUser().getFirstName() != null
@@ -119,7 +155,6 @@ public class AdminOrdersService {
                     "Sadece iade bekleyen siparişler onaylanabilir.");
         }
 
-        // Provider'dan bağımsız iade — PaymentService hangi provider olduğunu bilir
         paymentService.refundByOrderId(order.getId());
 
         order.setStatus(OrderStatus.RETURNED);
@@ -128,7 +163,7 @@ public class AdminOrdersService {
         auditLogService.log("RETURN_APPROVED", "ORDER", id,
                 Map.of("returnCode", order.getReturnCode() != null ? order.getReturnCode() : ""));
 
-        log.info("[ADMIN] İade onaylandı. Order ID: {}", id);
+        log.info("[ADMIN] İade onaylandı. OrderId: {}", id);
 
         String customerName = order.getUser().getFirstName() != null
                 ? order.getUser().getFirstName()
@@ -168,7 +203,7 @@ public class AdminOrdersService {
         auditLogService.log("RETURN_REJECTED", "ORDER", id,
                 Map.of("reason", reason != null ? reason : ""));
 
-        log.info("[ADMIN] İade reddedildi. Order ID: {}, Neden: {}", id, reason);
+        log.info("[ADMIN] İade reddedildi. OrderId: {}, Neden: {}", id, reason);
 
         String customerName = order.getUser().getFirstName() != null
                 ? order.getUser().getFirstName()

@@ -44,7 +44,14 @@ public class UserEntity extends BaseEntity {
     @Column(name = "phone_number_verified_at")
     private OffsetDateTime phoneNumberVerifiedAt;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+    /**
+     * LAZY: Roller ve izinler yalnızca fetch-join sorgusu veya açık transaction içinde yüklenir.
+     * EAGER'dan LAZY'ye geçiş, her kullanıcı sorgusunda gereksiz join yapılmasını önler.
+     * Roller gereken yerlerde UserRepository#findByIdFetchRoles / findByEmailAndDeletedAtIsNullFetchRoles kullanılır.
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<RoleEntity> roles;
 }

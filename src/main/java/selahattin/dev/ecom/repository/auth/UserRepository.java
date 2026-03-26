@@ -1,6 +1,5 @@
 package selahattin.dev.ecom.repository.auth;
 
-
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +18,7 @@ import selahattin.dev.ecom.entity.auth.UserEntity;
 
 @Repository
 public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpecificationExecutor<UserEntity> {
+
     // SADECE aktif kullanıcıyı bulur. Silinmişse yok sayar.
     Optional<UserEntity> findByEmailAndDeletedAtIsNull(String email);
 
@@ -33,11 +33,30 @@ public interface UserRepository extends JpaRepository<UserEntity, UUID>, JpaSpec
     // Silinmemiş kullanıcıları sayfalayarak getir
     Page<UserEntity> findAllByDeletedAtIsNull(Pageable pageable);
 
-    // ID ile silinmemiş kullanıcı getir (Zaten findById var ama deleted check için
-    // custom yazılabilir veya serviste filter yapılabilir)
     Optional<UserEntity> findByIdAndDeletedAtIsNull(UUID id);
 
     Page<UserEntity> findAllByRoles(RoleEntity role, Pageable pageable);
+
+    /**
+     * Auth akışı için: e-posta ile kullanıcıyı rol ve izinleriyle birlikte tek sorguda yükler.
+     * UserEntity.roles ve RoleEntity.permissions LAZY olduğundan, session oluşturma ve
+     * profil görüntüleme gibi rollere ihtiyaç duyulan yerlerde bu sorgu kullanılmalıdır.
+     */
+    @Query("SELECT u FROM UserEntity u " +
+            "LEFT JOIN FETCH u.roles r " +
+            "LEFT JOIN FETCH r.permissions " +
+            "WHERE u.email = :email AND u.deletedAt IS NULL")
+    Optional<UserEntity> findByEmailAndDeletedAtIsNullFetchRoles(@Param("email") String email);
+
+    /**
+     * Auth akışı için: ID ile kullanıcıyı rol ve izinleriyle birlikte tek sorguda yükler.
+     * getCurrentUser() çağrılarında N+1'i önlemek için kullanılır.
+     */
+    @Query("SELECT u FROM UserEntity u " +
+            "LEFT JOIN FETCH u.roles r " +
+            "LEFT JOIN FETCH r.permissions " +
+            "WHERE u.id = :id")
+    Optional<UserEntity> findByIdFetchRoles(@Param("id") UUID id);
 
     // --- ANALİTİK ---
 

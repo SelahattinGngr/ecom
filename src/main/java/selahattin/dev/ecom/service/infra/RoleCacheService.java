@@ -22,27 +22,29 @@ public class RoleCacheService {
     private final RoleRepository roleRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    // Redis Prefix: security:roles:admin
     private static final String ROLE_CACHE_PREFIX = "security:roles:";
 
     /**
-     * Tüm Rolleri ve İzinleri DB'den çekip Redis'e yükler.
-     * Uygulama başladığında veya Admin panelinden rol güncellendiğinde çağrılır.
+     * Tüm rolleri ve izinleri DB'den çekip Redis'e yükler.
+     * Uygulama başladığında (CacheWarmupRunner) veya admin panelinden rol
+     * güncellendiğinde çağrılır.
+     *
+     * findAllFetchPermissions() kullanımı: RoleEntity.permissions LAZY olduğundan
+     * findAll() ile yüklenen roller üzerinde role.getPermissions() çağrısı
+     * transaction bağlamı olmadığında LazyInitializationException fırlatır.
+     * JOIN FETCH ile tek sorguda hem roller hem izinler yüklenir.
      */
     public void refreshRoleCache() {
-        log.info("Rol ve Yetkiler önbelleğe yükleniyor...");
-        List<RoleEntity> roles = roleRepository.findAll();
+        log.info("Rol ve yetkiler önbelleğe yükleniyor...");
+        List<RoleEntity> roles = roleRepository.findAllFetchPermissions();
 
         for (RoleEntity role : roles) {
             String key = ROLE_CACHE_PREFIX + role.getName();
 
-            // Permission isimlerini listeye çevir
             Set<String> permissions = role.getPermissions().stream()
                     .map(PermissionEntity::getName)
                     .collect(Collectors.toSet());
 
-            // Redis'e kaydet (Süresiz veya çok uzun süreli)
-            // permissions setini direkt saklıyoruz.
             redisTemplate.opsForValue().set(key, new ArrayList<>(permissions));
         }
         log.info("{} adet rol önbelleğe alındı.", roles.size());
@@ -50,7 +52,10 @@ public class RoleCacheService {
 
     /**
      * Verilen rol isminin izinlerini Redis'ten getirir.
-     * Bulamazsa (Cache silinmişse) DB'den yükleyip tekrar cache'ler (Fail-safe).
+     * Cache miss durumunda DB'den yükleyip tekrar cache'ler (fail-safe).
+     *
+     * findByNameFetchPermissions() kullanımı: LAZY permissions alanının
+     * transaction dışında okunabilmesi için JOIN FETCH sorgusu kullanılır.
      */
     @SuppressWarnings("unchecked")
     public List<String> getPermissionsForRole(String roleName) {
@@ -61,12 +66,12 @@ public class RoleCacheService {
             return (List<String>) cachedPermissions;
         }
 
-        // Cache miss durumunda DB'ye git (Güvenlik önlemi)
         log.warn("Cache miss for role: {}. Fetching from DB...", roleName);
-        RoleEntity role = roleRepository.findByName(roleName).orElse(null);
+        RoleEntity role = roleRepository.findByNameFetchPermissions(roleName).orElse(null);
 
-        if (role == null)
+        if (role == null) {
             return new ArrayList<>();
+        }
 
         List<String> permissions = role.getPermissions().stream()
                 .map(PermissionEntity::getName)

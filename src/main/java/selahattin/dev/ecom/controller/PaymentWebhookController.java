@@ -14,11 +14,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.service.domain.PaymentService;
 import selahattin.dev.ecom.utils.enums.PaymentProvider;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/webhooks/payments")
 @RequiredArgsConstructor
@@ -32,14 +34,12 @@ public class PaymentWebhookController {
      */
     @PostMapping(value = "/{provider}", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<Void> handleFormCallback(
-            @PathVariable String provider, // Spring'in case-sensitive Enum dönüşümünde patlamaması için String alıyoruz
+            @PathVariable String provider,
             @RequestParam Map<String, String> payload) {
 
         PaymentProvider paymentProvider;
         try {
-            System.out.println("Received webhook for provider: " + provider);
-            System.out.println("uppercase: " + provider.toUpperCase());
-            System.out.println("payload: " + payload);
+            log.info("[WEBHOOK] Callback alındı. Provider: {}", provider.toUpperCase(Locale.ENGLISH));
             paymentProvider = PaymentProvider.valueOf(provider.toUpperCase(Locale.ENGLISH));
         } catch (IllegalArgumentException e) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "Geçersiz ödeme sağlayıcısı: " + provider);

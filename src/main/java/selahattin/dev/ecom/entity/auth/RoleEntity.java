@@ -48,7 +48,13 @@ public class RoleEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"), inverseJoinColumns = @JoinColumn(name = "permission_id"))
+    /**
+     * LAZY: İzinler yalnızca fetch-join sorgusu veya açık transaction içinde yüklenir.
+     * Rol listesi gibi permission detayı gerektirmeyen sorgularda ekstra JOIN önlenir.
+     */
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "role_permissions",
+            joinColumns = @JoinColumn(name = "role_id"),
+            inverseJoinColumns = @JoinColumn(name = "permission_id"))
     private Set<PermissionEntity> permissions;
 }

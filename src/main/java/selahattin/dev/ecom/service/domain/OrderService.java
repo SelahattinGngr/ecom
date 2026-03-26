@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.dto.infra.AddressSummaryDto;
 import selahattin.dev.ecom.dto.infra.EmailMessageDto;
 import selahattin.dev.ecom.dto.request.order.CheckoutPreviewRequest;
@@ -28,7 +29,6 @@ import selahattin.dev.ecom.dto.response.order.OrderResponse;
 import selahattin.dev.ecom.dto.response.order.OrderSummaryResponse;
 import selahattin.dev.ecom.dto.response.payment.PaymentResponse;
 import selahattin.dev.ecom.entity.auth.UserEntity;
-import selahattin.dev.ecom.entity.catalog.ProductVariantEntity;
 import selahattin.dev.ecom.entity.location.AddressEntity;
 import selahattin.dev.ecom.entity.order.OrderEntity;
 import selahattin.dev.ecom.entity.order.OrderItemEntity;
@@ -42,6 +42,7 @@ import selahattin.dev.ecom.repository.payment.PaymentRepository;
 import selahattin.dev.ecom.service.infra.RedisQueueService;
 import selahattin.dev.ecom.utils.enums.OrderStatus;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -54,6 +55,7 @@ public class OrderService {
     private final ProductVariantRepository productVariantRepository;
     private final ObjectMapper objectMapper;
     private final RedisQueueService redisQueueService;
+    private final PaymentService paymentService;
 
     public OrderSummaryResponse checkoutPreview(CheckoutPreviewRequest request) {
         CartResponse cart = cartService.getMyCart();
@@ -72,7 +74,12 @@ public class OrderService {
 
         List<CartItemResponse> selectedItems = filterSelectedItems(cart, request.getItems());
 
+        // C-03: Her iki adres de sahiplik kontrolüyle yüklenir — IDOR önlemi.
         AddressEntity shippingAddress = addressRepository.findById(request.getShippingAddressId())
+                .filter(a -> a.getUser().getId().equals(user.getId()))
+                .orElseThrow(() -> new BusinessException(ErrorCode.ADDRESS_NOT_FOUND));
+
+        AddressEntity billingAddress = addressRepository.findById(request.getBillingAddressId())
                 .filter(a -> a.getUser().getId().equals(user.getId()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.ADDRESS_NOT_FOUND));
 
@@ -98,7 +105,7 @@ public class OrderService {
                 .shippingCity(shippingAddress.getCity())
                 .shippingDistrict(shippingAddress.getDistrict())
                 .shippingAddress(convertAddressToMap(shippingAddress))
-                .billingAddress(convertAddressToMap(addressRepository.findById(request.getBillingAddressId()).get()))
+                .billingAddress(convertAddressToMap(billingAddress))
                 .build();
 
         List<OrderItemEntity> orderItems = selectedItems.stream().map(cartItem -> OrderItemEntity.builder()
@@ -156,6 +163,15 @@ public class OrderService {
                 .build();
     }
 
+    /**
+     * Sipariş iptali.
+     *
+     * C-04: Ödeme alınmış (PAID veya PREPARING) siparişler iptal edildiğinde
+     * ödeme iadesi otomatik tetiklenir. İade başarısız olursa transaction rollback
+     * yapılır ve sipariş iptal edilmez — tutarsız durum önlenir.
+     *
+     * H-05: Stok iadesi, N+1 UPDATE döngüsü yerine direkt @Modifying sorgusu ile yapılır.
+     */
     @Transactional
     public void cancelOrder(UUID orderId) {
         UserEntity user = userService.getCurrentUser();
@@ -169,19 +185,28 @@ public class OrderService {
         if (order.getStatus() != OrderStatus.PENDING && order.getStatus() != OrderStatus.PREPARING
                 && order.getStatus() != OrderStatus.PAID) {
             throw new BusinessException(ErrorCode.ORDER_CANNOT_BE_CANCELLED,
-                    "Sadece beklemede veya hazırlanıyor aşamasındaki siparişler iptal edilebilir.");
+                    "Sadece beklemede, hazırlanıyor veya ödeme alınmış siparişler iptal edilebilir.");
+        }
+
+        // Ödeme alınmışsa iade başlat. İade başarısız olursa BusinessException fırlatılır
+        // ve tüm transaction rollback olur — sipariş iptal edilmeden tutarlı kalır.
+        boolean paymentWasCollected = order.getStatus() == OrderStatus.PAID
+                || order.getStatus() == OrderStatus.PREPARING;
+
+        if (paymentWasCollected) {
+            log.info("[CANCEL] Ödeme iadesi başlatılıyor. OrderId: {}, Status: {}", orderId, order.getStatus());
+            paymentService.refundByOrderId(orderId);
         }
 
         order.setStatus(OrderStatus.CANCELLED);
-        // TODO: Eğer ödeme yapıldıysa, ödeme iadesi işlemini başlat (bu örnekte ödeme
-        // entegrasyonu olmadığı için atlanıyor)
+
+        // H-05: Her ürün için SELECT + UPDATE yerine direkt UPDATE — N+1 önlemi.
         for (OrderItemEntity item : order.getItems()) {
-            ProductVariantEntity variant = item.getProductVariant();
-            variant.setStockQuantity(variant.getStockQuantity() + item.getQuantity());
-            productVariantRepository.save(variant);
+            productVariantRepository.increaseStock(item.getProductVariant().getId(), item.getQuantity());
         }
 
         orderRepository.save(order);
+        log.info("[CANCEL] Sipariş iptal edildi. OrderId: {}, PaymentRefunded: {}", orderId, paymentWasCollected);
     }
 
     @Transactional
@@ -195,7 +220,6 @@ public class OrderService {
                     "Sadece teslim edilmiş siparişler iade edilebilir.");
         }
 
-        // İade takip kodu üret: "RET-" + orderId'nin ilk 8 karakteri büyük harf
         String returnCode = "RET-" + order.getId().toString().substring(0, 8).toUpperCase();
 
         order.setStatus(OrderStatus.RETURN_REQUESTED);
@@ -205,7 +229,6 @@ public class OrderService {
 
         orderRepository.save(order);
 
-        // Kullanıcıya iade bilgi maili gönder
         String customerName = user.getFirstName() != null ? user.getFirstName() : "Değerli Müşterimiz";
         EmailMessageDto email = EmailMessageDto.builder()
                 .to(user.getEmail())
@@ -294,7 +317,8 @@ public class OrderService {
             AddressSummaryDto summaryDto = mapToAddressSummary(address);
             return objectMapper.convertValue(summaryDto, Map.class);
         } catch (Exception e) {
-            throw new RuntimeException("Adres verisi dönüştürülemedi: " + e.getMessage());
+            log.error("Adres verisi dönüştürülemedi. AddressId: {}", address.getId(), e);
+            throw new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR, "Adres verisi işlenemedi.");
         }
     }
 
