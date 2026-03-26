@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.request.payment.PaymentInitRequest;
@@ -28,7 +29,9 @@ public class PaymentController {
     // Ödeme Başlat
     @PostMapping
     public ResponseEntity<ApiResponse<PaymentInitResponse>> initPayment(
-            @Valid @RequestBody PaymentInitRequest request) {
+            @Valid @RequestBody PaymentInitRequest request,
+            HttpServletRequest httpRequest) {
+        request.setClientIp(extractClientIp(httpRequest));
         return ResponseEntity.ok(ApiResponse.success(
                 "Ödeme başlatıldı",
                 paymentService.initPayment(request)));
@@ -40,5 +43,20 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Ödeme detayı getirildi",
                 paymentService.getPaymentDetail(id)));
+    }
+
+    /**
+     * Gerçek istemci IP'sini belirler.
+     * Reverse proxy veya Next.js frontend arkasında çalışırken X-Forwarded-For
+     * başlığı zincirinin ilk (en soldaki) değerini kullanır; başlık yoksa
+     * doğrudan bağlantı adresine döner.
+     */
+    private String extractClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            // "client, proxy1, proxy2" biçimindeki değerden yalnızca ilk IP alınır
+            return forwarded.split(",")[0].strip();
+        }
+        return request.getRemoteAddr();
     }
 }

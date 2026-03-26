@@ -74,6 +74,9 @@ public class PaymentEntity {
 
     private String description;
 
+    @Column(name = "client_ip")
+    private String clientIp;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;

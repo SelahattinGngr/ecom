@@ -10,4 +10,6 @@ import lombok.Setter;
 public class PaymentInitRequest {
     @NotNull
     private UUID orderId;
+
+    private String clientIp;
 }

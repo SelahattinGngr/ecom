@@ -15,10 +15,13 @@ import selahattin.dev.ecom.dto.response.payment.PaymentCallbackResult;
 import selahattin.dev.ecom.dto.response.payment.PaymentInitResponse;
 import selahattin.dev.ecom.dto.response.payment.PaymentResponse;
 import selahattin.dev.ecom.entity.auth.UserEntity;
+import selahattin.dev.ecom.entity.catalog.ProductVariantEntity;
 import selahattin.dev.ecom.entity.order.OrderEntity;
+import selahattin.dev.ecom.entity.order.OrderItemEntity;
 import selahattin.dev.ecom.entity.payment.PaymentEntity;
 import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
+import selahattin.dev.ecom.repository.catalog.ProductVariantRepository;
 import selahattin.dev.ecom.repository.order.OrderRepository;
 import selahattin.dev.ecom.repository.payment.PaymentRepository;
 import selahattin.dev.ecom.service.integration.payment.PaymentProviderStrategy;
@@ -34,6 +37,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final ProductVariantRepository productVariantRepository;
     private final UserService userService;
     private final PaymentStrategyFactory paymentStrategyFactory;
     private final PaymentProperties paymentProperties;
@@ -57,6 +61,7 @@ public class PaymentService {
                 .paymentProvider(activeProvider)
                 .status(PaymentStatus.PENDING)
                 .description("Sipariş ödemesi #" + order.getId())
+                .clientIp(request.getClientIp())
                 .build();
 
         PaymentEntity savedPayment = paymentRepository.save(payment);
@@ -64,7 +69,6 @@ public class PaymentService {
 
         PaymentInitResponse response = strategy.initializePayment(savedPayment, request);
 
-        // Iyzico token'ı initializePayment içinde savedPayment'a set eder, kaydet.
         paymentRepository.save(savedPayment);
 
         return response;
@@ -99,6 +103,20 @@ public class PaymentService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
                         "Ödeme kaydı bulunamadı. TransactionId: " + result.getTransactionId()));
 
+        OrderEntity order = payment.getOrder();
+
+        // IDEMPOTENCY KONTROLÜ: Eğer zaten işlenmişse direkt dön, sistemi yorma.
+        if (payment.getStatus() == PaymentStatus.SUCCEEDED || order.getStatus() == OrderStatus.PAID) {
+            log.info("[WEBHOOK] Idempotency: Bu işlem zaten başarılı olarak işaretlenmiş. OrderId: {}", order.getId());
+            return frontendUrl + "/checkout/success?orderId=" + order.getId();
+        }
+
+        if (payment.getStatus() == PaymentStatus.FAILED || payment.getStatus() == PaymentStatus.CANCELLED) {
+            log.info("[WEBHOOK] Idempotency: Bu işlem zaten başarısız olarak işaretlenmiş. OrderId: {}", order.getId());
+            return frontendUrl + "/checkout/failure?orderId=" + order.getId();
+        }
+
+        // Güncel provider verilerini kaydet
         payment.setStatus(result.getStatus());
         if (result.getProviderPaymentId() != null) {
             payment.setProviderPaymentId(result.getProviderPaymentId());
@@ -108,18 +126,26 @@ public class PaymentService {
         }
 
         if (result.getStatus() == PaymentStatus.SUCCEEDED) {
-            payment.getOrder().setStatus(OrderStatus.PAID);
+            order.setStatus(OrderStatus.PAID);
             paymentRepository.save(payment);
-            orderRepository.save(payment.getOrder());
-            log.info("[WEBHOOK] Ödeme BAŞARILI. OrderId: {}", payment.getOrder().getId());
-            return frontendUrl + "/checkout/success?orderId=" + payment.getOrder().getId();
+            orderRepository.save(order);
+            log.info("[WEBHOOK] Ödeme BAŞARILI. OrderId: {}", order.getId());
+            return frontendUrl + "/checkout/success?orderId=" + order.getId();
         } else {
-            payment.getOrder().setStatus(OrderStatus.CANCELLED);
+            order.setStatus(OrderStatus.CANCELLED);
+
+            for (OrderItemEntity item : order.getItems()) {
+                ProductVariantEntity variant = item.getProductVariant();
+                variant.setStockQuantity(variant.getStockQuantity() + item.getQuantity());
+                productVariantRepository.save(variant);
+                log.info("[WEBHOOK] Başarısız ödeme, stok iade edildi. VariantID: {}, Miktar: {}", variant.getId(),
+                        item.getQuantity());
+            }
+
             paymentRepository.save(payment);
-            orderRepository.save(payment.getOrder());
-            log.warn("[WEBHOOK] Ödeme BAŞARISIZ. OrderId: {}, ErrorCode: {}",
-                    payment.getOrder().getId(), result.getErrorCode());
-            return frontendUrl + "/checkout/failure?orderId=" + payment.getOrder().getId()
+            orderRepository.save(order);
+            log.warn("[WEBHOOK] Ödeme BAŞARISIZ. OrderId: {}, ErrorCode: {}", order.getId(), result.getErrorCode());
+            return frontendUrl + "/checkout/failure?orderId=" + order.getId()
                     + "&errorCode=" + result.getErrorCode();
         }
     }

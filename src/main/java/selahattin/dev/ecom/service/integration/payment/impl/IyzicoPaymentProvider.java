@@ -38,7 +38,6 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
 
     private static final String STATUS_SUCCESS = "success";
     private static final String PAYMENT_STATUS_SUCCESS = "SUCCESS";
-    private static final String DEFAULT_IP = "127.0.0.1";
 
     @Override
     public PaymentProvider getProviderName() {
@@ -101,7 +100,7 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
         }
 
         buyer.setRegistrationAddress(addressText);
-        buyer.setIp(DEFAULT_IP);
+        buyer.setIp(request.getClientIp());
         buyer.setCity(city);
         buyer.setCountry(country);
         iyzicoRequest.setBuyer(buyer);
@@ -218,7 +217,7 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
             request.setLocale(Locale.TR.getValue());
             request.setConversationId(payment.getId().toString());
             request.setPaymentId(numericPaymentId);
-            request.setIp(DEFAULT_IP);
+            request.setIp(payment.getClientIp());
 
             Cancel cancel = Cancel.create(request, getOptions());
             if (!STATUS_SUCCESS.equals(cancel.getStatus())) {
@@ -252,7 +251,7 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
                 request.setPrice(refundAmount.divide(
                         java.math.BigDecimal.valueOf(itemTxIds.size()),
                         2, java.math.RoundingMode.HALF_UP));
-                request.setIp(DEFAULT_IP);
+                request.setIp(payment.getClientIp());
                 request.setCurrency(Currency.TRY.name());
 
                 Refund refund = Refund.create(request, getOptions());
