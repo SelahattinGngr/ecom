@@ -7,6 +7,7 @@ import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_TOKEN_DURAT
 
 import java.security.SecureRandom;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.config.properties.ClientProperties;
 import selahattin.dev.ecom.dto.infra.CookieDto;
 import selahattin.dev.ecom.dto.infra.EmailMessageDto;
@@ -34,7 +36,9 @@ import selahattin.dev.ecom.service.infra.CookieService;
 import selahattin.dev.ecom.service.infra.RedisQueueService;
 import selahattin.dev.ecom.service.infra.TokenService;
 import selahattin.dev.ecom.utils.cookie.CookieFactory;
+import selahattin.dev.ecom.utils.enums.SecurityEventType;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -47,6 +51,7 @@ public class AuthService {
 	private final TokenService tokenService;
 	private final CookieService cookieService;
 	private final ClientProperties clientProperties;
+	private final SecurityEventService securityEventService;
 
 	/* --- Signin (OTP Flow) --- */
 	public void sendLoginOtp(SigninRequest signinRequest) {
@@ -67,17 +72,35 @@ public class AuthService {
 			HttpServletRequest httpRequest) {
 		String email = request.getEmail();
 		String inputOtp = request.getCode();
+		String ip = getClientIp(httpRequest);
+		String ua = getUserAgent(httpRequest);
 
-		validateRedisValue(OTP_KEY_TEMPLATE + email, inputOtp);
+		try {
+			validateRedisValue(OTP_KEY_TEMPLATE + email, inputOtp);
+		} catch (BusinessException e) {
+			try {
+				securityEventService.log(SecurityEventType.LOGIN_FAILED, null, email, ip, ua,
+						Map.of("reason", "INVALID_OTP"));
+			} catch (Exception logEx) {
+				log.warn("[AUTH] LOGIN_FAILED event yazılamadı — email: {}", email, logEx);
+			}
+			throw e;
+		}
 
 		UserEntity user = userService.findByEmail(email);
 		deleteFromRedis(OTP_KEY_TEMPLATE + email);
 
-		// IP ve UA çekiyoruz
-		String ip = getClientIp(httpRequest);
-		String ua = getUserAgent(httpRequest);
+		SigninResponse result = generateTokensAndReturnResponse(user, response, ip, ua);
 
-		return generateTokensAndReturnResponse(user, response, ip, ua);
+		try {
+			securityEventService.log(SecurityEventType.LOGIN_SUCCESS, user.getId(), user.getEmail(), ip, ua,
+					Map.of());
+		} catch (Exception logEx) {
+			log.warn("[AUTH] LOGIN_SUCCESS event yazılamadı — userId: {}", user.getId(), logEx);
+		}
+
+		log.info("[AUTH] Kullanıcı giriş yaptı — userId: {}, IP: {}", user.getId(), ip);
+		return result;
 	}
 	/* --- --- */
 
@@ -111,6 +134,16 @@ public class AuthService {
 
 		userService.activateUser(email);
 		deleteFromRedis(redisKey);
+
+		try {
+			UserEntity user = userService.findByEmail(email);
+			securityEventService.log(SecurityEventType.SIGNUP_COMPLETED, user.getId(), email, null, null,
+					Map.of());
+		} catch (Exception logEx) {
+			log.warn("[AUTH] SIGNUP_COMPLETED event yazılamadı — email: {}", email, logEx);
+		}
+
+		log.info("[AUTH] Email doğrulandı — email: {}", email);
 	}
 
 	public void resendVerificationEmail(SigninRequest signinRequest) {
@@ -141,6 +174,16 @@ public class AuthService {
 		try {
 			String email = jwtTokenProvider.extractUsername(refreshToken, false);
 			tokenService.deleteToken(email, deviceId);
+
+			try {
+				UserEntity user = userService.findByEmail(email);
+				securityEventService.log(SecurityEventType.LOGOUT, user.getId(), email, null, null,
+						Map.of("deviceId", deviceId != null ? deviceId : ""));
+			} catch (Exception logEx) {
+				log.warn("[AUTH] LOGOUT event yazılamadı — email: {}", email, logEx);
+			}
+
+			log.info("[AUTH] Kullanıcı çıkış yaptı — email: {}, deviceId: {}", email, deviceId);
 		} catch (Exception e) {
 			// Token bozuksa bile cookie temizle
 		}
@@ -150,7 +193,16 @@ public class AuthService {
 
 	/* --- Token Operations --- */
 	public void refreshToken(String refreshToken, HttpServletResponse response, HttpServletRequest httpRequest) {
+		String ip = getClientIp(httpRequest);
+		String ua = getUserAgent(httpRequest);
+
 		if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+			try {
+				securityEventService.log(SecurityEventType.TOKEN_REFRESH_FAILED, null, null, ip, ua,
+						Map.of("reason", "INVALID_REFRESH_TOKEN"));
+			} catch (Exception logEx) {
+				log.warn("[AUTH] TOKEN_REFRESH_FAILED event yazılamadı — IP: {}", ip, logEx);
+			}
 			throw new BusinessException(ErrorCode.INVALID_REFRESH_TOKEN);
 		}
 
@@ -166,9 +218,6 @@ public class AuthService {
 		}
 
 		UserEntity user = userService.findByEmail(email);
-
-		String ip = getClientIp(httpRequest);
-		String ua = getUserAgent(httpRequest);
 
 		generateTokensAndReturnResponse(user, deviceId, response, ip, ua);
 	}

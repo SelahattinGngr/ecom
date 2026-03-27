@@ -14,11 +14,9 @@ FROM eclipse-temurin:21-jdk-alpine AS runtime
 
 WORKDIR /app
 
-# Kullanıcıyı oluştur
 RUN addgroup -S spring && adduser -S spring -G spring
 
-# Bu klasörü oluşturup sahibini 'spring' yapıyoruz.
-RUN mkdir -p assets/public/products && chown -R spring:spring assets
+RUN mkdir -p assets/public/products logs && chown -R spring:spring assets logs
 
 # Kullanıcıya geç
 USER spring

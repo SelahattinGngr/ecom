@@ -1,5 +1,6 @@
 package selahattin.dev.ecom.service.domain.admin;
 
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -8,23 +9,29 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.dto.response.admin.AdminPaymentResponse;
 import selahattin.dev.ecom.entity.auth.UserEntity;
 import selahattin.dev.ecom.entity.payment.PaymentEntity;
 import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.payment.PaymentRepository;
+import selahattin.dev.ecom.service.domain.PaymentEventService;
 import selahattin.dev.ecom.service.integration.payment.PaymentProviderStrategy;
 import selahattin.dev.ecom.service.integration.payment.PaymentStrategyFactory;
 import selahattin.dev.ecom.utils.enums.OrderStatus;
+import selahattin.dev.ecom.utils.enums.PaymentEventType;
 import selahattin.dev.ecom.utils.enums.PaymentStatus;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminPaymentsService {
 
     private final PaymentRepository paymentRepository;
     private final PaymentStrategyFactory paymentStrategyFactory;
+    private final AuditLogService auditLogService;
+    private final PaymentEventService paymentEventService;
 
     public Page<AdminPaymentResponse> getAllPayments(Pageable pageable) {
         return paymentRepository.findAllWithOrderAndUser(pageable)
@@ -54,6 +61,22 @@ public class AdminPaymentsService {
         payment.setStatus(PaymentStatus.SUCCEEDED);
         payment.getOrder().setStatus(OrderStatus.PAID);
         paymentRepository.save(payment);
+
+        try {
+            paymentEventService.log(payment.getId(), PaymentEventType.CAPTURE_EXECUTED,
+                    payment.getPaymentProvider(),
+                    Map.of("orderId", payment.getOrder().getId().toString(),
+                           "amount", payment.getAmount().toString()));
+        } catch (Exception logEx) {
+            log.warn("[PAYMENT] CAPTURE_EXECUTED event yazılamadı — paymentId: {}", id, logEx);
+        }
+
+        auditLogService.log("PAYMENT_CAPTURED", "PAYMENT", id,
+                Map.of("orderId", payment.getOrder().getId().toString(),
+                       "amount", payment.getAmount().toString(),
+                       "provider", payment.getPaymentProvider().name()));
+
+        log.info("[ADMIN][PAYMENT] Ödeme capture edildi — paymentId: {}", id);
     }
 
     @Transactional
@@ -67,6 +90,20 @@ public class AdminPaymentsService {
         payment.setStatus(PaymentStatus.CANCELLED);
         payment.getOrder().setStatus(OrderStatus.CANCELLED);
         paymentRepository.save(payment);
+
+        try {
+            paymentEventService.log(payment.getId(), PaymentEventType.VOID_EXECUTED,
+                    payment.getPaymentProvider(),
+                    Map.of("orderId", payment.getOrder().getId().toString()));
+        } catch (Exception logEx) {
+            log.warn("[PAYMENT] VOID_EXECUTED event yazılamadı — paymentId: {}", id, logEx);
+        }
+
+        auditLogService.log("PAYMENT_VOIDED", "PAYMENT", id,
+                Map.of("orderId", payment.getOrder().getId().toString(),
+                       "provider", payment.getPaymentProvider().name()));
+
+        log.info("[ADMIN][PAYMENT] Ödeme void edildi — paymentId: {}", id);
     }
 
     // --- MAPPER ---

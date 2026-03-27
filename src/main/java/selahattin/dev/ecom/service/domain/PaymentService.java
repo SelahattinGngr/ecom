@@ -1,5 +1,6 @@
 package selahattin.dev.ecom.service.domain;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -15,7 +16,6 @@ import selahattin.dev.ecom.dto.response.payment.PaymentCallbackResult;
 import selahattin.dev.ecom.dto.response.payment.PaymentInitResponse;
 import selahattin.dev.ecom.dto.response.payment.PaymentResponse;
 import selahattin.dev.ecom.entity.auth.UserEntity;
-import selahattin.dev.ecom.entity.catalog.ProductVariantEntity;
 import selahattin.dev.ecom.entity.order.OrderEntity;
 import selahattin.dev.ecom.entity.order.OrderItemEntity;
 import selahattin.dev.ecom.entity.payment.PaymentEntity;
@@ -27,6 +27,7 @@ import selahattin.dev.ecom.repository.payment.PaymentRepository;
 import selahattin.dev.ecom.service.integration.payment.PaymentProviderStrategy;
 import selahattin.dev.ecom.service.integration.payment.PaymentStrategyFactory;
 import selahattin.dev.ecom.utils.enums.OrderStatus;
+import selahattin.dev.ecom.utils.enums.PaymentEventType;
 import selahattin.dev.ecom.utils.enums.PaymentProvider;
 import selahattin.dev.ecom.utils.enums.PaymentStatus;
 
@@ -42,6 +43,7 @@ public class PaymentService {
     private final PaymentStrategyFactory paymentStrategyFactory;
     private final PaymentProperties paymentProperties;
     private final ClientProperties clientProperties;
+    private final PaymentEventService paymentEventService;
 
     @Transactional
     public PaymentInitResponse initPayment(PaymentInitRequest request) {
@@ -70,6 +72,13 @@ public class PaymentService {
         PaymentInitResponse response = strategy.initializePayment(savedPayment, request);
 
         paymentRepository.save(savedPayment);
+
+        try {
+            paymentEventService.log(savedPayment.getId(), PaymentEventType.PAYMENT_INITIATED, activeProvider,
+                    Map.of("orderId", order.getId().toString(), "amount", order.getTotalAmount().toString()));
+        } catch (Exception logEx) {
+            log.warn("[PAYMENT] PAYMENT_INITIATED event yazılamadı — paymentId: {}", savedPayment.getId(), logEx);
+        }
 
         return response;
     }
@@ -103,6 +112,14 @@ public class PaymentService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
                         "Ödeme kaydı bulunamadı. TransactionId: " + result.getTransactionId()));
 
+        // Webhook'u aldık — ham payload'ı kaydet (itiraz/muhasebe için kanıt)
+        try {
+            Map<String, Object> rawPayload = new HashMap<>(payload);
+            paymentEventService.log(payment.getId(), PaymentEventType.WEBHOOK_RECEIVED, provider, rawPayload);
+        } catch (Exception logEx) {
+            log.warn("[WEBHOOK] WEBHOOK_RECEIVED event yazılamadı — paymentId: {}", payment.getId(), logEx);
+        }
+
         OrderEntity order = payment.getOrder();
 
         // IDEMPOTENCY KONTROLÜ: Eğer zaten işlenmişse direkt dön, sistemi yorma.
@@ -129,21 +146,37 @@ public class PaymentService {
             order.setStatus(OrderStatus.PAID);
             paymentRepository.save(payment);
             orderRepository.save(order);
+
+            try {
+                paymentEventService.log(payment.getId(), PaymentEventType.PAYMENT_SUCCEEDED, provider,
+                        Map.of("orderId", order.getId().toString(), "amount", payment.getAmount().toString()));
+            } catch (Exception logEx) {
+                log.warn("[WEBHOOK] PAYMENT_SUCCEEDED event yazılamadı — paymentId: {}", payment.getId(), logEx);
+            }
+
             log.info("[WEBHOOK] Ödeme BAŞARILI. OrderId: {}", order.getId());
             return frontendUrl + "/checkout/success?orderId=" + order.getId();
         } else {
             order.setStatus(OrderStatus.CANCELLED);
 
+            // H-05: Her ürün için SELECT + UPDATE yerine direkt UPDATE — N+1 önlemi.
             for (OrderItemEntity item : order.getItems()) {
-                ProductVariantEntity variant = item.getProductVariant();
-                variant.setStockQuantity(variant.getStockQuantity() + item.getQuantity());
-                productVariantRepository.save(variant);
-                log.info("[WEBHOOK] Başarısız ödeme, stok iade edildi. VariantID: {}, Miktar: {}", variant.getId(),
-                        item.getQuantity());
+                productVariantRepository.increaseStock(item.getProductVariant().getId(), item.getQuantity());
+                log.info("[WEBHOOK] Başarısız ödeme, stok iade edildi. VariantID: {}, Miktar: {}",
+                        item.getProductVariant().getId(), item.getQuantity());
             }
 
             paymentRepository.save(payment);
             orderRepository.save(order);
+
+            try {
+                paymentEventService.log(payment.getId(), PaymentEventType.PAYMENT_FAILED, provider,
+                        Map.of("orderId", order.getId().toString(), "errorCode",
+                                result.getErrorCode() != null ? result.getErrorCode() : ""));
+            } catch (Exception logEx) {
+                log.warn("[WEBHOOK] PAYMENT_FAILED event yazılamadı — paymentId: {}", payment.getId(), logEx);
+            }
+
             log.warn("[WEBHOOK] Ödeme BAŞARISIZ. OrderId: {}, ErrorCode: {}", order.getId(), result.getErrorCode());
             return frontendUrl + "/checkout/failure?orderId=" + order.getId()
                     + "&errorCode=" + result.getErrorCode();
@@ -161,12 +194,27 @@ public class PaymentService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
                         "Bu sipariş için başarılı bir ödeme kaydı bulunamadı."));
 
-        PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(payment.getPaymentProvider());
+        try {
+            paymentEventService.log(payment.getId(), PaymentEventType.REFUND_INITIATED,
+                    payment.getPaymentProvider(),
+                    Map.of("orderId", orderId.toString(), "amount", payment.getAmount().toString()));
+        } catch (Exception logEx) {
+            log.warn("[REFUND] REFUND_INITIATED event yazılamadı — paymentId: {}", payment.getId(), logEx);
+        }
 
+        PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(payment.getPaymentProvider());
         strategy.refundPayment(payment, payment.getAmount());
 
         payment.setStatus(PaymentStatus.REFUNDED);
         paymentRepository.save(payment);
+
+        try {
+            paymentEventService.log(payment.getId(), PaymentEventType.REFUND_COMPLETED,
+                    payment.getPaymentProvider(),
+                    Map.of("orderId", orderId.toString(), "amount", payment.getAmount().toString()));
+        } catch (Exception logEx) {
+            log.warn("[REFUND] REFUND_COMPLETED event yazılamadı — paymentId: {}", payment.getId(), logEx);
+        }
 
         log.info("[REFUND] İade başarılı. OrderId: {}, Provider: {}, Tutar: {}",
                 orderId, payment.getPaymentProvider(), payment.getAmount());

@@ -42,3 +42,7 @@ docker-data
 claude.md
 .claude
 SECURITY_AUDIT.md
+db-data
+logs
+redis-data
+LOGGING_GUIDE.md

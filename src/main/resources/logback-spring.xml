@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+
+    <!--
+        LOG_PATH override: Docker'da /app/logs (volume: ./logs:/app/logs)
+        Local dev için: java -DLOG_PATH=./logs -jar app.jar
+    -->
+    <property name="LOG_PATH" value="${LOG_PATH:-/app/logs}" />
+    <property name="LOG_FILE" value="ecom-backend" />
+
+    <property name="CONSOLE_LOG_PATTERN"
+        value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} [TraceID: %X{traceId:-NONE} | UserID: %X{userId:-NONE} | IP: %X{clientIp:-NONE}] %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
+
+    <property name="FILE_LOG_PATTERN"
+        value="%d{yyyy-MM-dd HH:mm:ss.SSS} ${LOG_LEVEL_PATTERN:-%5p} ${PID:- } --- [%t] %-40.40logger{39} : [TraceID: %X{traceId:-NONE} | UserID: %X{userId:-NONE} | IP: %X{clientIp:-NONE}] %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}" />
+
+    <!-- ═══════════════════════════════════════════════════════
+         APPENDERS
+         ═══════════════════════════════════════════════════════ -->
+
+    <!-- CONSOLE: Tüm loglar, renkli -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <!-- ANA DOSYA: Tüm loglar bir arada (genel bakış) -->
+    <appender name="ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}.log</file>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/${LOG_FILE}.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>5GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- ERROR DOSYASI: Sadece ERROR seviyesi, tüm domain'lerden -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/error.log</file>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/error.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>90</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- AUTH DOSYASI: Giriş, çıkış, OTP, kayıt -->
+    <appender name="AUTH_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/auth.log</file>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/auth.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>90</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- PAYMENT DOSYASI: Ödeme başlatma, webhook, capture, void -->
+    <appender name="PAYMENT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/payment.log</file>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/payment.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>90</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- ORDER DOSYASI: Checkout, iptal, iade, kargo -->
+    <appender name="ORDER_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/order.log</file>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/order.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>90</maxHistory>
+            <totalSizeCap>2GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- ADMIN DOSYASI: Tüm admin panel işlemleri -->
+    <appender name="ADMIN_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/admin.log</file>
+        <encoder>
+            <pattern>${FILE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/archived/admin.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>90</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- ═══════════════════════════════════════════════════════
+         DOMAIN LOGGER'LARI
+         additivity="true" → loglar hem domain dosyasına hem
+         ana ecom-backend.log'a yazılır (root appender'lar çalışır)
+         ═══════════════════════════════════════════════════════ -->
+
+    <!-- AUTH domain: controller + service -->
+    <logger name="selahattin.dev.ecom.controller.AuthController" level="INFO" additivity="true">
+        <appender-ref ref="AUTH_FILE" />
+    </logger>
+    <logger name="selahattin.dev.ecom.service.domain.AuthService" level="INFO" additivity="true">
+        <appender-ref ref="AUTH_FILE" />
+    </logger>
+
+    <!-- PAYMENT domain: her iki controller + service + integration katmanı -->
+    <logger name="selahattin.dev.ecom.controller.PaymentController" level="INFO" additivity="true">
+        <appender-ref ref="PAYMENT_FILE" />
+    </logger>
+    <logger name="selahattin.dev.ecom.controller.PaymentWebhookController" level="INFO" additivity="true">
+        <appender-ref ref="PAYMENT_FILE" />
+    </logger>
+    <logger name="selahattin.dev.ecom.service.domain.PaymentService" level="INFO" additivity="true">
+        <appender-ref ref="PAYMENT_FILE" />
+    </logger>
+    <logger name="selahattin.dev.ecom.service.integration.payment" level="INFO" additivity="true">
+        <appender-ref ref="PAYMENT_FILE" />
+    </logger>
+
+    <!-- ORDER domain: controller + service -->
+    <logger name="selahattin.dev.ecom.controller.OrderController" level="INFO" additivity="true">
+        <appender-ref ref="ORDER_FILE" />
+    </logger>
+    <logger name="selahattin.dev.ecom.service.domain.OrderService" level="INFO" additivity="true">
+        <appender-ref ref="ORDER_FILE" />
+    </logger>
+
+    <!-- ADMIN domain: tüm admin alt paketi (controller + service) -->
+    <logger name="selahattin.dev.ecom.controller.admin" level="INFO" additivity="true">
+        <appender-ref ref="ADMIN_FILE" />
+    </logger>
+    <logger name="selahattin.dev.ecom.service.domain.admin" level="INFO" additivity="true">
+        <appender-ref ref="ADMIN_FILE" />
+    </logger>
+
+    <!-- Genel uygulama seviyesi -->
+    <logger name="selahattin.dev.ecom" level="INFO" />
+
+    <!-- ═══════════════════════════════════════════════════════
+         ROOT LOGGER
+         ═══════════════════════════════════════════════════════ -->
+    <root level="WARN">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="ROLLING_FILE" />
+        <appender-ref ref="ERROR_FILE" />
+    </root>
+
+</configuration>

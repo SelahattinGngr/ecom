@@ -220,7 +220,7 @@ ecom/
 │       │   │                                      #   PaymentStatus, RefundStatus
 │       │   │
 │       │   └── dev/
-│       │       └── CreateUserBean.java            # @Profile("dev") — seed verisi
+│       │       └── CreateUserBean.java            # @Profile({"dev","test"}) — seed verisi
 │       │
 │       └── resources/
 │           ├── application.properties             # Ortak ayarlar
@@ -241,7 +241,8 @@ ecom/
 │               ├── V12__add_analytics_permissions.sql
 │               ├── V13__fix_site_settings_value_format.sql
 │               ├── V14__add_provider_payment_id_to_payments.sql
-│               └── V15__add_provider_item_transaction_ids_to_payments.sql
+│               ├── V15__add_provider_item_transaction_ids_to_payments.sql
+│               └── V16__add_client_ip_to_payments.sql
 │
 ├── client/
 │   ├── test.http                                  # Genel endpoint testleri
@@ -295,7 +296,7 @@ mvnw.cmd spring-boot:run        # Windows
 Uygulama **http://localhost:5353** adresinde başlar.
 Swagger UI: **http://localhost:5353/swagger-ui.html**
 
-> **Dev seed verisi:** `spring.profiles.active=dev` ile başlatıldığında `CreateUserBean` otomatik olarak kullanıcı, ürün, sipariş ve ödeme seed verisi oluşturur.
+> **Dev/Test seed verisi:** `spring.profiles.active=dev` veya `test` ile başlatıldığında `CreateUserBean` otomatik olarak kullanıcı, ürün, sipariş ve ödeme seed verisi oluşturur. Veriler idempotent olduğundan tekrar çalıştırmak güvenlidir.
 
 ### 2. Docker Compose ile Çalıştırma
 
@@ -390,7 +391,7 @@ SITE CONFIGURATION
   - Hibernate eşleştirmesi: `@JdbcTypeCode(SqlTypes.NAMED_ENUM)` + `@Enumerated(EnumType.STRING)`
 - **CITEXT:** `users.email` — case-insensitive karşılaştırma
 - **JSONB:** `orders.shipping_address`, `orders.billing_address`, `site_settings.value_json`, `payments.provider_item_transaction_ids`
-- **Payments ek kolonlar:** `provider_payment_id` (Iyzico numeric ID, Cancel için), `provider_item_transaction_ids` (per-item IDs, Refund için)
+- **Payments ek kolonlar:** `provider_payment_id` (Iyzico numeric ID, Cancel için), `provider_item_transaction_ids` (per-item IDs, Refund için), `client_ip` (fraud prevention, Iyzico'ya iletilir)
 
 ---
 
@@ -547,7 +548,9 @@ Strategy Pattern ile tasarlanmıştır. Yeni provider eklemek için `PaymentProv
 
 ```
 POST /payments
+  → PaymentController: X-Forwarded-For / RemoteAddr'dan gerçek IP alınır
   → IyzicoPaymentProvider.initializePayment()
+  → client_ip payments tablosuna kaydedilir, Iyzico buyer'a set edilir (fraud prevention)
   → Iyzico'ya CheckoutForm isteği
   → payment_transaction_id = checkout form token (kaydedilir)
   → redirectUrl döner (kullanıcı Iyzico sayfasına yönlenir)
@@ -603,7 +606,7 @@ PENDING → REQUIRES_ACTION → SUCCEEDED → REFUNDED
 /api/v1/webhooks/**
 /api/v1/locations/**
 /assets/public/**
-/actuator/**
+/actuator/**          ← health,info,metrics,mappings — production'da kısıtlayın (bkz. SECURITY_AUDIT N-05)
 /swagger-ui/**
 /v3/api-docs/**
 ```
