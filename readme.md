@@ -35,7 +35,10 @@ Tam kapsamlı bir e-ticaret platformunun backend API'si. Temel özellikler:
 - **Adres yönetimi** – Ülke/Şehir/İlçe hiyerarşisi ile CRUD
 - **Admin paneli** – Ürün, sipariş, kullanıcı, ödeme, iade, rol, site konfigürasyonu
 - **Analytics dashboard** – Sipariş, ödeme, ürün ve kullanıcı analizleri
-- **Audit log** – Admin işlemlerinin izlenmesi
+- **Audit log** – Admin işlemlerinin izlenmesi (`admin_audit_logs`)
+- **Güvenlik olay logu** – Giriş/çıkış/OTP olayları DB'ye kaydedilir (`security_events`)
+- **Ödeme olay logu** – Webhook ham verisi, durum değişimleri, iade, capture, void (`payment_events`)
+- **Domain bazlı log dosyaları** – `auth.log`, `payment.log`, `order.log`, `admin.log`, `error.log`
 - **Site konfigürasyonu** – Dinamik ayarlar ve asset slot yönetimi (Redis cache)
 - **E-posta servisi** – OTP, iade kodu maili (Gmail SMTP, Redis queue)
 - **Redis** – Token, OTP, RBAC cache, e-posta kuyruğu, site config cache
@@ -136,7 +139,7 @@ ecom/
 │       │   │                                      #   AssetSlotResponse
 │       │   │
 │       │   ├── entity/
-│       │   │   ├── audit/                         # AdminAuditLogEntity
+│       │   │   ├── audit/                         # AdminAuditLogEntity, SecurityEventEntity
 │       │   │   ├── auth/                          # UserEntity, RoleEntity, PermissionEntity
 │       │   │   ├── catalog/                       # ProductEntity, ProductVariantEntity,
 │       │   │   │                                  #   ProductImageEntity, CategoryEntity
@@ -144,7 +147,7 @@ ecom/
 │       │   │   │                                  #   CityEntity, DistrictEntity
 │       │   │   ├── order/                         # CartEntity, CartItemEntity,
 │       │   │   │                                  #   OrderEntity, OrderItemEntity
-│       │   │   ├── payment/                       # PaymentEntity, RefundEntity
+│       │   │   ├── payment/                       # PaymentEntity, RefundEntity, PaymentEventEntity
 │       │   │   └── site/                          # AssetEntity, SiteSettingEntity,
 │       │   │                                      #   SiteAssetSlotEntity
 │       │   │
@@ -174,20 +177,22 @@ ecom/
 │       │   │
 │       │   ├── service/
 │       │   │   ├── domain/
-│       │   │   │   ├── AuthService.java
+│       │   │   │   ├── AuthService.java           # SecurityEventService entegreli
 │       │   │   │   ├── CartService.java
 │       │   │   │   ├── CategoryService.java
 │       │   │   │   ├── OrderService.java
-│       │   │   │   ├── PaymentService.java        # Webhook işleme, iade başlatma
+│       │   │   │   ├── PaymentService.java        # Webhook işleme, iade, PaymentEventService entegreli
+│       │   │   │   ├── PaymentEventService.java   # Ödeme olayları DB kaydı (REQUIRES_NEW)
 │       │   │   │   ├── ProductService.java        # Listing'de min variant fiyatı hesaplar
 │       │   │   │   ├── RefundService.java         # Kullanıcı iade sorgulama
+│       │   │   │   ├── SecurityEventService.java  # Güvenlik olayları DB kaydı (REQUIRES_NEW)
 │       │   │   │   ├── SiteConfigService.java     # Redis cache (TTL: 2 saat)
 │       │   │   │   ├── UserAddressService.java
 │       │   │   │   ├── UserService.java
 │       │   │   │   └── admin/
 │       │   │   │       ├── AdminCategoryService.java
 │       │   │   │       ├── AdminOrdersService.java    # Audit log entegreli
-│       │   │   │       ├── AdminPaymentsService.java
+│       │   │   │       ├── AdminPaymentsService.java  # Audit log + PaymentEvent entegreli
 │       │   │   │       ├── AdminPermissionService.java
 │       │   │   │       ├── AdminProductsService.java  # Audit log entegreli
 │       │   │   │       ├── AdminRefundsService.java
@@ -217,7 +222,8 @@ ecom/
 │       │   │   ├── SlugUtils.java
 │       │   │   ├── constant/AuthConstant.java
 │       │   │   └── enums/                         # OrderStatus, PaymentProvider,
-│       │   │                                      #   PaymentStatus, RefundStatus
+│       │   │                                      #   PaymentStatus, RefundStatus,
+│       │   │                                      #   SecurityEventType, PaymentEventType
 │       │   │
 │       │   └── dev/
 │       │       └── CreateUserBean.java            # @Profile({"dev","test"}) — seed verisi
@@ -242,7 +248,9 @@ ecom/
 │               ├── V13__fix_site_settings_value_format.sql
 │               ├── V14__add_provider_payment_id_to_payments.sql
 │               ├── V15__add_provider_item_transaction_ids_to_payments.sql
-│               └── V16__add_client_ip_to_payments.sql
+│               ├── V16__add_client_ip_to_payments.sql
+│               ├── V17__add_security_events_table.sql
+│               └── V18__add_payment_events_table.sql
 │
 ├── client/
 │   ├── test.http                                  # Genel endpoint testleri
@@ -250,6 +258,14 @@ ecom/
 │   └── admin.http                                 # Admin akışı (ürün→sipariş→analytics)
 │
 ├── assets/public/products/                        # Ürün görselleri (local storage)
+├── docs/                                          # ⛔ .gitignore — local-only belgeler
+│   ├── LOGGING_GUIDE.md                           #   Log stratejisi ve rehberi
+│   └── SECURITY_AUDIT.md                          #   Güvenlik denetim notları
+├── logs/                                          # ⛔ .gitignore — runtime log dosyaları
+│   ├── ecom-backend.log                           #   Tüm loglar
+│   ├── auth.log / payment.log / order.log         #   Domain bazlı
+│   ├── admin.log / error.log                      #   Domain bazlı
+│   └── archived/                                  #   Günlük rotasyon
 ├── Dockerfile
 ├── docker-compose.yaml
 ├── pom.xml
@@ -366,7 +382,8 @@ CLIENT_BACKEND_URL=http://localhost:5353
 AUTH & RBAC
   users ──┬── user_roles ── roles ── role_permissions ── permissions
           ├── addresses
-          └── admin_audit_logs
+          ├── admin_audit_logs    ← admin panel aksiyonları
+          └── security_events     ← giriş/çıkış/OTP güvenlik olayları (V17)
 
 CATALOG
   categories (self-referencing)
@@ -376,7 +393,8 @@ CATALOG
 ORDER & PAYMENT
   carts ── cart_items
   orders ── order_items
-         └── payments ── refunds
+         └── payments ──┬── refunds
+                        └── payment_events  ← webhook/iade/capture/void izleri (V18)
 
 SITE CONFIGURATION
   assets ── site_asset_slots
@@ -390,8 +408,10 @@ SITE CONFIGURATION
 - **Custom PostgreSQL ENUM'lar:** `order_status`, `payment_status`, `payment_provider`, `refund_status`
   - Hibernate eşleştirmesi: `@JdbcTypeCode(SqlTypes.NAMED_ENUM)` + `@Enumerated(EnumType.STRING)`
 - **CITEXT:** `users.email` — case-insensitive karşılaştırma
-- **JSONB:** `orders.shipping_address`, `orders.billing_address`, `site_settings.value_json`, `payments.provider_item_transaction_ids`
+- **JSONB:** `orders.shipping_address`, `orders.billing_address`, `site_settings.value_json`, `payments.provider_item_transaction_ids`, `security_events.metadata`, `payment_events.raw_payload`
 - **Payments ek kolonlar:** `provider_payment_id` (Iyzico numeric ID, Cancel için), `provider_item_transaction_ids` (per-item IDs, Refund için), `client_ip` (fraud prevention, Iyzico'ya iletilir)
+- **security_events:** `user_id` ON DELETE SET NULL — kullanıcı silinse bile güvenlik geçmişi korunur
+- **payment_events:** `payment_id` ON DELETE SET NULL — ödeme silinse bile olay kaydı korunur; `raw_payload` sağlayıcının ham webhook verisini saklar (muhasebe/itiraz kanıtı)
 
 ---
 
@@ -606,7 +626,7 @@ PENDING → REQUIRES_ACTION → SUCCEEDED → REFUNDED
 /api/v1/webhooks/**
 /api/v1/locations/**
 /assets/public/**
-/actuator/**          ← health,info,metrics,mappings — production'da kısıtlayın (bkz. SECURITY_AUDIT N-05)
+/actuator/**          ← health,info,metrics,mappings — production'da kısıtlayın (bkz. docs/SECURITY_AUDIT.md N-05)
 /swagger-ui/**
 /v3/api-docs/**
 ```
@@ -622,6 +642,37 @@ PENDING → REQUIRES_ACTION → SUCCEEDED → REFUNDED
 | `site:public:config`         | 2 saat    | Site konfigürasyonu       |
 | `cat:tree`                   | 2 saat    | Kategori ağacı            |
 | `prd:slug:{slug}`            | 10 dk     | Ürün detayı               |
+
+---
+
+## 📋 Loglama
+
+### Domain Bazlı Log Dosyaları
+
+Docker volume `./logs:/app/logs` ile host'a bağlıdır. Her log hem ilgili domain dosyasına hem ana `ecom-backend.log`'a düşer.
+
+| Dosya | İçerik | Saklama |
+|-------|--------|---------|
+| `ecom-backend.log` | Tüm loglar | 30 gün |
+| `auth.log` | Giriş, çıkış, OTP, kayıt | 90 gün |
+| `payment.log` | Ödeme, webhook, capture, void | 90 gün |
+| `order.log` | Checkout, iptal, iade, kargo | 90 gün |
+| `admin.log` | Tüm admin panel işlemleri | 90 gün |
+| `error.log` | Sadece ERROR seviyesi (tüm domain'ler) | 90 gün |
+
+### Veritabanı Olay Logları
+
+Dosya loglarına ek olarak iş açısından kritik olaylar veritabanına kaydedilir:
+
+| Tablo | Ne Kaydedilir | Kimden |
+|-------|---------------|--------|
+| `admin_audit_logs` | Admin panel mutasyonları (durum değişikliği, iade onay/red, rol güncelleme, ürün silme, capture, void) | `AuditLogService` |
+| `security_events` | Giriş başarı/başarısız, OTP hatası, kayıt tamamlama, çıkış, token yenileme hatası | `SecurityEventService` |
+| `payment_events` | Webhook ham payload, ödeme başarı/başarısız, iade başlatma/tamamlama, capture, void | `PaymentEventService` |
+
+`SecurityEventService` ve `PaymentEventService` `REQUIRES_NEW` propagation kullanır — log yazma hatası ana iş akışını kesmez, ana transaction rollback olsa bile event kaydı korunur.
+
+Detaylar: `docs/LOGGING_GUIDE.md` (git'e atılmaz)
 
 ---
 
