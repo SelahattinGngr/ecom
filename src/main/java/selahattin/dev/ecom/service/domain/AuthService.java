@@ -58,6 +58,11 @@ public class AuthService {
 		String otp = generateOtp();
 		UserEntity user = userService.findByEmail(signinRequest.getEmail());
 
+		if (user.getEmailVerifiedAt() == null) {
+			throw new BusinessException(ErrorCode.ACCOUNT_NOT_VERIFIED,
+					"E-posta adresiniz doğrulanmamış. Lütfen önce e-postanızı doğrulayın.");
+		}
+
 		saveToRedis(OTP_KEY_TEMPLATE + user.getEmail(), otp, OTP_DURATION_MINUTES, TimeUnit.MINUTES);
 
 		EmailMessageDto emailMessage = createEmailMessage(
