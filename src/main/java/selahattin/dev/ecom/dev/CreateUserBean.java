@@ -130,6 +130,13 @@ public class CreateUserBean implements CommandLineRunner {
                 saveUser("customer1@example.com", "Ali", "Yılmaz", "customer", false);
                 saveUser("customer2@example.com", "Ayşe", "Kaya", "customer", false);
                 saveUser("customer3@example.com", "Mehmet", "Demir", "customer", false);
+                saveUser("customer4@example.com", "Fatma", "Şahin", "customer", false);
+                saveUser("customer5@example.com", "Hasan", "Çelik", "customer", false);
+                saveUser("customer6@example.com", "Zeynep", "Arslan", "customer", false);
+                saveUser("customer7@example.com", "Emre", "Koç", "customer", false);
+                saveUser("customer8@example.com", "Selin", "Aydın", "customer", false);
+                saveUser("customer9@example.com", "Burak", "Yıldız", "customer", false);
+                saveUser("customer10@example.com", "Merve", "Özkan", "customer", false);
                 // Ürün yöneticisi
                 saveUser("mod@example.com", "Moderator", "Test", "product-manager", true);
         }

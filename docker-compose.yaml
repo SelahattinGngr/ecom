@@ -37,6 +37,8 @@ services:
       - ./db-data:/var/lib/postgresql
     networks:
       - ecom-net
+    ports:
+      - "5432:5432"
     healthcheck:
       test:
         [
@@ -61,6 +63,8 @@ services:
       - ./redis-data:/data
     networks:
       - ecom-net
+    ports:
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
