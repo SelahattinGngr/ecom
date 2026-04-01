@@ -60,37 +60,41 @@ public class AdminCategoryService {
     }
 
     @Transactional
-    public CategoryResponse updateCategory(Integer id, UpdateCategoryRequest request) {
-        CategoryEntity category = categoryRepository.findById(id)
+    public CategoryResponse updateCategory(String slug, UpdateCategoryRequest request) {
+        CategoryEntity category = categoryRepository.findBySlugAndDeletedAtIsNull(slug)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
-
+    
         if (StringUtils.hasText(request.getName())) {
             category.setName(request.getName());
-
+    
             if (StringUtils.hasText(request.getSlug())) {
                 category.setSlug(request.getSlug());
             } else {
                 category.setSlug(SlugUtils.toSlug(request.getName()));
             }
         }
-
+    
         if (request.getParentId() != null) {
-            if (request.getParentId().equals(category.getId())) {
-                throw new BusinessException(ErrorCode.INVALID_REQUEST,
-                        "Kategori kendi kendisinin üst kategorisi olamaz.");
+            if (request.getParentId() == 0) {
+                category.setParent(null);
+            } else {
+                if (request.getParentId().equals(category.getId())) {
+                    throw new BusinessException(ErrorCode.INVALID_REQUEST,
+                            "Kategori kendi kendisinin üst kategorisi olamaz.");
+                }
+                CategoryEntity parent = categoryRepository.findById(request.getParentId())
+                        .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
+                category.setParent(parent);
             }
-            CategoryEntity parent = categoryRepository.findById(request.getParentId())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
-            category.setParent(parent);
         }
-
+    
         category.setUpdatedAt(OffsetDateTime.now());
         return mapToResponse(categoryRepository.save(category));
     }
 
     @Transactional
-    public void deleteCategory(Integer id) {
-        CategoryEntity category = categoryRepository.findById(id)
+    public void deleteCategory(String slug) {
+        CategoryEntity category = categoryRepository.findBySlugAndDeletedAtIsNull(slug)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
         // Eğer alt kategorileri varsa silinmesini engelleyebiliriz

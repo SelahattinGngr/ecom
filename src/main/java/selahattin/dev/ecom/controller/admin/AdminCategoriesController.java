@@ -46,20 +46,20 @@ public class AdminCategoriesController {
                 adminCategoryService.createCategory(request)));
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/{slug}")
     @PreAuthorize("hasAuthority('category:manage')")
     public ResponseEntity<ApiResponse<CategoryResponse>> updateCategory(
-            @PathVariable Integer id,
+            @PathVariable String slug,
             @RequestBody UpdateCategoryRequest request) {
         return ResponseEntity.ok(ApiResponse.success(
                 "Kategori güncellendi",
-                adminCategoryService.updateCategory(id, request)));
+                adminCategoryService.updateCategory(slug, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{slug}")
     @PreAuthorize("hasAuthority('category:manage')")
-    public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable Integer id) {
-        adminCategoryService.deleteCategory(id);
+    public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable String slug) {
+        adminCategoryService.deleteCategory(slug);
         return ResponseEntity.ok(ApiResponse.success("Kategori silindi (Soft Delete)"));
     }
 }

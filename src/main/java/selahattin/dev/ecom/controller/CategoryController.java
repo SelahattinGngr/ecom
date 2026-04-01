@@ -25,9 +25,9 @@ public class CategoryController {
                 .ok(ApiResponse.success("Kategoriler başarıyla alındı.", categoryService.getAllCategories()));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<CategoryResponse>> getCategoryById(@PathVariable Integer id) {
+    @GetMapping("/{slug}")
+    public ResponseEntity<ApiResponse<CategoryResponse>> getCategoryBySlug(@PathVariable String slug) {
         return ResponseEntity
-                .ok(ApiResponse.success("Kategori başarıyla alındı.", categoryService.getCategoryById(id)));
+                .ok(ApiResponse.success("Kategori başarıyla alındı.", categoryService.getCategoryBySlug(slug)));
     }
 }

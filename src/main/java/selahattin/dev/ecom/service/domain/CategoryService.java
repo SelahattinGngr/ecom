@@ -31,14 +31,9 @@ public class CategoryService {
 	}
 
 	@Transactional(readOnly = true)
-	public CategoryResponse getCategoryById(Integer id) {
-		CategoryEntity category = categoryRepository.findById(id)
+	public CategoryResponse getCategoryBySlug(String slug) {
+		CategoryEntity category = categoryRepository.findBySlugAndDeletedAtIsNull(slug)
 				.orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
-
-		// Eğer silinmişse 404 ver (Soft delete kontrolü)
-		if (category.getDeletedAt() != null) {
-			throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
-		}
 
 		return mapToResponse(category);
 	}
