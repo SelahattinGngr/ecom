@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import selahattin.dev.ecom.dto.request.product.AdminProductFilterRequest;
-import selahattin.dev.ecom.dto.request.product.CreateImageRequest;
 import selahattin.dev.ecom.repository.catalog.spec.ProductSpecification;
 import selahattin.dev.ecom.dto.request.product.CreateProductRequest;
 import selahattin.dev.ecom.dto.request.product.ProductVariantRequest;
@@ -181,14 +180,16 @@ public class AdminProductsService {
     // --- IMAGE MANAGEMENT ---
 
     @Transactional
-    public void addImage(UUID productId, CreateImageRequest request) {
+    public void addImage(UUID productId, MultipartFile file, Integer displayOrder, Boolean isThumbnail) {
         ProductEntity product = findProduct(productId);
+
+        String url = fileStorageService.save(file);
 
         ProductImageEntity image = ProductImageEntity.builder()
             .product(product)
-            .url(request.getUrl())
-            .displayOrder(request.getDisplayOrder())
-            .isThumbnail(request.getIsThumbnail())
+            .url(url)
+            .displayOrder(displayOrder != null ? displayOrder : 0)
+            .isThumbnail(isThumbnail != null ? isThumbnail : false)
             .build();
 
         imageRepository.save(image);

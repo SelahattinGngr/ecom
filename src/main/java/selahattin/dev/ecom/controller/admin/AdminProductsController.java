@@ -25,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.request.product.AdminProductFilterRequest;
-import selahattin.dev.ecom.dto.request.product.CreateImageRequest;
 import selahattin.dev.ecom.dto.request.product.CreateProductRequest;
 import selahattin.dev.ecom.dto.request.product.ProductVariantRequest;
 import selahattin.dev.ecom.dto.request.product.UpdateProductRequest;
@@ -112,12 +111,14 @@ public class AdminProductsController {
 
     // --- IMAGES ---
 
-    @PostMapping("/{id}/images")
+    @PostMapping(value = "/{id}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('product:update')")
     public ResponseEntity<ApiResponse<Void>> addImage(
             @PathVariable UUID id,
-            @Valid @RequestBody CreateImageRequest request) {
-        adminProductsService.addImage(id, request);
+            @RequestPart("image") MultipartFile image,
+            @RequestPart(value = "displayOrder", required = false) Integer displayOrder,
+            @RequestPart(value = "isThumbnail", required = false) Boolean isThumbnail) {
+        adminProductsService.addImage(id, image, displayOrder, isThumbnail);
         return ResponseEntity.ok(ApiResponse.success("Görsel eklendi"));
     }
 
