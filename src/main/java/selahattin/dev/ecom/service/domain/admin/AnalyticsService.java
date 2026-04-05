@@ -15,6 +15,7 @@ import selahattin.dev.ecom.dto.response.analytics.PaymentAnalyticsResponse;
 import selahattin.dev.ecom.dto.response.analytics.ProductAnalyticsResponse;
 import selahattin.dev.ecom.dto.response.analytics.UserAnalyticsResponse;
 import selahattin.dev.ecom.repository.auth.UserRepository;
+import selahattin.dev.ecom.repository.catalog.ProductRepository;
 import selahattin.dev.ecom.repository.order.OrderItemRepository;
 import selahattin.dev.ecom.repository.order.OrderRepository;
 import selahattin.dev.ecom.repository.payment.PaymentRepository;
@@ -28,6 +29,7 @@ public class AnalyticsService {
     private final OrderItemRepository orderItemRepository;
     private final PaymentRepository paymentRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
 
     public DashboardAnalyticsResponse getDashboardAnalytics(
         OffsetDateTime from,
@@ -169,34 +171,47 @@ public class AnalyticsService {
         OffsetDateTime to,
         String tz
     ) {
-        Long totalItemsSold = orderItemRepository.sumItemsSoldByPeriod(
-            from,
-            to
-        );
-        BigDecimal totalRevenue = orderItemRepository.sumProductRevenueByPeriod(
-            from,
-            to
-        );
-
-        List<ProductAnalyticsResponse.TopProductEntry> topProducts =
+        List<ProductAnalyticsResponse.TopSellingProductEntry> topSellingProducts =
             orderItemRepository
                 .findTopProductsByPeriod(from, to)
                 .stream()
                 .map(row ->
-                    ProductAnalyticsResponse.TopProductEntry.builder()
-                        .productName(
-                            row[0] != null ? row[0].toString() : "Unknown"
-                        )
-                        .quantitySold(((Number) row[1]).longValue())
+                    ProductAnalyticsResponse.TopSellingProductEntry.builder()
+                        .productId(row[0] != null ? row[0].toString() : null)
+                        .name(row[1] != null ? row[1].toString() : "Unknown")
+                        .quantity(((Number) row[2]).longValue())
+                        .build()
+                )
+                .toList();
+
+        List<ProductAnalyticsResponse.CategoryRevenueEntry> categoryRevenue =
+            orderItemRepository
+                .findCategoryRevenueByPeriod(from, to)
+                .stream()
+                .map(row ->
+                    ProductAnalyticsResponse.CategoryRevenueEntry.builder()
+                        .categoryId(row[0] != null ? row[0].toString() : null)
+                        .name(row[1] != null ? row[1].toString() : "Unknown")
                         .revenue(new BigDecimal(row[2].toString()))
                         .build()
                 )
                 .toList();
 
         return ProductAnalyticsResponse.builder()
-            .totalItemsSold(totalItemsSold)
-            .totalRevenue(totalRevenue)
-            .topProducts(topProducts)
+            .kpis(
+                ProductAnalyticsResponse.Kpis.builder()
+                    .totalProducts(productRepository.countTotalProducts())
+                    .activeProducts(productRepository.countActiveProducts())
+                    .outOfStockCount(productRepository.countOutOfStockProducts())
+                    .lowStockCount(productRepository.countLowStockProducts())
+                    .build()
+            )
+            .charts(
+                ProductAnalyticsResponse.Charts.builder()
+                    .topSellingProducts(topSellingProducts)
+                    .categoryRevenue(categoryRevenue)
+                    .build()
+            )
             .build();
     }
 

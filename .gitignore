@@ -45,3 +45,5 @@ db-data
 logs
 redis-data
 docs/
+
+uploads/

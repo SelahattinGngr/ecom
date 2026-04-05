@@ -3,10 +3,16 @@ package selahattin.dev.ecom.controller.admin;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.dto.request.product.AdminProductFilterRequest;
 import selahattin.dev.ecom.dto.request.product.CreateImageRequest;
 import selahattin.dev.ecom.dto.request.product.CreateProductRequest;
 import selahattin.dev.ecom.dto.request.product.ProductVariantRequest;
@@ -32,6 +39,26 @@ import selahattin.dev.ecom.service.domain.admin.AdminProductsService;
 public class AdminProductsController {
 
     private final AdminProductsService adminProductsService;
+
+    // --- PRODUCT GET ---
+
+    @GetMapping
+    @PreAuthorize("hasAuthority('product:read')")
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProducts(
+            @ModelAttribute AdminProductFilterRequest filter,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC, size = 50) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Ürünler listelendi",
+                adminProductsService.getProducts(filter, pageable)));
+    }
+
+    @GetMapping("/slug/{slug}")
+    @PreAuthorize("hasAuthority('product:read')")
+    public ResponseEntity<ApiResponse<ProductResponse>> getProductBySlug(@PathVariable String slug) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Ürün detayı getirildi",
+                adminProductsService.getProductBySlug(slug)));
+    }
 
     // --- PRODUCT ---
 

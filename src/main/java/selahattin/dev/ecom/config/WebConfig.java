@@ -6,6 +6,7 @@ import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import selahattin.dev.ecom.utils.enums.ProductStatus;
 import selahattin.dev.ecom.utils.enums.UserStatus;
 
 @Configuration
@@ -24,6 +25,12 @@ public class WebConfig implements WebMvcConfigurer {
             @Override
             public UserStatus convert(String source) {
                 return UserStatus.fromValue(source);
+            }
+        });
+        registry.addConverter(new Converter<String, ProductStatus>() {
+            @Override
+            public ProductStatus convert(String source) {
+                return ProductStatus.fromValue(source);
             }
         });
     }

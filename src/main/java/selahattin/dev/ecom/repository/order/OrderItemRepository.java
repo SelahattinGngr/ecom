@@ -15,18 +15,35 @@ import selahattin.dev.ecom.entity.order.OrderItemEntity;
 public interface OrderItemRepository extends JpaRepository<OrderItemEntity, UUID> {
 
     @Query(value = """
-            SELECT oi.product_name_at_purchase,
-                   SUM(oi.quantity) AS total_qty,
-                   SUM(oi.quantity * oi.price_at_purchase) AS revenue
+            SELECT pv.product_id,
+                   MAX(oi.product_name_at_purchase) AS product_name,
+                   SUM(oi.quantity) AS total_qty
             FROM order_items oi
             JOIN orders o ON oi.order_id = o.id
+            JOIN product_variants pv ON oi.product_variant_id = pv.id
             WHERE o.created_at >= :from AND o.created_at < :to
               AND o.status != 'CANCELLED'::order_status
-            GROUP BY oi.product_name_at_purchase
+            GROUP BY pv.product_id
             ORDER BY total_qty DESC
             LIMIT 10
             """, nativeQuery = true)
     List<Object[]> findTopProductsByPeriod(@Param("from") OffsetDateTime from, @Param("to") OffsetDateTime to);
+
+    @Query(value = """
+            SELECT c.id AS category_id,
+                   c.name AS category_name,
+                   SUM(oi.quantity * oi.price_at_purchase) AS revenue
+            FROM order_items oi
+            JOIN orders o ON oi.order_id = o.id
+            JOIN product_variants pv ON oi.product_variant_id = pv.id
+            JOIN products p ON pv.product_id = p.id
+            JOIN categories c ON p.category_id = c.id
+            WHERE o.created_at >= :from AND o.created_at < :to
+              AND o.status != 'CANCELLED'::order_status
+            GROUP BY c.id, c.name
+            ORDER BY revenue DESC
+            """, nativeQuery = true)
+    List<Object[]> findCategoryRevenueByPeriod(@Param("from") OffsetDateTime from, @Param("to") OffsetDateTime to);
 
     @Query(value = """
             SELECT COALESCE(SUM(oi.quantity), 0)
