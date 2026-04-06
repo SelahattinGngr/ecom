@@ -123,6 +123,17 @@ public class AdminProductsController {
         return ResponseEntity.ok(ApiResponse.success("Görsel eklendi"));
     }
 
+    @PatchMapping("/{productId}/images/{imageId}")
+    @PreAuthorize("hasAuthority('product:update')")
+    public ResponseEntity<ApiResponse<Void>> updateImage(
+            @PathVariable UUID productId,
+            @PathVariable UUID imageId,
+            @RequestParam(value = "displayOrder", required = false) Integer displayOrder,
+            @RequestParam(value = "isThumbnail", required = false) Boolean isThumbnail) {
+        adminProductsService.updateImage(productId, imageId, displayOrder, isThumbnail);
+        return ResponseEntity.ok(ApiResponse.success("Görsel güncellendi"));
+    }
+
     @DeleteMapping("/{productId}/images/{imageId}")
     @PreAuthorize("hasAuthority('product:update')")
     public ResponseEntity<ApiResponse<Void>> deleteImage(

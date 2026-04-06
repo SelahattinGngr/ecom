@@ -46,6 +46,7 @@ public enum ErrorCode {
     VARIANT_NOT_FOUND(4005, "Varyant bulunamadı", HttpStatus.NOT_FOUND),
     IMAGE_NOT_FOUND(4006, "Görsel bulunamadı", HttpStatus.NOT_FOUND),
     VARIANT_MISMATCH(4007, "Varyant bu ürüne ait değil", HttpStatus.BAD_REQUEST),
+    IMAGE_MISMATCH(4008, "Görsel bu ürüne ait değil", HttpStatus.BAD_REQUEST),
 
     // --- CART (4500-4599) ---
     CART_ITEM_NOT_FOUND(4501, "Sepetteki ürün bulunamadı", HttpStatus.NOT_FOUND),
