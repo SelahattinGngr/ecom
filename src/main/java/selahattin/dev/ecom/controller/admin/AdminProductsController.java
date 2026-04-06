@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -116,8 +117,8 @@ public class AdminProductsController {
     public ResponseEntity<ApiResponse<Void>> addImage(
             @PathVariable UUID id,
             @RequestPart("image") MultipartFile image,
-            @RequestPart(value = "displayOrder", required = false) Integer displayOrder,
-            @RequestPart(value = "isThumbnail", required = false) Boolean isThumbnail) {
+            @RequestParam(value = "displayOrder", required = false) Integer displayOrder,
+            @RequestParam(value = "isThumbnail", required = false) Boolean isThumbnail) {
         adminProductsService.addImage(id, image, displayOrder, isThumbnail);
         return ResponseEntity.ok(ApiResponse.success("Görsel eklendi"));
     }
