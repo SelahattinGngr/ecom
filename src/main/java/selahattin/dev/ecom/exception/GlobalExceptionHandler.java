@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestCookieException;
@@ -44,6 +45,15 @@ public class GlobalExceptionHandler {
                         .errorCode(ErrorCode.VALIDATION_ERROR.getCode())
                         .data(errors)
                         .build());
+    }
+
+    // YETKİ HATASI (@PreAuthorize)
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+        log.warn("Access Denied: {}", ex.getMessage());
+        return ResponseEntity
+                .status(ErrorCode.ACCESS_DENIED.getHttpStatus())
+                .body(ApiResponse.error(ErrorCode.ACCESS_DENIED.getMessage(), ErrorCode.ACCESS_DENIED.getCode()));
     }
 
     // SPRING SECURITY HATALARI (BadCredentials)

@@ -25,6 +25,7 @@ public enum ErrorCode {
     SESSION_EXPIRED(2003, "Oturum süresi doldu", HttpStatus.UNAUTHORIZED),
     AUTH_CONTEXT_ERROR(2004, "Kimlik doğrulama bağlamı hatası", HttpStatus.UNAUTHORIZED),
     ACCOUNT_NOT_VERIFIED(2005, "Hesap doğrulanmamış", HttpStatus.UNAUTHORIZED),
+    ACCESS_DENIED(2006, "Bu işlem için yetkiniz yok", HttpStatus.FORBIDDEN),
     SESSION_NOT_FOUND(2010, "Oturum bulunamadı", HttpStatus.NOT_FOUND),
     ADDRESS_NOT_FOUND(2020, "Adres bulunamadı", HttpStatus.NOT_FOUND),
     ADDRESS_ACCESS_DENIED(2021, "Bu adrese erişim yetkiniz yok", HttpStatus.FORBIDDEN),

@@ -199,9 +199,7 @@ public class AdminProductsService {
 			image.setDisplayOrder(displayOrder);
 		if (isThumbnail != null) {
 			if (isThumbnail) {
-				image.getProduct().getImages().stream()
-						.filter(img -> !img.getId().equals(imageId) && img.getIsThumbnail())
-						.forEach(img -> img.setIsThumbnail(false));
+				imageRepository.clearThumbnailForProduct(productId, imageId);
 			}
 			image.setIsThumbnail(isThumbnail);
 		}
