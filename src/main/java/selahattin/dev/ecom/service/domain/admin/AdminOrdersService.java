@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.dto.infra.EmailMessageDto;
+import selahattin.dev.ecom.dto.request.admin.AdminOrderFilterRequest;
 import selahattin.dev.ecom.dto.request.admin.ShipOrderRequest;
 import selahattin.dev.ecom.dto.request.admin.UpdateOrderStatusRequest;
 import selahattin.dev.ecom.dto.response.admin.AdminOrderResponse;
@@ -26,6 +27,7 @@ import selahattin.dev.ecom.entity.order.OrderEntity;
 import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.order.OrderRepository;
+import selahattin.dev.ecom.repository.order.spec.OrderSpecification;
 import selahattin.dev.ecom.service.domain.PaymentService;
 import selahattin.dev.ecom.service.infra.RedisQueueService;
 import selahattin.dev.ecom.utils.enums.OrderStatus;
@@ -57,16 +59,10 @@ public class AdminOrdersService {
             OrderStatus.SHIPPED,   EnumSet.of(OrderStatus.DELIVERED)
     );
 
-    public Page<AdminOrderResponse> getAllOrders(OrderStatus status, Pageable pageable) {
-        Page<OrderEntity> orders;
-
-        if (status != null) {
-            orders = orderRepository.findAllWithDetailsByStatus(status, pageable);
-        } else {
-            orders = orderRepository.findAllWithDetails(pageable);
-        }
-
-        return orders.map(this::mapToAdminOrderResponse);
+    public Page<AdminOrderResponse> getAllOrders(AdminOrderFilterRequest filter, Pageable pageable) {
+        return orderRepository
+                .findAll(OrderSpecification.withFilter(filter), pageable)
+                .map(this::mapToAdminOrderResponse);
     }
 
     public OrderDetailResponse getOrderDetail(UUID id) {

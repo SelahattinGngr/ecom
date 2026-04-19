@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,7 +17,7 @@ import selahattin.dev.ecom.entity.order.OrderEntity;
 import selahattin.dev.ecom.utils.enums.OrderStatus;
 
 @Repository
-public interface OrderRepository extends JpaRepository<OrderEntity, UUID> {
+public interface OrderRepository extends JpaRepository<OrderEntity, UUID>, JpaSpecificationExecutor<OrderEntity> {
 
     // Müşteri tarafı
     List<OrderEntity> findAllByUserId(UUID userId);
@@ -68,4 +69,31 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID> {
 
     @Query("SELECT COUNT(DISTINCT o.user.id) FROM OrderEntity o WHERE o.createdAt >= :from AND o.createdAt < :to")
     Long countDistinctCustomersByPeriod(@Param("from") OffsetDateTime from, @Param("to") OffsetDateTime to);
+
+    @Query(value = """
+            SELECT AVG(EXTRACT(EPOCH FROM (shipped_at - created_at)) / 3600)
+            FROM orders
+            WHERE created_at >= :from AND created_at < :to
+            AND shipped_at IS NOT NULL
+            """, nativeQuery = true)
+    Double averageShippingTimeHours(@Param("from") OffsetDateTime from, @Param("to") OffsetDateTime to);
+
+    @Query(value = """
+            SELECT day_of_week, hour, orders
+            FROM (
+                SELECT TO_CHAR(DATE_TRUNC('day', created_at AT TIME ZONE :tz), 'Dy') AS day_of_week,
+                       EXTRACT(HOUR FROM created_at AT TIME ZONE :tz)::int AS hour,
+                       COUNT(*) AS orders
+                FROM orders
+                WHERE created_at >= :from AND created_at < :to
+                GROUP BY 1, 2
+            ) sub
+            ORDER BY
+                CASE day_of_week
+                    WHEN 'Mon' THEN 1 WHEN 'Tue' THEN 2 WHEN 'Wed' THEN 3
+                    WHEN 'Thu' THEN 4 WHEN 'Fri' THEN 5 WHEN 'Sat' THEN 6 WHEN 'Sun' THEN 7
+                END, hour
+            """, nativeQuery = true)
+    List<Object[]> hourlyOrderHeatmap(@Param("from") OffsetDateTime from, @Param("to") OffsetDateTime to,
+            @Param("tz") String tz);
 }

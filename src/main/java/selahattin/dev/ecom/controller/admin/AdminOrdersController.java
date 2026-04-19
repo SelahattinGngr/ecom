@@ -8,6 +8,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,13 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.dto.request.admin.AdminOrderFilterRequest;
 import selahattin.dev.ecom.dto.request.admin.ShipOrderRequest;
 import selahattin.dev.ecom.dto.request.admin.UpdateOrderStatusRequest;
 import selahattin.dev.ecom.response.ApiResponse;
 import selahattin.dev.ecom.dto.response.admin.AdminOrderResponse;
 import selahattin.dev.ecom.dto.response.order.OrderDetailResponse;
 import selahattin.dev.ecom.service.domain.admin.AdminOrdersService;
-import selahattin.dev.ecom.utils.enums.OrderStatus;
 
 @RestController
 @RequiredArgsConstructor
@@ -36,12 +37,12 @@ public class AdminOrdersController {
     @GetMapping
     @PreAuthorize("hasAuthority('order:read')")
     public ResponseEntity<ApiResponse<Page<AdminOrderResponse>>> getAllOrders(
-            @RequestParam(required = false) OrderStatus status,
+            @ModelAttribute AdminOrderFilterRequest filter,
             @PageableDefault(size = 20) Pageable pageable) {
 
         return ResponseEntity.ok(ApiResponse.success(
                 "Sipariş listesi getirildi",
-                adminOrdersService.getAllOrders(status, pageable)));
+                adminOrdersService.getAllOrders(filter, pageable)));
     }
 
     @GetMapping("/{id}")

@@ -3,6 +3,8 @@ package selahattin.dev.ecom.service.domain.admin;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,41 +86,83 @@ public class AnalyticsService {
         OffsetDateTime to,
         String tz
     ) {
-        Long totalOrders = orderRepository.countByPeriod(from, to);
-        BigDecimal totalRevenue = orderRepository.sumRevenueByPeriod(from, to);
-        BigDecimal avgOrderValue =
-            totalOrders > 0
-                ? totalRevenue.divide(
-                      BigDecimal.valueOf(totalOrders),
-                      2,
-                      RoundingMode.HALF_UP
-                  )
-                : BigDecimal.ZERO;
+        ZoneId zoneId = ZoneId.of(tz);
+        ZonedDateTime todayStart = ZonedDateTime.now(zoneId).toLocalDate().atStartOfDay(zoneId);
+        ZonedDateTime todayEnd = todayStart.plusDays(1);
+        long todayOrders = orderRepository.countByPeriod(todayStart.toOffsetDateTime(), todayEnd.toOffsetDateTime());
 
-        Map<String, Long> byStatus = new LinkedHashMap<>();
+        long totalOrders = orderRepository.countByPeriod(from, to);
+        BigDecimal totalRevenue = orderRepository.sumRevenueByPeriod(from, to);
+        BigDecimal avgOrderValue = totalOrders > 0
+            ? totalRevenue.divide(BigDecimal.valueOf(totalOrders), 2, RoundingMode.HALF_UP)
+            : BigDecimal.ZERO;
+
+        long pendingOrders = 0;
+        long cancelledOrders = 0;
+        long returnedOrders = 0;
+        List<OrderAnalyticsResponse.StatusDistributionEntry> statusDistribution = new java.util.ArrayList<>();
         for (Object[] row : orderRepository.countByStatusAndPeriod(from, to)) {
-            byStatus.put(row[0].toString(), ((Number) row[1]).longValue());
+            String status = row[0].toString();
+            long count = ((Number) row[1]).longValue();
+            statusDistribution.add(OrderAnalyticsResponse.StatusDistributionEntry.builder()
+                .status(status)
+                .count(count)
+                .build());
+            if ("PENDING".equals(status)) pendingOrders = count;
+            if ("CANCELLED".equals(status)) cancelledOrders = count;
+            if ("RETURNED".equals(status)) returnedOrders = count;
         }
 
-        List<OrderAnalyticsResponse.DailyOrderEntry> dailyOrders =
-            orderRepository
-                .dailyOrderStats(from, to, tz)
-                .stream()
-                .map(row ->
-                    OrderAnalyticsResponse.DailyOrderEntry.builder()
-                        .date(row[0].toString())
-                        .orders(((Number) row[1]).longValue())
-                        .revenue(new BigDecimal(row[2].toString()))
-                        .build()
-                )
+        double cancelledRate = totalOrders > 0
+            ? BigDecimal.valueOf((double) cancelledOrders / totalOrders)
+                .setScale(4, RoundingMode.HALF_UP)
+                .doubleValue()
+            : 0.0;
+
+        double returnRate = totalOrders > 0
+            ? BigDecimal.valueOf((double) returnedOrders / totalOrders)
+                .setScale(4, RoundingMode.HALF_UP)
+                .doubleValue()
+            : 0.0;
+
+        Double avgShipping = orderRepository.averageShippingTimeHours(from, to);
+        double averageShippingTimeHours = avgShipping != null
+            ? BigDecimal.valueOf(avgShipping).setScale(1, RoundingMode.HALF_UP).doubleValue()
+            : 0.0;
+
+        List<OrderAnalyticsResponse.DailyOrderTrendEntry> dailyOrderTrend =
+            orderRepository.dailyOrderStats(from, to, tz).stream()
+                .map(row -> OrderAnalyticsResponse.DailyOrderTrendEntry.builder()
+                    .date(row[0].toString())
+                    .orders(((Number) row[1]).longValue())
+                    .build())
+                .toList();
+
+        List<OrderAnalyticsResponse.HourlyOrderEntry> hourlyOrderHeatmap =
+            orderRepository.hourlyOrderHeatmap(from, to, tz).stream()
+                .map(row -> OrderAnalyticsResponse.HourlyOrderEntry.builder()
+                    .dayOfWeek(row[0].toString().trim())
+                    .hour(((Number) row[1]).intValue())
+                    .orders(((Number) row[2]).longValue())
+                    .build())
                 .toList();
 
         return OrderAnalyticsResponse.builder()
-            .totalOrders(totalOrders)
-            .totalRevenue(totalRevenue)
-            .averageOrderValue(avgOrderValue)
-            .byStatus(byStatus)
-            .dailyOrders(dailyOrders)
+            .kpis(OrderAnalyticsResponse.Kpis.builder()
+                .todayOrders(todayOrders)
+                .pendingOrders(pendingOrders)
+                .cancelledRate(cancelledRate)
+                .returnRate(returnRate)
+                .averageShippingTimeHours(averageShippingTimeHours)
+                .totalOrders(totalOrders)
+                .totalRevenue(totalRevenue)
+                .averageOrderValue(avgOrderValue)
+                .build())
+            .charts(OrderAnalyticsResponse.Charts.builder()
+                .dailyOrderTrend(dailyOrderTrend)
+                .statusDistribution(statusDistribution)
+                .hourlyOrderHeatmap(hourlyOrderHeatmap)
+                .build())
             .build();
     }
 
