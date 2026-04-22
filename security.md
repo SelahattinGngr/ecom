@@ -613,6 +613,43 @@ Secret key 64 karakter hex string olarak `getBytes(UTF-8)` ile alınıyor — ya
 
 `admin@example.com` kullanıcısı `example.com` domainine aittir. `example.com` IANA tarafından test amaçlı ayrılmış bir domain olup kimseye ait değil — email ulaşmaz. Bu yüzden OTP ile bu hesaba giriş yapılamaz. Ancak aktif SMTP konfigürasyonu mail gönderilmesini engellemez ve bu bir kaynak israfıdır.
 
+### Redis Bellek Boyutlandırması (S-18 Ek Not)
+
+**Dev ortamında 128MB ne zaman dolar?**
+
+Mevcut test verisiyle Redis kullanımı tahmini:
+
+| Key Tipi | Boyut/adet | Dev'de tahmini adet | Toplam |
+|----------|-----------|-------------------|--------|
+| `auth:rt:{jti}` (session) | ~700 byte | 5–10 | ~7 KB |
+| `auth:signin_otp:{email}` | ~100 byte | 0–5 | <1 KB |
+| `prd:slug:{slug}` (ürün cache) | ~2.5 KB | 10–50 | ~125 KB |
+| `cat:tree` | ~30 KB | 1 | 30 KB |
+| `prd:list:{hash}` (liste cache) | ~8 KB | 5–10 | ~80 KB |
+| `site:public:config` | ~5 KB | 1 | 5 KB |
+| `security:roles:{role}` | ~500 byte | 3–5 | ~2 KB |
+
+**Dev toplam: ~250 KB** — 128 MB'ın %0.2'si. Pratikte dolmaz.
+
+**Production'da 128 MB ne kadar taşır?**
+
+En çok yer tüketen bileşen session'lardır:
+```
+128 MB / ~750 byte per session ≈ 178.000 eş zamanlı aktif oturum
+```
+Ürün cache için:
+```
+128 MB / ~2.5 KB per product ≈ 52.000 ürün
+```
+
+| Kullanıcı ölçeği | Önerilen Redis belleği |
+|-----------------|----------------------|
+| <10K aktif kullanıcı | 128 MB yeter |
+| 10K–100K aktif kullanıcı | 256 MB–512 MB |
+| 100K+ aktif kullanıcı | 1 GB+ |
+
+**Asıl risk:** `prd:list:{queryHash}` — her farklı filtre/sayfa/sıralama kombinasyonu ayrı key açıyor. TTL 60 saniye olduğu için hızlı döner ama yoğun trafik altında anlık olarak en çok yer kaplayan key grubu bu olabilir.
+
 ---
 
 *Bu rapor yalnızca statik analiz içermektedir. Dinamik test (penetrasyon testi, fuzzing) yapılmamıştır.*
