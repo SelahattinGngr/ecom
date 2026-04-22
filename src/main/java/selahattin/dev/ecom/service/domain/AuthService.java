@@ -1,7 +1,11 @@
 package selahattin.dev.ecom.service.domain;
 
+import static selahattin.dev.ecom.utils.constant.AuthConstant.MAX_OTP_ATTEMPTS;
+import static selahattin.dev.ecom.utils.constant.AuthConstant.MAX_OTP_RATE_PER_MINUTE;
+import static selahattin.dev.ecom.utils.constant.AuthConstant.OTP_ATTEMPTS_KEY_TEMPLATE;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.OTP_DURATION_MINUTES;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.OTP_KEY_TEMPLATE;
+import static selahattin.dev.ecom.utils.constant.AuthConstant.RATE_LIMIT_KEY_TEMPLATE;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_KEY_TEMPLATE;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_TOKEN_DURATION_HOURS;
 
@@ -55,6 +59,7 @@ public class AuthService {
 
 	/* --- Signin (OTP Flow) --- */
 	public void sendLoginOtp(SigninRequest signinRequest) {
+		checkOtpRateLimit(signinRequest.getEmail());
 		String otp = generateOtp();
 		UserEntity user = userService.findByEmail(signinRequest.getEmail());
 
@@ -79,10 +84,24 @@ public class AuthService {
 		String inputOtp = request.getCode();
 		String ip = getClientIp(httpRequest);
 		String ua = getUserAgent(httpRequest);
+		String attemptsKey = OTP_ATTEMPTS_KEY_TEMPLATE + email;
+
+		Object attemptsObj = redisTemplate.opsForValue().get(attemptsKey);
+		if (attemptsObj != null && Long.parseLong(attemptsObj.toString()) >= MAX_OTP_ATTEMPTS) {
+			deleteFromRedis(OTP_KEY_TEMPLATE + email);
+			throw new BusinessException(ErrorCode.INVALID_OTP);
+		}
 
 		try {
 			validateRedisValue(OTP_KEY_TEMPLATE + email, inputOtp);
 		} catch (BusinessException e) {
+			Long attempts = redisTemplate.opsForValue().increment(attemptsKey);
+			if (attempts == 1) {
+				redisTemplate.expire(attemptsKey, OTP_DURATION_MINUTES, TimeUnit.MINUTES);
+			}
+			if (attempts >= MAX_OTP_ATTEMPTS) {
+				deleteFromRedis(OTP_KEY_TEMPLATE + email);
+			}
 			try {
 				securityEventService.log(SecurityEventType.LOGIN_FAILED, null, email, ip, ua,
 						Map.of("reason", "INVALID_OTP"));
@@ -92,6 +111,7 @@ public class AuthService {
 			throw e;
 		}
 
+		deleteFromRedis(attemptsKey);
 		UserEntity user = userService.findByEmail(email);
 		deleteFromRedis(OTP_KEY_TEMPLATE + email);
 
@@ -152,6 +172,7 @@ public class AuthService {
 	}
 
 	public void resendVerificationEmail(SigninRequest signinRequest) {
+		checkOtpRateLimit(signinRequest.getEmail());
 		UserEntity user = userService.findByEmail(signinRequest.getEmail());
 
 		if (user.getEmailVerifiedAt() != null) {
@@ -259,11 +280,7 @@ public class AuthService {
 	}
 
 	private String getClientIp(HttpServletRequest request) {
-		String xfHeader = request.getHeader("X-Forwarded-For");
-		if (xfHeader == null) {
-			return request.getRemoteAddr();
-		}
-		return xfHeader.split(",")[0];
+		return request.getRemoteAddr();
 	}
 
 	private String getUserAgent(HttpServletRequest request) {
@@ -271,6 +288,17 @@ public class AuthService {
 		return ua != null ? ua : "Unknown";
 	}
 	// ------------------------------
+
+	private void checkOtpRateLimit(String email) {
+		String key = RATE_LIMIT_KEY_TEMPLATE + email;
+		Long count = redisTemplate.opsForValue().increment(key);
+		if (count == 1) {
+			redisTemplate.expire(key, 1, TimeUnit.MINUTES);
+		}
+		if (count > MAX_OTP_RATE_PER_MINUTE) {
+			throw new BusinessException(ErrorCode.INVALID_REQUEST, "Çok fazla istek gönderildi. Lütfen 1 dakika bekleyin.");
+		}
+	}
 
 	/* Redis Helpers */
 	private void saveToRedis(String key, Object value, long duration, TimeUnit unit) {

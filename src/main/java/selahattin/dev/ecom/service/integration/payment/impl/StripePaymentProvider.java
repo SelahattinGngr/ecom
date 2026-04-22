@@ -100,8 +100,8 @@ public class StripePaymentProvider implements PaymentProviderStrategy {
                     .build();
 
         } catch (Exception e) {
-            log.error("[STRIPE] Init Hatası: {}", e.getMessage(), e);
-            throw new BusinessException(ErrorCode.PAYMENT_INIT_ERROR, "Stripe hatası: " + e.getMessage());
+            log.error("[STRIPE] Init Hatası. Payment ID: {}", payment.getId(), e);
+            throw new BusinessException(ErrorCode.PAYMENT_INIT_ERROR, "Ödeme başlatılamadı.");
         }
     }
 
@@ -127,8 +127,8 @@ public class StripePaymentProvider implements PaymentProviderStrategy {
             }
 
         } catch (Exception e) {
-            log.error("[STRIPE] Void Hatası: {}", e.getMessage());
-            throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Stripe iptal hatası: " + e.getMessage());
+            log.error("[STRIPE] Void Hatası. Payment ID: {}", payment.getId(), e);
+            throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Ödeme iptali gerçekleştirilemedi.");
         }
     }
 
@@ -161,8 +161,8 @@ public class StripePaymentProvider implements PaymentProviderStrategy {
             log.info("[STRIPE] İade başarılı. Refund ID: {}", refund.getId());
 
         } catch (Exception e) {
-            log.error("[STRIPE] Refund Hatası: {}", e.getMessage(), e);
-            throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Stripe iade hatası: " + e.getMessage());
+            log.error("[STRIPE] Refund Hatası. Payment ID: {}", payment.getId(), e);
+            throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Ödeme iadesi gerçekleştirilemedi.");
         }
     }
 

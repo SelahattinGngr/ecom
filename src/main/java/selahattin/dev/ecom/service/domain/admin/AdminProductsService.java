@@ -212,6 +212,7 @@ public class AdminProductsService {
 				.findById(imageId)
 				.orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
 
+		fileStorageService.delete(image.getUrl());
 		image.setDeletedAt(OffsetDateTime.now());
 		imageRepository.save(image);
 	}

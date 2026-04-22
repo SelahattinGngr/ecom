@@ -2,6 +2,7 @@ package selahattin.dev.ecom.service.domain.admin;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DateTimeException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -16,6 +17,8 @@ import selahattin.dev.ecom.dto.response.analytics.OrderAnalyticsResponse;
 import selahattin.dev.ecom.dto.response.analytics.PaymentAnalyticsResponse;
 import selahattin.dev.ecom.dto.response.analytics.ProductAnalyticsResponse;
 import selahattin.dev.ecom.dto.response.analytics.UserAnalyticsResponse;
+import selahattin.dev.ecom.exception.BusinessException;
+import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.auth.UserRepository;
 import selahattin.dev.ecom.repository.catalog.ProductRepository;
 import selahattin.dev.ecom.repository.order.OrderItemRepository;
@@ -33,11 +36,20 @@ public class AnalyticsService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
 
+    private void validateTimezone(String tz) {
+        try {
+            ZoneId.of(tz);
+        } catch (DateTimeException e) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "Geçersiz timezone: " + tz);
+        }
+    }
+
     public DashboardAnalyticsResponse getDashboardAnalytics(
         OffsetDateTime from,
         OffsetDateTime to,
         String tz
     ) {
+        validateTimezone(tz);
         Long totalOrders = orderRepository.countByPeriod(from, to);
         BigDecimal totalRevenue = orderRepository.sumRevenueByPeriod(from, to);
         Long newCustomers = userRepository.countNewUsersByPeriod(from, to);
@@ -86,6 +98,7 @@ public class AnalyticsService {
         OffsetDateTime to,
         String tz
     ) {
+        validateTimezone(tz);
         ZoneId zoneId = ZoneId.of(tz);
         ZonedDateTime todayStart = ZonedDateTime.now(zoneId).toLocalDate().atStartOfDay(zoneId);
         ZonedDateTime todayEnd = todayStart.plusDays(1);
@@ -264,6 +277,7 @@ public class AnalyticsService {
         OffsetDateTime to,
         String tz
     ) {
+        validateTimezone(tz);
         Long totalUsers = userRepository.countTotalActiveUsers();
         Long newUsers = userRepository.countNewUsersByPeriod(from, to);
         Long activeUsers = orderRepository.countDistinctCustomersByPeriod(

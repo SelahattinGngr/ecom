@@ -45,18 +45,7 @@ public class PaymentController {
                 paymentService.getPaymentDetail(id)));
     }
 
-    /**
-     * Gerçek istemci IP'sini belirler.
-     * Reverse proxy veya Next.js frontend arkasında çalışırken X-Forwarded-For
-     * başlığı zincirinin ilk (en soldaki) değerini kullanır; başlık yoksa
-     * doğrudan bağlantı adresine döner.
-     */
     private String extractClientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            // "client, proxy1, proxy2" biçimindeki değerden yalnızca ilk IP alınır
-            return forwarded.split(",")[0].strip();
-        }
         return request.getRemoteAddr();
     }
 }

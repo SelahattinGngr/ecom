@@ -31,9 +31,12 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         try {
-            // 1. Trace ID Oluştur veya Frontend'den geleni al
-            String traceId = request.getHeader(TRACE_ID_HEADER);
-            if (traceId == null || traceId.isEmpty()) {
+            // 1. Trace ID Oluştur veya Frontend'den geleni al (log injection koruması)
+            String rawTraceId = request.getHeader(TRACE_ID_HEADER);
+            String traceId;
+            if (rawTraceId != null && rawTraceId.matches("[a-zA-Z0-9\\-]{1,64}")) {
+                traceId = rawTraceId;
+            } else {
                 traceId = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
             }
             MDC.put(TRACE_ID_KEY, traceId);
@@ -62,10 +65,6 @@ public class MdcLoggingFilter extends OncePerRequestFilter {
     }
 
     private String extractClientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].strip();
-        }
         return request.getRemoteAddr();
     }
 }

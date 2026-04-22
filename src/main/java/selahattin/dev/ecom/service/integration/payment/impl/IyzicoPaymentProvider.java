@@ -1,6 +1,7 @@
 package selahattin.dev.ecom.service.integration.payment.impl;
 
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,6 +39,7 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
 
     private static final String STATUS_SUCCESS = "success";
     private static final String PAYMENT_STATUS_SUCCESS = "SUCCESS";
+    private static final DateTimeFormatter IYZICO_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     public PaymentProvider getProviderName() {
@@ -87,8 +89,8 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
         buyer.setGsmNumber(user.getPhoneNumber() != null ? user.getPhoneNumber() : "+905555555555");
         buyer.setEmail(user.getEmail());
         buyer.setIdentityNumber("11111111111");
-        buyer.setLastLoginDate("2024-01-01 12:00:00");
-        buyer.setRegistrationDate("2024-01-01 12:00:00");
+        buyer.setLastLoginDate(java.time.OffsetDateTime.now().format(IYZICO_DATE_FORMAT));
+        buyer.setRegistrationDate(user.getCreatedAt().format(IYZICO_DATE_FORMAT));
 
         String addressText = "Teslimat Adresi";
         String city = "Istanbul";
@@ -130,10 +132,9 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
             CheckoutFormInitialize checkoutForm = CheckoutFormInitialize.create(iyzicoRequest, options);
 
             if (!STATUS_SUCCESS.equals(checkoutForm.getStatus())) {
-                log.error("[IYZICO] Init Hatası: Code: {}, Msg: {}", checkoutForm.getErrorCode(),
+                log.error("[IYZICO] Init Hatası. Code: {}, Msg: {}", checkoutForm.getErrorCode(),
                         checkoutForm.getErrorMessage());
-                throw new BusinessException(ErrorCode.PAYMENT_INIT_ERROR,
-                        "Iyzico Hatası: " + checkoutForm.getErrorMessage());
+                throw new BusinessException(ErrorCode.PAYMENT_INIT_ERROR, "Ödeme başlatılamadı.");
             }
 
             payment.setPaymentTransactionId(checkoutForm.getToken());
@@ -221,13 +222,14 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
 
             Cancel cancel = Cancel.create(request, getOptions());
             if (!STATUS_SUCCESS.equals(cancel.getStatus())) {
-                throw new BusinessException(ErrorCode.PAYMENT_FAILED,
-                        "Iyzico İptal Hatası: " + cancel.getErrorMessage());
+                log.error("[IYZICO] İptal Hatası. Code: {}, Msg: {}", cancel.getErrorCode(), cancel.getErrorMessage());
+                throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Ödeme iptali gerçekleştirilemedi.");
             }
         } catch (BusinessException be) {
             throw be;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Iyzico iptal hatası: " + e.getMessage());
+            log.error("[IYZICO] İptal Exception. Payment ID: {}", payment.getId(), e);
+            throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Ödeme iptali gerçekleştirilemedi.");
         }
     }
 
@@ -256,15 +258,16 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
 
                 Refund refund = Refund.create(request, getOptions());
                 if (!STATUS_SUCCESS.equals(refund.getStatus())) {
-                    throw new BusinessException(ErrorCode.PAYMENT_FAILED,
-                            "Iyzico İade Hatası (item: " + itemTxId + "): " + refund.getErrorMessage());
+                    log.error("[IYZICO] İade Hatası. Item: {}, Code: {}, Msg: {}", itemTxId, refund.getErrorCode(), refund.getErrorMessage());
+                    throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Ödeme iadesi gerçekleştirilemedi.");
                 }
                 log.info("[IYZICO] Kalem iade edildi. paymentTransactionId: {}", itemTxId);
             }
         } catch (BusinessException be) {
             throw be;
         } catch (Exception e) {
-            throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Iyzico iade hatası: " + e.getMessage());
+            log.error("[IYZICO] İade Exception. Payment ID: {}", payment.getId(), e);
+            throw new BusinessException(ErrorCode.PAYMENT_FAILED, "Ödeme iadesi gerçekleştirilemedi.");
         }
     }
 
