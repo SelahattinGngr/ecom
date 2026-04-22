@@ -7,9 +7,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.stripe.Stripe;
+import com.stripe.exception.SignatureVerificationException;
+import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
 import com.stripe.model.Refund;
 import com.stripe.model.checkout.Session;
+import com.stripe.net.Webhook;
 import com.stripe.param.PaymentIntentCancelParams;
 import com.stripe.param.RefundCreateParams;
 import com.stripe.param.checkout.SessionCreateParams;
@@ -26,6 +29,7 @@ import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.service.integration.payment.PaymentProviderStrategy;
 import selahattin.dev.ecom.utils.enums.PaymentProvider;
+import selahattin.dev.ecom.utils.enums.PaymentStatus;
 
 @Slf4j
 @Service
@@ -168,7 +172,44 @@ public class StripePaymentProvider implements PaymentProviderStrategy {
 
     @Override
     public PaymentCallbackResult processCallback(Map<String, String> payload) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'processCallback'");
+        String rawBody = payload.get("rawBody");
+        String signature = payload.get("stripeSignature");
+        String secret = paymentProperties.getStripe().getWebhookSecret();
+
+        Event event;
+        try {
+            event = Webhook.constructEvent(rawBody, signature, secret);
+        } catch (SignatureVerificationException e) {
+            log.error("[STRIPE] Webhook imza doğrulaması başarısız", e);
+            return PaymentCallbackResult.builder()
+                    .status(PaymentStatus.FAILED)
+                    .errorCode("INVALID_SIGNATURE")
+                    .build();
+        } catch (Exception e) {
+            log.error("[STRIPE] Webhook event parse hatası", e);
+            return PaymentCallbackResult.builder()
+                    .status(PaymentStatus.FAILED)
+                    .errorCode("PARSE_ERROR")
+                    .build();
+        }
+
+        if (!"checkout.session.completed".equals(event.getType())) {
+            log.info("[STRIPE] Desteklenmeyen event tipi atlanıyor: {}", event.getType());
+            return PaymentCallbackResult.builder()
+                    .status(PaymentStatus.PENDING)
+                    .build();
+        }
+
+        Session session = (Session) event.getDataObjectDeserializer()
+                .getObject()
+                .orElseThrow(() -> new BusinessException(ErrorCode.INTERNAL_SERVER_ERROR,
+                        "Stripe event deserialize edilemedi."));
+
+        boolean paid = "paid".equals(session.getPaymentStatus());
+        return PaymentCallbackResult.builder()
+                .transactionId(session.getId())
+                .status(paid ? PaymentStatus.SUCCEEDED : PaymentStatus.FAILED)
+                .providerPaymentId(session.getPaymentIntent())
+                .build();
     }
 }

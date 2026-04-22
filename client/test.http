@@ -272,3 +272,28 @@ GET {{baseUrl}}/admin/logs/audit HTTP/1.1
 
 ### admin-audit-logs-filtered-by-user
 GET {{baseUrl}}/admin/logs/audit?entityType=ORDER&action=ORDER_STATUS_UPDATED HTTP/1.1
+
+# --- WEBHOOKS ---
+
+### stripe-webhook (gerçek Stripe-Signature üretmek için: stripe listen --forward-to localhost:5353/api/v1/webhooks/payments/stripe)
+POST {{baseUrl}}/webhooks/payments/stripe HTTP/1.1
+Content-Type: application/json
+Stripe-Signature: t=1234567890,v1=abc123dummy
+
+{
+  "id": "evt_test_000000",
+  "type": "checkout.session.completed",
+  "data": {
+    "object": {
+      "id": "cs_test_SESSION_ID",
+      "payment_status": "paid",
+      "payment_intent": "pi_test_PAYMENT_INTENT_ID"
+    }
+  }
+}
+
+### iyzico-webhook
+POST {{baseUrl}}/webhooks/payments/iyzico HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+token=TEST_IYZICO_TOKEN

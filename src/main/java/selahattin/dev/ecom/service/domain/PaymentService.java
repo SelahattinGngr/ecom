@@ -183,6 +183,77 @@ public class PaymentService {
         }
     }
 
+    @Transactional
+    public void handleStripeWebhook(String rawBody, String signature) {
+        Map<String, String> payload = Map.of(
+                "rawBody", rawBody != null ? rawBody : "",
+                "stripeSignature", signature != null ? signature : "");
+
+        PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(PaymentProvider.STRIPE);
+        PaymentCallbackResult result = strategy.processCallback(payload);
+
+        if (result.getTransactionId() == null) {
+            log.info("[STRIPE-WEBHOOK] TransactionId yok — event atlanıyor (desteklenmiyor veya imza geçersiz).");
+            return;
+        }
+
+        PaymentEntity payment = paymentRepository.findByPaymentTransactionId(result.getTransactionId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
+                        "Ödeme kaydı bulunamadı. TransactionId: " + result.getTransactionId()));
+
+        try {
+            paymentEventService.log(payment.getId(), PaymentEventType.WEBHOOK_RECEIVED, PaymentProvider.STRIPE,
+                    Map.of("transactionId", result.getTransactionId()));
+        } catch (Exception logEx) {
+            log.warn("[STRIPE-WEBHOOK] WEBHOOK_RECEIVED event yazılamadı — paymentId: {}", payment.getId(), logEx);
+        }
+
+        OrderEntity order = payment.getOrder();
+
+        if (payment.getStatus() == PaymentStatus.SUCCEEDED || order.getStatus() == OrderStatus.PAID) {
+            log.info("[STRIPE-WEBHOOK] Idempotency: Zaten işlenmiş. OrderId: {}", order.getId());
+            return;
+        }
+
+        payment.setStatus(result.getStatus());
+        if (result.getProviderPaymentId() != null) {
+            payment.setProviderPaymentId(result.getProviderPaymentId());
+        }
+
+        if (result.getStatus() == PaymentStatus.SUCCEEDED) {
+            order.setStatus(OrderStatus.PAID);
+            paymentRepository.save(payment);
+            orderRepository.save(order);
+
+            try {
+                paymentEventService.log(payment.getId(), PaymentEventType.PAYMENT_SUCCEEDED, PaymentProvider.STRIPE,
+                        Map.of("orderId", order.getId().toString(), "amount", payment.getAmount().toString()));
+            } catch (Exception logEx) {
+                log.warn("[STRIPE-WEBHOOK] PAYMENT_SUCCEEDED event yazılamadı — paymentId: {}", payment.getId(), logEx);
+            }
+
+            log.info("[STRIPE-WEBHOOK] Ödeme BAŞARILI. OrderId: {}", order.getId());
+        } else {
+            order.setStatus(OrderStatus.CANCELLED);
+            for (OrderItemEntity item : order.getItems()) {
+                productVariantRepository.increaseStock(item.getProductVariant().getId(), item.getQuantity());
+            }
+            paymentRepository.save(payment);
+            orderRepository.save(order);
+
+            try {
+                paymentEventService.log(payment.getId(), PaymentEventType.PAYMENT_FAILED, PaymentProvider.STRIPE,
+                        Map.of("orderId", order.getId().toString(), "errorCode",
+                                result.getErrorCode() != null ? result.getErrorCode() : ""));
+            } catch (Exception logEx) {
+                log.warn("[STRIPE-WEBHOOK] PAYMENT_FAILED event yazılamadı — paymentId: {}", payment.getId(), logEx);
+            }
+
+            log.warn("[STRIPE-WEBHOOK] Ödeme BAŞARISIZ. OrderId: {}, ErrorCode: {}", order.getId(),
+                    result.getErrorCode());
+        }
+    }
+
     /**
      * Siparişin başarılı ödemesini bulup hangi provider ile yapıldıysa
      * o provider üzerinden iade başlatır. Admin iade onayı buradan çağrılır.

@@ -9,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,5 +52,17 @@ public class PaymentWebhookController {
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create(redirectUrl))
                 .build();
+    }
+
+    /**
+     * Stripe JSON webhook. İmza Stripe-Signature header'ında gelir.
+     * Stripe 200 dışı yanıt alırsa 72 saat boyunca tekrar dener.
+     */
+    @PostMapping(value = "/stripe", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> handleStripeWebhook(
+            @RequestHeader("Stripe-Signature") String stripeSignature,
+            @RequestBody String rawBody) {
+        paymentService.handleStripeWebhook(rawBody, stripeSignature);
+        return ResponseEntity.ok().build();
     }
 }
