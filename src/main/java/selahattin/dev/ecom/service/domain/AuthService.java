@@ -2,11 +2,13 @@ package selahattin.dev.ecom.service.domain;
 
 import static selahattin.dev.ecom.utils.constant.AuthConstant.MAX_OTP_ATTEMPTS;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.MAX_OTP_RATE_PER_MINUTE;
+import static selahattin.dev.ecom.utils.constant.AuthConstant.MAX_SIGNUP_RATE_PER_HOUR;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.OTP_ATTEMPTS_KEY_TEMPLATE;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.OTP_DURATION_MINUTES;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.OTP_KEY_TEMPLATE;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.RATE_LIMIT_KEY_TEMPLATE;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_KEY_TEMPLATE;
+import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_RATE_KEY_TEMPLATE;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_TOKEN_DURATION_HOURS;
 
 import java.security.SecureRandom;
@@ -131,6 +133,7 @@ public class AuthService {
 
 	/* --- Signup --- */
 	public void signup(SignupRequest signupRequest) {
+		checkSignupRateLimit(signupRequest.getEmail());
 		UserEntity user = userService.signup(signupRequest);
 		String token = UUID.randomUUID().toString();
 
@@ -288,6 +291,17 @@ public class AuthService {
 		return ua != null ? ua : "Unknown";
 	}
 	// ------------------------------
+
+	private void checkSignupRateLimit(String email) {
+		String key = SIGNUP_RATE_KEY_TEMPLATE + email;
+		Long count = redisTemplate.opsForValue().increment(key);
+		if (count == 1) {
+			redisTemplate.expire(key, 1, TimeUnit.HOURS);
+		}
+		if (count > MAX_SIGNUP_RATE_PER_HOUR) {
+			throw new BusinessException(ErrorCode.INVALID_REQUEST, "Bu e-posta ile çok fazla kayıt denemesi yapıldı. Lütfen 1 saat bekleyin.");
+		}
+	}
 
 	private void checkOtpRateLimit(String email) {
 		String key = RATE_LIMIT_KEY_TEMPLATE + email;

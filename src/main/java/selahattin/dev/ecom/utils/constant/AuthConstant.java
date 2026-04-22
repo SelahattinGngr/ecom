@@ -29,4 +29,9 @@ public final class AuthConstant {
     public static final String RATE_LIMIT_PREFIX = "otprate:";
     public static final String RATE_LIMIT_KEY_TEMPLATE = REDIS_PREFIX + RATE_LIMIT_PREFIX;
     public static final int MAX_OTP_RATE_PER_MINUTE = 3;
+
+    // Signup rate limit (email başına saatte maks. kayıt denemesi)
+    public static final String SIGNUP_RATE_PREFIX = "signuprate:";
+    public static final String SIGNUP_RATE_KEY_TEMPLATE = REDIS_PREFIX + SIGNUP_RATE_PREFIX;
+    public static final int MAX_SIGNUP_RATE_PER_HOUR = 3;
 }

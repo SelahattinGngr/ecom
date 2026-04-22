@@ -13,8 +13,8 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./uploads:/app/assets/public/products
-      - ./logs:/app/logs
+      - ./app/uploads:/app/assets/public/products
+      - ./app/logs:/app/logs
     networks:
       - ecom-net
     deploy:
@@ -34,7 +34,7 @@ services:
       POSTGRES_USER: ${POSTGRES_DB_USER}
       POSTGRES_PASSWORD: ${POSTGRES_DB_PASSWORD}
     volumes:
-      - ./db-data:/var/lib/postgresql
+      - ./app/db-data:/var/lib/postgresql
     networks:
       - ecom-net
     ports:
@@ -60,7 +60,7 @@ services:
     restart: unless-stopped
     command: redis-server --maxmemory 128mb --maxmemory-policy allkeys-lru
     volumes:
-      - ./redis-data:/data
+      - ./app/redis-data:/data
     networks:
       - ecom-net
     ports:
