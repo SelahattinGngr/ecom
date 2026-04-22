@@ -71,10 +71,14 @@ public class AdminPaymentsService {
             log.warn("[PAYMENT] CAPTURE_EXECUTED event yazılamadı — paymentId: {}", id, logEx);
         }
 
-        auditLogService.log("PAYMENT_CAPTURED", "PAYMENT", id,
-                Map.of("orderId", payment.getOrder().getId().toString(),
-                       "amount", payment.getAmount().toString(),
-                       "provider", payment.getPaymentProvider().name()));
+        try {
+            auditLogService.log("PAYMENT_CAPTURED", "PAYMENT", id,
+                    Map.of("orderId", payment.getOrder().getId().toString(),
+                           "amount", payment.getAmount().toString(),
+                           "provider", payment.getPaymentProvider().name()));
+        } catch (Exception logEx) {
+            log.warn("[ADMIN] PAYMENT_CAPTURED audit log yazılamadı — paymentId: {}", id, logEx);
+        }
 
         log.info("[ADMIN][PAYMENT] Ödeme capture edildi — paymentId: {}", id);
     }
@@ -99,9 +103,13 @@ public class AdminPaymentsService {
             log.warn("[PAYMENT] VOID_EXECUTED event yazılamadı — paymentId: {}", id, logEx);
         }
 
-        auditLogService.log("PAYMENT_VOIDED", "PAYMENT", id,
-                Map.of("orderId", payment.getOrder().getId().toString(),
-                       "provider", payment.getPaymentProvider().name()));
+        try {
+            auditLogService.log("PAYMENT_VOIDED", "PAYMENT", id,
+                    Map.of("orderId", payment.getOrder().getId().toString(),
+                           "provider", payment.getPaymentProvider().name()));
+        } catch (Exception logEx) {
+            log.warn("[ADMIN] PAYMENT_VOIDED audit log yazılamadı — paymentId: {}", id, logEx);
+        }
 
         log.info("[ADMIN][PAYMENT] Ödeme void edildi — paymentId: {}", id);
     }

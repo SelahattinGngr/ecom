@@ -97,8 +97,12 @@ public class AdminOrdersService {
         order.setStatus(targetStatus);
         orderRepository.save(order);
 
-        auditLogService.log("ORDER_STATUS_UPDATED", "ORDER", id,
-                Map.of("previousStatus", currentStatus.name(), "newStatus", targetStatus.name()));
+        try {
+            auditLogService.log("ORDER_STATUS_UPDATED", "ORDER", id,
+                    Map.of("previousStatus", currentStatus.name(), "newStatus", targetStatus.name()));
+        } catch (Exception logEx) {
+            log.warn("[ADMIN] ORDER_STATUS_UPDATED audit log yazılamadı — orderId: {}", id, logEx);
+        }
 
         log.info("[ADMIN] Sipariş durumu güncellendi. OrderId: {}, {} → {}", id, currentStatus, targetStatus);
     }
@@ -156,8 +160,12 @@ public class AdminOrdersService {
         order.setStatus(OrderStatus.RETURNED);
         orderRepository.save(order);
 
-        auditLogService.log("RETURN_APPROVED", "ORDER", id,
-                Map.of("returnCode", order.getReturnCode() != null ? order.getReturnCode() : ""));
+        try {
+            auditLogService.log("RETURN_APPROVED", "ORDER", id,
+                    Map.of("returnCode", order.getReturnCode() != null ? order.getReturnCode() : ""));
+        } catch (Exception logEx) {
+            log.warn("[ADMIN] RETURN_APPROVED audit log yazılamadı — orderId: {}", id, logEx);
+        }
 
         log.info("[ADMIN] İade onaylandı. OrderId: {}", id);
 
@@ -196,8 +204,12 @@ public class AdminOrdersService {
         order.setReturnCode(null);
         orderRepository.save(order);
 
-        auditLogService.log("RETURN_REJECTED", "ORDER", id,
-                Map.of("reason", reason != null ? reason : ""));
+        try {
+            auditLogService.log("RETURN_REJECTED", "ORDER", id,
+                    Map.of("reason", reason != null ? reason : ""));
+        } catch (Exception logEx) {
+            log.warn("[ADMIN] RETURN_REJECTED audit log yazılamadı — orderId: {}", id, logEx);
+        }
 
         log.info("[ADMIN] İade reddedildi. OrderId: {}, Neden: {}", id, reason);
 

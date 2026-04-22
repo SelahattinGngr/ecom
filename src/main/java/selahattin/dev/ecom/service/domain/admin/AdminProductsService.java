@@ -126,11 +126,15 @@ public class AdminProductsService {
 		product.setDeletedAt(OffsetDateTime.now()); // Soft Delete
 		productRepository.save(product);
 
-		auditLogService.log(
-				"PRODUCT_DELETED",
-				"PRODUCT",
-				id,
-				Map.of("productName", productName, "slug", product.getSlug()));
+		try {
+			auditLogService.log(
+					"PRODUCT_DELETED",
+					"PRODUCT",
+					id,
+					Map.of("productName", productName, "slug", product.getSlug()));
+		} catch (Exception logEx) {
+			log.warn("[ADMIN] PRODUCT_DELETED audit log yazılamadı — productId: {}", id, logEx);
+		}
 	}
 
 	// --- VARIANT MANAGEMENT ---

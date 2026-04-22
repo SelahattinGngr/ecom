@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class AuditLogService {
     private final AdminAuditLogRepository auditLogRepository;
     private final UserService userService;
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void log(String action, String entityType, UUID entityId, Map<String, Object> metadata) {
         UserEntity currentUser = userService.getCurrentUser();
 

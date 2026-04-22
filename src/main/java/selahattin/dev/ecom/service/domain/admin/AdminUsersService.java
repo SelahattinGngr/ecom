@@ -70,8 +70,12 @@ public class AdminUsersService {
         // Yeni yetkilerini alabilmesi icin kullanıcının tüm oturumlarını kapat
         tokenService.deleteAllTokens(user.getEmail());
 
-        auditLogService.log("USER_ROLES_UPDATED", "USER", userId,
-                Map.of("assignedRoles", roleNames));
+        try {
+            auditLogService.log("USER_ROLES_UPDATED", "USER", userId,
+                    Map.of("assignedRoles", roleNames));
+        } catch (Exception logEx) {
+            log.warn("[ADMIN] USER_ROLES_UPDATED audit log yazılamadı — userId: {}", userId, logEx);
+        }
 
         return mapToResponse(savedUser);
     }
