@@ -4,7 +4,7 @@
 ### adımın response'undan güncelle.
 ### ============================================================
 
-@baseUrl    = http://localhost:5353/api/v1
+@baseUrl    = http://91.102.163.188:5353/api/v1
 @authUrl    = {{baseUrl}}/auth
 @userUrl    = {{baseUrl}}/users
 @cartUrl    = {{baseUrl}}/cart
