@@ -43,5 +43,11 @@ public class IpBanFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+
+        // Tüm 4xx yanıtları (401 hariç) ban sayacına ekle — Spring Security dahil
+        int status = response.getStatus();
+        if (status >= 400 && status != 401) {
+            ipBanService.recordBadRequest(ip);
+        }
     }
 }

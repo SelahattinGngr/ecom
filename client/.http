@@ -13,7 +13,7 @@
 @imageId = iii10222-1111-2222-3333-444455556666
 
 ### deneme
-GET http://91.102.163.188:5353/ HTTP/1.1
+GET http://91.102.163.188:5353/api/v1/test/ban-test HTTP/1.1
 
 # --- AUTHENTICATION ---
 

@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.security.CustomUserDetails;
-import selahattin.dev.ecom.service.infra.IpBanService;
 import selahattin.dev.ecom.service.infra.UserActivityEventService;
 
 @Component
@@ -19,7 +18,6 @@ import selahattin.dev.ecom.service.infra.UserActivityEventService;
 public class RequestLoggingInterceptor implements HandlerInterceptor {
 
     private final UserActivityEventService userActivityEventService;
-    private final IpBanService ipBanService;
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
@@ -47,12 +45,6 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
             ip = request.getRemoteAddr();
         }
 
-        int status = response.getStatus();
-        userActivityEventService.log(userId, deviceId, ip, request.getMethod(), endpoint, status);
-
-        // 4xx hataları (401 hariç — token expire normal akış) ban sayacına ekle
-        if (status >= 400 && status != 401) {
-            ipBanService.recordBadRequest(ip);
-        }
+        userActivityEventService.log(userId, deviceId, ip, request.getMethod(), endpoint, response.getStatus());
     }
 }
