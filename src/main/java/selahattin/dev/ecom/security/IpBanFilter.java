@@ -42,6 +42,15 @@ public class IpBanFilter extends OncePerRequestFilter {
             return;
         }
 
+        if (ipBanService.isRateLimited(ip)) {
+            response.setStatus(429);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write(
+                    objectMapper.writeValueAsString(
+                            ApiResponse.error("Çok fazla istek gönderdiniz. Lütfen bekleyin.", 4029)));
+            return;
+        }
+
         filterChain.doFilter(request, response);
 
         // Tüm 4xx yanıtları (401 hariç) ban sayacına ekle — Spring Security dahil

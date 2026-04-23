@@ -17,10 +17,23 @@ public class IpBanService {
 
     private static final String COUNT_PREFIX = "ipban:count:";
     private static final String BANNED_PREFIX = "ipban:banned:";
+    private static final String RATE_PREFIX = "iprate:";
 
     private static final int BAD_REQUEST_THRESHOLD = 20;   // 10 dakikada 20 hatalı istek
     private static final int COUNT_WINDOW_MINUTES = 10;
     private static final long DEFAULT_BAN_HOURS = 24;
+
+    private static final int RATE_LIMIT = 60;              // dakikada 60 istek
+    private static final int RATE_WINDOW_SECONDS = 60;
+
+    public boolean isRateLimited(String ip) {
+        String key = RATE_PREFIX + ip;
+        Long count = redisTemplate.opsForValue().increment(key);
+        if (count != null && count == 1) {
+            redisTemplate.expire(key, RATE_WINDOW_SECONDS, TimeUnit.SECONDS);
+        }
+        return count != null && count > RATE_LIMIT;
+    }
 
     public boolean isBanned(String ip) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(BANNED_PREFIX + ip));
