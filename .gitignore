@@ -44,7 +44,7 @@ claude.md
 db-data
 logs
 redis-data
-# docs/
+docs/
 
 uploads/
 .claude/
