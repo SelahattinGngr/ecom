@@ -1,3 +1,6 @@
+limit_req_zone $binary_remote_addr zone=api_general:10m rate=20r/s;
+limit_req_zone $binary_remote_addr zone=api_auth:10m rate=5r/m;
+
 server {
     listen 80;
     server_name ${DOMAIN_NAME};
@@ -23,7 +26,23 @@ server {
 
     client_max_body_size 10M;
 
+    # Login / Signup — dakikada 5 istek
+    location ~* ^/api/v1/(auth/login|auth/signup) {
+        limit_req zone=api_auth burst=5 nodelay;
+        limit_req_status 429;
+
+        proxy_pass http://app:5353;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Genel API — saniyede 20 istek, anlık 40'a burst
     location / {
+        limit_req zone=api_general burst=40 nodelay;
+        limit_req_status 429;
+
         proxy_pass http://app:5353;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;

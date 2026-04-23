@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.response.ApiResponse;
@@ -70,6 +71,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(ErrorCode.MISSING_COOKIE.getHttpStatus())
                 .body(ApiResponse.error("Eksik cookie: " + ex.getCookieName(), ErrorCode.MISSING_COOKIE.getCode()));
+    }
+
+    // OLMAYAN ENDPOINT
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(NoResourceFoundException ex) {
+        return ResponseEntity
+                .status(ErrorCode.NOT_FOUND.getHttpStatus())
+                .body(ApiResponse.error("Endpoint bulunamadı.", ErrorCode.RESOURCE_NOT_FOUND.getCode()));
     }
 
     // BEKLENMEYEN HATALAR (NullPointer, DB Connection vs.)
