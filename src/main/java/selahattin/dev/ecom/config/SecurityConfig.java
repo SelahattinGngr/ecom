@@ -2,6 +2,7 @@ package selahattin.dev.ecom.config;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +36,9 @@ public class SecurityConfig {
     private final ClientProperties clientProperties;
     private final JwtAuthenticationFilter jwtAuthFilter;
 
+    @Value("${app.dev-tools.enabled:false}")
+    private boolean devToolsEnabled;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -52,7 +56,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
+                .authorizeHttpRequests(auth -> {
+                        auth
                         // Public Endpoint'ler
                         .requestMatchers("/api/v1/public/**").permitAll()
                         .requestMatchers("/api/v1/auth/public/**").permitAll()
@@ -60,14 +65,21 @@ public class SecurityConfig {
                         // Webhook'lar (Dış dünyadan JWT'siz gelecek)
                         .requestMatchers("/api/v1/webhooks/**").permitAll()
 
-                        // Statik Dosyalar ve Dokümantasyon
-                        .requestMatchers("/assets/public/**").permitAll()
-                        .requestMatchers("/actuator/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        // Statik Dosyalar
+                        .requestMatchers("/assets/public/**").permitAll();
 
-                        // Kalan tüm endpointler için yetki zorunlu
-                        .anyRequest().authenticated())
+                        if (devToolsEnabled) {
+                            // Dev/Test: Swagger ve tam Actuator erişimi
+                            auth.requestMatchers("/actuator/**").permitAll()
+                                .requestMatchers("/v3/api-docs/**").permitAll()
+                                .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll();
+                        } else {
+                            // Prod: Sadece health (Dockerfile HEALTHCHECK için)
+                            auth.requestMatchers("/actuator/health").permitAll();
+                        }
+
+                        auth.anyRequest().authenticated();
+                })
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

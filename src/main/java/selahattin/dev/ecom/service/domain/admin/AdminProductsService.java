@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.dto.request.product.AdminProductFilterRequest;
 import selahattin.dev.ecom.dto.request.product.CreateProductRequest;
 import selahattin.dev.ecom.dto.request.product.ProductVariantRequest;
@@ -35,6 +36,7 @@ import selahattin.dev.ecom.repository.catalog.spec.ProductSpecification;
 import selahattin.dev.ecom.service.infra.FileStorageService;
 import selahattin.dev.ecom.utils.SlugUtils;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminProductsService {

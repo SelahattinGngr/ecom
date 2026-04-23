@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import selahattin.dev.ecom.dto.request.admin.AdminUserFilterRequest;
 import selahattin.dev.ecom.dto.request.admin.UpdateUserRolesRequest;
 import selahattin.dev.ecom.dto.response.admin.AdminUserResponse;
@@ -25,6 +26,7 @@ import selahattin.dev.ecom.repository.auth.UserRepository;
 import selahattin.dev.ecom.repository.auth.spec.UserSpecification;
 import selahattin.dev.ecom.service.infra.TokenService;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AdminUsersService {

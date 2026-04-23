@@ -162,7 +162,10 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
         }
 
         try {
-            log.info("[IYZICO] Ödeme sonucu sorgulanıyor. Token: {}", token);
+            String maskedToken = token.length() > 8
+                    ? token.substring(0, 4) + "..." + token.substring(token.length() - 4)
+                    : "****";
+            log.info("[IYZICO] Ödeme sonucu sorgulanıyor. Token: {}", maskedToken);
             RetrieveCheckoutFormRequest request = new RetrieveCheckoutFormRequest();
             request.setToken(token);
 
@@ -171,7 +174,7 @@ public class IyzicoPaymentProvider implements PaymentProviderStrategy {
             PaymentStatus finalStatus = PaymentStatus.FAILED;
             if (STATUS_SUCCESS.equals(form.getStatus()) && PAYMENT_STATUS_SUCCESS.equals(form.getPaymentStatus())) {
                 finalStatus = PaymentStatus.SUCCEEDED;
-                log.info("[IYZICO] Ödeme BAŞARILI. Token: {}", token);
+                log.info("[IYZICO] Ödeme BAŞARILI. Token: {}", maskedToken);
             } else {
                 log.warn("[IYZICO] Ödeme BAŞARISIZ. Msg: {}", form.getErrorMessage());
             }

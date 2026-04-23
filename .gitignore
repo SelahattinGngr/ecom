@@ -47,3 +47,5 @@ redis-data
 docs/
 
 uploads/
+.claude/
+.github/

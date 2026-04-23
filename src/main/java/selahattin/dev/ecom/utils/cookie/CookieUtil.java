@@ -1,5 +1,6 @@
 package selahattin.dev.ecom.utils.cookie;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
@@ -8,7 +9,9 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class CookieUtil {
-    private boolean isSecure = false;
+
+    @Value("${app.cookie.secure:true}")
+    private boolean isSecure;
 
     public void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
         ResponseCookie cookie = ResponseCookie.from(name, value)
