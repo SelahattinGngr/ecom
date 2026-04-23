@@ -77,7 +77,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(NoResourceFoundException ex) {
         return ResponseEntity
-                .status(ErrorCode.NOT_FOUND.getHttpStatus())
+                .status(ErrorCode.RESOURCE_NOT_FOUND.getHttpStatus())
                 .body(ApiResponse.error("Endpoint bulunamadı.", ErrorCode.RESOURCE_NOT_FOUND.getCode()));
     }
 
