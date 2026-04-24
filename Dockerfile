@@ -16,12 +16,14 @@ WORKDIR /app
 
 RUN addgroup -S spring && adduser -S spring -G spring
 
-RUN mkdir -p assets/public/products logs && chown -R spring:spring assets logs
+RUN apk add --no-cache su-exec
 
-# Kullanıcıya geç
-USER spring
+RUN mkdir -p assets/public/products logs
 
 COPY --from=build /app/target/*.jar app.jar
+
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
 ENV JAVA_OPTS="-Xms256m -Xmx512m"
 ENV TZ=Europe/Istanbul
@@ -31,4 +33,4 @@ EXPOSE 5353
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:5353/actuator/health || exit 1
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
