@@ -712,3 +712,4 @@ Controller → Service (Domain) → Repository (JPA)
 ## 📄 Lisans
 
 Bu proje özel kullanım amaçlıdır.
+
