@@ -59,7 +59,7 @@ import selahattin.dev.ecom.utils.enums.RefundStatus;
 @Slf4j
 @Order(1)
 @Component
-@Profile({"dev", "test"})
+@Profile({ "dev", "test" })
 @RequiredArgsConstructor
 public class CreateUserBean implements CommandLineRunner {
 
@@ -95,6 +95,9 @@ public class CreateUserBean implements CommandLineRunner {
                 createOrders();
 
                 log.info("✅ Dev seed tamamlandı.");
+                log.info("   {} kullanıcı, {} rol, {} kategori, {} ürün, {} sipariş oluşturuldu",
+                                userRepository.count(), roleRepository.count(), categoryRepository.count(),
+                                productRepository.count(), orderRepository.count());
         }
 
         // ─── ROLLER ────────────────────────────────────────────────────────────────
