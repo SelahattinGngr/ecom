@@ -1,3 +1,4 @@
+#!/bin/sh
 set -e
 
 # Volume mount'tan gelen dizinlerin sahipliğini spring'e ver
