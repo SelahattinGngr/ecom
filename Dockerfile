@@ -23,7 +23,7 @@ RUN mkdir -p assets/public/products logs
 COPY --from=build /app/target/*.jar app.jar
 
 COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+RUN sed -i 's/\r//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
 ENV JAVA_OPTS="-Xms256m -Xmx512m"
 ENV TZ=Europe/Istanbul
