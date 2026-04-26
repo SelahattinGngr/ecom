@@ -160,34 +160,38 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
-    @SuppressWarnings("unchecked")
     public List<ProductResponse> getShowcaseProducts() {
         Object cached = redisTemplate.opsForValue().get(CACHE_SHOWCASE);
-        if (cached instanceof List<?> list) {
-            return (List<ProductResponse>) list;
+        if (cached instanceof CachedProductPage cp) {
+            return cp.getContent();
         }
 
         List<ProductResponse> result = productRepository.findShowcaseProducts().stream()
                 .map(entity -> mapToResponse(entity, false))
                 .toList();
 
-        redisTemplate.opsForValue().set(CACHE_SHOWCASE, result, Duration.ofHours(TTL_SHOWCASE_HOURS));
+        redisTemplate.opsForValue().set(
+                CACHE_SHOWCASE,
+                new CachedProductPage(result, (long) result.size(), 0, result.size()),
+                Duration.ofHours(TTL_SHOWCASE_HOURS));
         return result;
     }
 
     @Transactional(readOnly = true)
-    @SuppressWarnings("unchecked")
     public List<ProductResponse> getBestSellers() {
         Object cached = redisTemplate.opsForValue().get(CACHE_BESTSELLERS);
-        if (cached instanceof List<?> list) {
-            return (List<ProductResponse>) list;
+        if (cached instanceof CachedProductPage cp) {
+            return cp.getContent();
         }
 
         List<ProductResponse> result = productRepository.findBestSellers().stream()
                 .map(entity -> mapToResponse(entity, false))
                 .toList();
 
-        redisTemplate.opsForValue().set(CACHE_BESTSELLERS, result, Duration.ofHours(TTL_BESTSELLERS_HOURS));
+        redisTemplate.opsForValue().set(
+                CACHE_BESTSELLERS,
+                new CachedProductPage(result, (long) result.size(), 0, result.size()),
+                Duration.ofHours(TTL_BESTSELLERS_HOURS));
         return result;
     }
 
