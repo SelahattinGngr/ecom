@@ -4,6 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -22,12 +23,13 @@ import selahattin.dev.ecom.utils.SlugUtils;
 @RequiredArgsConstructor
 public class AdminCategoryService {
 
+    private static final String CACHE_CAT_TREE = "cat:tree";
+
     private final CategoryRepository categoryRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Transactional(readOnly = true)
     public List<CategoryResponse> getAllCategories() {
-        // Sadece ANA (Root) kategorileri getir.
-        // Alt kategoriler mapToResponse içinde recursive dolacak.
         return categoryRepository.findAllByParentIsNullAndDeletedAtIsNull().stream()
                 .map(this::mapToResponse)
                 .toList();
@@ -51,29 +53,30 @@ public class AdminCategoryService {
                 .name(request.getName())
                 .slug(slug)
                 .parent(parent)
-                // imageUrl eklenebilir
                 .createdAt(OffsetDateTime.now())
                 .updatedAt(OffsetDateTime.now())
                 .build();
 
-        return mapToResponse(categoryRepository.save(category));
+        CategoryResponse response = mapToResponse(categoryRepository.save(category));
+        redisTemplate.delete(CACHE_CAT_TREE);
+        return response;
     }
 
     @Transactional
     public CategoryResponse updateCategory(String slug, UpdateCategoryRequest request) {
         CategoryEntity category = categoryRepository.findBySlugAndDeletedAtIsNull(slug)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
-    
+
         if (StringUtils.hasText(request.getName())) {
             category.setName(request.getName());
-    
+
             if (StringUtils.hasText(request.getSlug())) {
                 category.setSlug(request.getSlug());
             } else {
                 category.setSlug(SlugUtils.toSlug(request.getName()));
             }
         }
-    
+
         if (request.getParentId() != null) {
             if (request.getParentId() == 0) {
                 category.setParent(null);
@@ -87,9 +90,11 @@ public class AdminCategoryService {
                 category.setParent(parent);
             }
         }
-    
+
         category.setUpdatedAt(OffsetDateTime.now());
-        return mapToResponse(categoryRepository.save(category));
+        CategoryResponse response = mapToResponse(categoryRepository.save(category));
+        redisTemplate.delete(CACHE_CAT_TREE);
+        return response;
     }
 
     @Transactional
@@ -97,21 +102,20 @@ public class AdminCategoryService {
         CategoryEntity category = categoryRepository.findBySlugAndDeletedAtIsNull(slug)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        // Eğer alt kategorileri varsa silinmesini engelleyebiliriz
         category.setDeletedAt(OffsetDateTime.now());
         categoryRepository.save(category);
+        redisTemplate.delete(CACHE_CAT_TREE);
     }
 
     private CategoryResponse mapToResponse(CategoryEntity entity) {
         if (entity == null)
             return null;
 
-        // Alt kategorileri recursive olarak dönüştür
         List<CategoryResponse> subCategories = null;
         if (entity.getSubCategories() != null) {
             subCategories = entity.getSubCategories().stream()
-                    .filter(sub -> sub.getDeletedAt() == null) // Silinenleri gösterme
-                    .map(this::mapToResponse) // Kendini çağır (Recursion)
+                    .filter(sub -> sub.getDeletedAt() == null)
+                    .map(this::mapToResponse)
                     .toList();
         }
 

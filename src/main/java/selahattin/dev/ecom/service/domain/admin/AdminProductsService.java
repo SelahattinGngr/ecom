@@ -33,6 +33,7 @@ import selahattin.dev.ecom.repository.catalog.ProductImageRepository;
 import selahattin.dev.ecom.repository.catalog.ProductRepository;
 import selahattin.dev.ecom.repository.catalog.ProductVariantRepository;
 import selahattin.dev.ecom.repository.catalog.spec.ProductSpecification;
+import selahattin.dev.ecom.service.domain.ProductService;
 import selahattin.dev.ecom.service.infra.FileStorageService;
 import selahattin.dev.ecom.utils.SlugUtils;
 
@@ -41,266 +42,268 @@ import selahattin.dev.ecom.utils.SlugUtils;
 @RequiredArgsConstructor
 public class AdminProductsService {
 
-	private final ProductRepository productRepository;
-	private final CategoryRepository categoryRepository;
-	private final ProductVariantRepository variantRepository;
-	private final ProductImageRepository imageRepository;
-	private final FileStorageService fileStorageService;
-	private final AuditLogService auditLogService;
-	private final EntityManager entityManager;
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+    private final ProductVariantRepository variantRepository;
+    private final ProductImageRepository imageRepository;
+    private final FileStorageService fileStorageService;
+    private final AuditLogService auditLogService;
+    private final EntityManager entityManager;
+    private final ProductService productService;
 
-	// --- PRODUCT CRUD ---
+    // --- PRODUCT CRUD ---
 
-	@Transactional
-	public ProductResponse createProductWithImages(
-			CreateProductRequest request,
-			List<MultipartFile> images) {
-		CategoryEntity category = categoryRepository
-				.findById(request.getCategoryId())
-				.orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
+    @Transactional
+    public ProductResponse createProductWithImages(CreateProductRequest request, List<MultipartFile> images) {
+        CategoryEntity category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
 
-		String slug = SlugUtils.toSlug(request.getName());
-		if (productRepository.existsBySlugAndDeletedAtIsNull(slug)) {
-			slug += "-" + UUID.randomUUID().toString().substring(0, 4);
-		}
+        String slug = SlugUtils.toSlug(request.getName());
+        if (productRepository.existsBySlugAndDeletedAtIsNull(slug)) {
+            slug += "-" + UUID.randomUUID().toString().substring(0, 4);
+        }
 
-		ProductEntity product = ProductEntity.builder()
-				.category(category)
-				.name(request.getName())
-				.slug(slug)
-				.description(request.getDescription())
-				.basePrice(request.getBasePrice())
-				.build();
+        ProductEntity product = ProductEntity.builder()
+                .category(category)
+                .name(request.getName())
+                .slug(slug)
+                .description(request.getDescription())
+                .basePrice(request.getBasePrice())
+                .isShowcase(request.getIsShowcase() != null ? request.getIsShowcase() : false)
+                .build();
 
-		ProductEntity savedProduct = productRepository.save(product);
+        ProductEntity savedProduct = productRepository.save(product);
 
-		if (images != null && !images.isEmpty()) {
-			int order = 0;
-			for (MultipartFile file : images) {
-				String imageUrl = fileStorageService.save(file); // Dosyayı diske yaz, URL al
+        if (images != null && !images.isEmpty()) {
+            int order = 0;
+            for (MultipartFile file : images) {
+                String imageUrl = fileStorageService.save(file);
+                ProductImageEntity image = ProductImageEntity.builder()
+                        .product(savedProduct)
+                        .url(imageUrl)
+                        .displayOrder(order++)
+                        .isThumbnail(order == 1)
+                        .build();
+                imageRepository.save(image);
+            }
+        }
 
-				ProductImageEntity image = ProductImageEntity.builder()
-						.product(savedProduct)
-						.url(imageUrl)
-						.displayOrder(order++)
-						.isThumbnail(order == 1) // İlk resim otomatik thumbnail olsun
-						.build();
+        entityManager.flush();
+        entityManager.refresh(savedProduct);
 
-				imageRepository.save(image);
-			}
-		}
+        productService.evictProductListCache();
 
-		entityManager.flush();
-		entityManager.refresh(savedProduct);
-		return mapToAdminResponse(savedProduct);
-	}
+        return mapToAdminResponse(savedProduct);
+    }
 
-	@Transactional
-	public ProductResponse updateProduct(
-			UUID id,
-			UpdateProductRequest request) {
-		ProductEntity product = findProduct(id);
+    @Transactional
+    public ProductResponse updateProduct(UUID id, UpdateProductRequest request) {
+        ProductEntity product = findProduct(id);
 
-		if (request.getName() != null)
-			product.setName(request.getName());
-		if (request.getDescription() != null)
-			product.setDescription(
-					request.getDescription());
-		if (request.getBasePrice() != null)
-			product.setBasePrice(
-					request.getBasePrice());
+        boolean oldIsShowcase = Boolean.TRUE.equals(product.getIsShowcase());
 
-		if (request.getCategoryId() != null) {
-			CategoryEntity category = categoryRepository
-					.findById(request.getCategoryId())
-					.orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
-			product.setCategory(category);
-		}
+        if (request.getName() != null)
+            product.setName(request.getName());
+        if (request.getDescription() != null)
+            product.setDescription(request.getDescription());
+        if (request.getBasePrice() != null)
+            product.setBasePrice(request.getBasePrice());
+        if (request.getIsShowcase() != null)
+            product.setIsShowcase(request.getIsShowcase());
 
-		productRepository.save(product);
-		return mapToAdminResponse(product);
-	}
+        if (request.getCategoryId() != null) {
+            CategoryEntity category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
+            product.setCategory(category);
+        }
 
-	@Transactional
-	public void deleteProduct(UUID id) {
-		ProductEntity product = findProduct(id);
-		String productName = product.getName();
-		product.setDeletedAt(OffsetDateTime.now()); // Soft Delete
-		productRepository.save(product);
+        String slug = product.getSlug();
+        boolean newIsShowcase = Boolean.TRUE.equals(product.getIsShowcase());
 
-		try {
-			auditLogService.log(
-					"PRODUCT_DELETED",
-					"PRODUCT",
-					id,
-					Map.of("productName", productName, "slug", product.getSlug()));
-		} catch (Exception logEx) {
-			log.warn("[ADMIN] PRODUCT_DELETED audit log yazılamadı — productId: {}", id, logEx);
-		}
-	}
+        productRepository.save(product);
 
-	// --- VARIANT MANAGEMENT ---
+        productService.evictSlugCache(slug);
+        productService.evictProductListCache();
 
-	@Transactional
-	public void addVariant(UUID productId, ProductVariantRequest request) {
-		ProductEntity product = findProduct(productId);
+        if (oldIsShowcase != newIsShowcase) {
+            productService.evictShowcaseCache();
+        }
 
-		// TODO SKU check yapılacak
+        return mapToAdminResponse(product);
+    }
 
-		ProductVariantEntity variant = ProductVariantEntity.builder()
-				.product(product)
-				.sku(request.getSku())
-				.size(request.getProductSize())
-				.color(request.getColor())
-				.price(request.getPrice())
-				.stockQuantity(request.getStockQuantity())
-				.isActive(
-						request.getIsActive() != null ? request.getIsActive() : true)
-				.build();
+    @Transactional
+    public void deleteProduct(UUID id) {
+        ProductEntity product = findProduct(id);
+        String slug = product.getSlug();
+        String productName = product.getName();
 
-		variantRepository.save(variant);
-	}
+        product.setDeletedAt(OffsetDateTime.now());
+        productRepository.save(product);
 
-	@Transactional
-	public void deleteVariant(UUID productId, UUID variantId) {
-		ProductVariantEntity variant = variantRepository
-				.findById(variantId)
-				.orElseThrow(() -> new BusinessException(ErrorCode.VARIANT_NOT_FOUND));
+        productService.evictSlugCache(slug);
+        productService.evictProductListCache();
 
-		if (!variant.getProduct().getId().equals(productId)) {
-			throw new BusinessException(ErrorCode.VARIANT_MISMATCH);
-		}
+        try {
+            auditLogService.log(
+                    "PRODUCT_DELETED",
+                    "PRODUCT",
+                    id,
+                    Map.of("productName", productName, "slug", slug));
+        } catch (Exception logEx) {
+            log.warn("[ADMIN] PRODUCT_DELETED audit log yazılamadı — productId: {}", id, logEx);
+        }
+    }
 
-		variant.setDeletedAt(OffsetDateTime.now());
-		variantRepository.save(variant);
-	}
+    // --- VARIANT MANAGEMENT ---
 
-	// --- IMAGE MANAGEMENT ---
+    @Transactional
+    public void addVariant(UUID productId, ProductVariantRequest request) {
+        ProductEntity product = findProduct(productId);
 
-	@Transactional
-	public void addImage(UUID productId, MultipartFile file, Integer displayOrder, Boolean isThumbnail) {
-		ProductEntity product = findProduct(productId);
+        ProductVariantEntity variant = ProductVariantEntity.builder()
+                .product(product)
+                .sku(request.getSku())
+                .size(request.getProductSize())
+                .color(request.getColor())
+                .price(request.getPrice())
+                .stockQuantity(request.getStockQuantity())
+                .isActive(request.getIsActive() != null ? request.getIsActive() : true)
+                .build();
 
-		String url = fileStorageService.save(file);
+        variantRepository.save(variant);
+    }
 
-		ProductImageEntity image = ProductImageEntity.builder()
-				.product(product)
-				.url(url)
-				.displayOrder(displayOrder != null ? displayOrder : 0)
-				.isThumbnail(isThumbnail != null ? isThumbnail : false)
-				.build();
+    @Transactional
+    public void deleteVariant(UUID productId, UUID variantId) {
+        ProductVariantEntity variant = variantRepository.findById(variantId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.VARIANT_NOT_FOUND));
 
-		imageRepository.save(image);
-	}
+        if (!variant.getProduct().getId().equals(productId)) {
+            throw new BusinessException(ErrorCode.VARIANT_MISMATCH);
+        }
 
-	@Transactional
-	public void updateImage(UUID productId, UUID imageId, Integer displayOrder, Boolean isThumbnail) {
-		ProductImageEntity image = imageRepository
-				.findById(imageId)
-				.orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
-		if (!image.getProduct().getId().equals(productId)) {
-			throw new BusinessException(ErrorCode.IMAGE_MISMATCH);
-		}
-		if (displayOrder != null)
-			image.setDisplayOrder(displayOrder);
-		if (isThumbnail != null) {
-			if (isThumbnail) {
-				imageRepository.clearThumbnailForProduct(productId, imageId);
-			}
-			image.setIsThumbnail(isThumbnail);
-		}
-		imageRepository.save(image);
-	}
+        variant.setDeletedAt(OffsetDateTime.now());
+        variantRepository.save(variant);
+    }
 
-	@Transactional
-	public void deleteImage(UUID productId, UUID imageId) {
-		ProductImageEntity image = imageRepository
-				.findById(imageId)
-				.orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
+    // --- IMAGE MANAGEMENT ---
 
-		fileStorageService.delete(image.getUrl());
-		image.setDeletedAt(OffsetDateTime.now());
-		imageRepository.save(image);
-	}
+    @Transactional
+    public void addImage(UUID productId, MultipartFile file, Integer displayOrder, Boolean isThumbnail) {
+        ProductEntity product = findProduct(productId);
+        String url = fileStorageService.save(file);
 
-	// --- PRODUCT GET ---
+        ProductImageEntity image = ProductImageEntity.builder()
+                .product(product)
+                .url(url)
+                .displayOrder(displayOrder != null ? displayOrder : 0)
+                .isThumbnail(isThumbnail != null ? isThumbnail : false)
+                .build();
 
-	@Transactional(readOnly = true)
-	public Page<ProductResponse> getProducts(
-			AdminProductFilterRequest filter,
-			Pageable pageable) {
-		return productRepository
-				.findAll(ProductSpecification.withFilter(filter), pageable)
-				.map(this::mapToAdminResponse);
-	}
+        imageRepository.save(image);
+    }
 
-	@Transactional(readOnly = true)
-	public ProductResponse getProductBySlug(String slug) {
-		ProductEntity product = productRepository
-				.findBySlug(slug)
-				.orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-		return mapToAdminResponse(product);
-	}
+    @Transactional
+    public void updateImage(UUID productId, UUID imageId, Integer displayOrder, Boolean isThumbnail) {
+        ProductImageEntity image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
 
-	// Helper
-	private ProductEntity findProduct(UUID id) {
-		return productRepository
-				.findById(id)
-				.filter(p -> p.getDeletedAt() == null)
-				.orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
-	}
+        if (!image.getProduct().getId().equals(productId)) {
+            throw new BusinessException(ErrorCode.IMAGE_MISMATCH);
+        }
 
-	private ProductResponse mapToAdminResponse(ProductEntity product) {
-		// Varyant Listesini Hazırla
-		List<VariantResponse> variantDtos = (product.getVariants() == null)
-				? Collections.emptyList()
-				: product
-						.getVariants()
-						.stream()
-						.filter(v -> v.getDeletedAt() == null)
-						.map(v -> VariantResponse.builder()
-								.id(v.getId())
-								.sku(v.getSku())
-								.size(v.getSize())
-								.color(v.getColor())
-								.price(v.getPrice())
-								.stockQuantity(v.getStockQuantity())
-								.isActive(v.getIsActive())
-								.createdAt(v.getCreatedAt())
-								.updatedAt(v.getUpdatedAt())
-								.deletedAt(v.getDeletedAt())
-								.build())
-						.toList();
+        if (displayOrder != null)
+            image.setDisplayOrder(displayOrder);
+        if (isThumbnail != null) {
+            if (isThumbnail) {
+                imageRepository.clearThumbnailForProduct(productId, imageId);
+            }
+            image.setIsThumbnail(isThumbnail);
+        }
+        imageRepository.save(image);
+    }
 
-		// Resim Listesini Hazırla
-		List<ImageResponse> imageDtos = (product.getImages() == null)
-				? Collections.emptyList()
-				: product
-						.getImages()
-						.stream()
-						.filter(i -> i.getDeletedAt() == null)
-						.map(i -> ImageResponse.builder()
-								.id(i.getId())
-								.url(i.getUrl())
-								.displayOrder(i.getDisplayOrder())
-								.isThumbnail(i.getIsThumbnail())
-								.build())
-						.toList();
+    @Transactional
+    public void deleteImage(UUID productId, UUID imageId) {
+        ProductImageEntity image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.IMAGE_NOT_FOUND));
 
-		return ProductResponse.builder()
-				.id(product.getId())
-				.name(product.getName())
-				.slug(product.getSlug())
-				.description(product.getDescription())
-				.basePrice(product.getBasePrice())
-				.categoryId(product.getCategory().getId())
-				.categoryName(product.getCategory().getName())
-				.categorySlug(product.getCategory().getSlug())
-				.createdAt(product.getCreatedAt())
-				.updatedAt(product.getUpdatedAt())
-				.deletedAt(product.getDeletedAt())
-				.variants(variantDtos)
-				.images(imageDtos)
-				.build();
-	}
+        fileStorageService.delete(image.getUrl());
+        image.setDeletedAt(OffsetDateTime.now());
+        imageRepository.save(image);
+    }
+
+    // --- PRODUCT GET ---
+
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> getProducts(AdminProductFilterRequest filter, Pageable pageable) {
+        return productRepository
+                .findAll(ProductSpecification.withFilter(filter), pageable)
+                .map(this::mapToAdminResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductResponse getProductBySlug(String slug) {
+        ProductEntity product = productRepository.findBySlug(slug)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+        return mapToAdminResponse(product);
+    }
+
+    // --- Helpers ---
+
+    private ProductEntity findProduct(UUID id) {
+        return productRepository.findById(id)
+                .filter(p -> p.getDeletedAt() == null)
+                .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
+    }
+
+    private ProductResponse mapToAdminResponse(ProductEntity product) {
+        List<VariantResponse> variantDtos = (product.getVariants() == null)
+                ? Collections.emptyList()
+                : product.getVariants().stream()
+                        .filter(v -> v.getDeletedAt() == null)
+                        .map(v -> VariantResponse.builder()
+                                .id(v.getId())
+                                .sku(v.getSku())
+                                .size(v.getSize())
+                                .color(v.getColor())
+                                .price(v.getPrice())
+                                .stockQuantity(v.getStockQuantity())
+                                .isActive(v.getIsActive())
+                                .createdAt(v.getCreatedAt())
+                                .updatedAt(v.getUpdatedAt())
+                                .deletedAt(v.getDeletedAt())
+                                .build())
+                        .toList();
+
+        List<ImageResponse> imageDtos = (product.getImages() == null)
+                ? Collections.emptyList()
+                : product.getImages().stream()
+                        .filter(i -> i.getDeletedAt() == null)
+                        .map(i -> ImageResponse.builder()
+                                .id(i.getId())
+                                .url(i.getUrl())
+                                .displayOrder(i.getDisplayOrder())
+                                .isThumbnail(i.getIsThumbnail())
+                                .build())
+                        .toList();
+
+        return ProductResponse.builder()
+                .id(product.getId())
+                .name(product.getName())
+                .slug(product.getSlug())
+                .isShowcase(product.getIsShowcase())
+                .description(product.getDescription())
+                .basePrice(product.getBasePrice())
+                .categoryId(product.getCategory().getId())
+                .categoryName(product.getCategory().getName())
+                .categorySlug(product.getCategory().getSlug())
+                .createdAt(product.getCreatedAt())
+                .updatedAt(product.getUpdatedAt())
+                .deletedAt(product.getDeletedAt())
+                .variants(variantDtos)
+                .images(imageDtos)
+                .build();
+    }
 }

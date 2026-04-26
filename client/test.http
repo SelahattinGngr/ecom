@@ -57,6 +57,12 @@ GET {{productUrl}}?query=iphone HTTP/1.1
 ### get-product-by-slug
 GET {{productUrl}}/slug/{{slug}} HTTP/1.1
 
+### get-showcase-products
+GET {{productUrl}}/showcase HTTP/1.1
+
+### get-best-sellers
+GET {{productUrl}}/best-sellers HTTP/1.1
+
 # --- CART ---
 
 ### add-to-cart

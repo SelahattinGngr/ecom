@@ -9,5 +9,5 @@ public class UpdateProductRequest {
     private String name;
     private String description;
     private BigDecimal basePrice;
-    // Slug genelde güncellenmez ama gerekirse eklenebilir
+    private Boolean isShowcase;
 }

@@ -19,4 +19,6 @@ public class CreateProductRequest {
     @NotNull(message = "Taban fiyat boş olamaz")
     @Min(value = 0, message = "Fiyat 0'dan küçük olamaz")
     private BigDecimal basePrice;
+
+    private Boolean isShowcase = false;
 }

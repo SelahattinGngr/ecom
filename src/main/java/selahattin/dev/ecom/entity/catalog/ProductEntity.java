@@ -11,6 +11,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -41,6 +42,10 @@ public class ProductEntity extends BaseEntity {
 
     @Column(name = "base_price", nullable = false)
     private BigDecimal basePrice;
+
+    @Builder.Default
+    @Column(name = "is_showcase", nullable = false)
+    private Boolean isShowcase = false;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     private List<ProductVariantEntity> variants;

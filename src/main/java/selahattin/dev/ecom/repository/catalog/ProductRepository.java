@@ -1,5 +1,6 @@
 package selahattin.dev.ecom.repository.catalog;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,13 +13,11 @@ import selahattin.dev.ecom.entity.catalog.ProductEntity;
 
 @Repository
 public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, JpaSpecificationExecutor<ProductEntity> {
-    // Public taraf için (Silinmemişleri getir)
+
     Optional<ProductEntity> findBySlugAndDeletedAtIsNull(String slug);
 
-    // Slug unique kontrolü için
     boolean existsBySlugAndDeletedAtIsNull(String slug);
 
-    // Admin tarafı için (Silinmiş olsa bile slug ile bulabilmek için)
     Optional<ProductEntity> findBySlug(String slug);
 
     @Query(value = "SELECT COUNT(*) FROM products WHERE deleted_at IS NULL", nativeQuery = true)
@@ -52,4 +51,28 @@ public interface ProductRepository extends JpaRepository<ProductEntity, UUID>, J
             ) sub
             """, nativeQuery = true)
     Long countLowStockProducts();
+
+    @Query(value = """
+            SELECT * FROM products
+            WHERE is_showcase = true AND deleted_at IS NULL
+            ORDER BY created_at DESC
+            LIMIT 20
+            """, nativeQuery = true)
+    List<ProductEntity> findShowcaseProducts();
+
+    @Query(value = """
+            SELECT p.* FROM products p
+            INNER JOIN (
+                SELECT pv.product_id, COUNT(oi.id) AS sold_count
+                FROM order_items oi
+                JOIN orders o ON o.id = oi.order_id
+                JOIN product_variants pv ON pv.id = oi.product_variant_id
+                WHERE o.status = 'DELIVERED'::order_status
+                GROUP BY pv.product_id
+            ) bs ON bs.product_id = p.id
+            WHERE p.deleted_at IS NULL
+            ORDER BY bs.sold_count DESC
+            LIMIT 20
+            """, nativeQuery = true)
+    List<ProductEntity> findBestSellers();
 }

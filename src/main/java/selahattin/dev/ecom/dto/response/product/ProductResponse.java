@@ -14,6 +14,7 @@ public class ProductResponse {
     private UUID id;
     private String name;
     private String slug;
+    private Boolean isShowcase;
     private String description;
     private BigDecimal basePrice;
     private String categoryName;

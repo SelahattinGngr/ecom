@@ -1,5 +1,7 @@
 package selahattin.dev.ecom.controller;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -34,5 +36,19 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.success(
                 "Ürün detayı getirildi",
                 productService.getProductBySlug(slug)));
+    }
+
+    @GetMapping("/showcase")
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getShowcaseProducts() {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Vitrin ürünleri listelendi",
+                productService.getShowcaseProducts()));
+    }
+
+    @GetMapping("/best-sellers")
+    public ResponseEntity<ApiResponse<List<ProductResponse>>> getBestSellers() {
+        return ResponseEntity.ok(ApiResponse.success(
+                "En çok satanlar listelendi",
+                productService.getBestSellers()));
     }
 }
