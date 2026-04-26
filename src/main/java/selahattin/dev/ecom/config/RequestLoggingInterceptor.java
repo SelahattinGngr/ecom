@@ -10,14 +10,15 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.dto.infra.ActivityLogDto;
 import selahattin.dev.ecom.security.CustomUserDetails;
-import selahattin.dev.ecom.service.infra.UserActivityEventService;
+import selahattin.dev.ecom.service.infra.RedisQueueService;
 
 @Component
 @RequiredArgsConstructor
 public class RequestLoggingInterceptor implements HandlerInterceptor {
 
-    private final UserActivityEventService userActivityEventService;
+    private final RedisQueueService redisQueueService;
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
@@ -25,7 +26,6 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
 
         String endpoint = request.getRequestURI();
 
-        // Gürültülü path'leri atla
         if (endpoint.startsWith("/actuator")
                 || endpoint.startsWith("/assets")
                 || endpoint.startsWith("/.well-known")) {
@@ -45,6 +45,13 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
             ip = request.getRemoteAddr();
         }
 
-        userActivityEventService.log(userId, deviceId, ip, request.getMethod(), endpoint, response.getStatus());
+        redisQueueService.enqueueActivityLog(ActivityLogDto.builder()
+                .userId(userId)
+                .deviceId(deviceId)
+                .ipAddress(ip)
+                .method(request.getMethod())
+                .endpoint(endpoint)
+                .statusCode(response.getStatus())
+                .build());
     }
 }
