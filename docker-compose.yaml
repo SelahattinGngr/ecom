@@ -22,8 +22,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.0"
-          memory: 600M
+          cpus: "1.5"
+          memory: 1200M
 
   postgres:
     image: postgres:18
@@ -51,8 +51,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: 256M
+          cpus: "0.8"
+          memory: 512M
 
   redis:
     image: redis:8
@@ -74,7 +74,7 @@ services:
       resources:
         limits:
           cpus: "0.5"
-          memory: 150M
+          memory: 256M
 
   nginx:
     image: nginx:1.27-alpine

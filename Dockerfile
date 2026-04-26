@@ -25,7 +25,7 @@ COPY --from=build /app/target/*.jar app.jar
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN sed -i 's/\r//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
-ENV JAVA_OPTS="-Xms256m -Xmx512m"
+ENV JAVA_OPTS="-Xms512m -Xmx900m -XX:+UseG1GC"
 ENV TZ=Europe/Istanbul
 
 EXPOSE 5353
