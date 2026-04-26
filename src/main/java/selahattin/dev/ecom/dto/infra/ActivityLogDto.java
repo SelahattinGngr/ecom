@@ -1,6 +1,7 @@
 package selahattin.dev.ecom.dto.infra;
 
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;
@@ -19,4 +20,5 @@ public class ActivityLogDto implements Serializable {
     private String method;
     private String endpoint;
     private int statusCode;
+    private OffsetDateTime timestamp;
 }

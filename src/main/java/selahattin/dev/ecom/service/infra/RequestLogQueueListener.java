@@ -100,6 +100,7 @@ public class RequestLogQueueListener {
                         .method(dto.getMethod())
                         .endpoint(dto.getEndpoint())
                         .statusCode(dto.getStatusCode())
+                        .createdAt(dto.getTimestamp())
                         .build())
                 .toList();
 

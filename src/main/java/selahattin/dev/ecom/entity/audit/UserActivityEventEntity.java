@@ -3,8 +3,6 @@ package selahattin.dev.ecom.entity.audit;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-import org.hibernate.annotations.CreationTimestamp;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -48,7 +46,6 @@ public class UserActivityEventEntity {
     @Column(name = "status_code")
     private Integer statusCode;
 
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 }

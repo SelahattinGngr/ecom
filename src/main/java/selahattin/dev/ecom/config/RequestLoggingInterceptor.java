@@ -1,5 +1,6 @@
 package selahattin.dev.ecom.config;
 
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.springframework.security.core.Authentication;
@@ -52,6 +53,7 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
                 .method(request.getMethod())
                 .endpoint(endpoint)
                 .statusCode(response.getStatus())
+                .timestamp(OffsetDateTime.now())
                 .build());
     }
 }
