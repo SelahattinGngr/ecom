@@ -19,14 +19,10 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariantEn
 
     Optional<ProductVariantEntity> findBySku(String sku);
 
-    /**
-     * Stok azaltma — sipariş oluşturma sırasında kullanılır.
-     * WHERE koşulu atomik kontrol sağlar: yeterli stok yoksa 0 satır güncellenir.
-     */
     @Modifying
     @Transactional
-    @Query("UPDATE ProductVariantEntity v SET v.stockQuantity = v.stockQuantity - :qty " +
-            "WHERE v.id = :id AND v.stockQuantity >= :qty")
+    @Query(value = "UPDATE product_variants SET stock_quantity = stock_quantity - :qty " +
+            "WHERE id = :id AND stock_quantity >= :qty AND deleted_at IS NULL", nativeQuery = true)
     int decreaseStock(@Param("id") UUID id, @Param("qty") int qty);
 
     /**

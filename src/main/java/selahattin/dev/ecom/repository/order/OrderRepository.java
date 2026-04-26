@@ -44,6 +44,12 @@ public interface OrderRepository extends JpaRepository<OrderEntity, UUID>, JpaSp
            countQuery = "SELECT COUNT(o) FROM OrderEntity o WHERE o.status = :status")
     Page<OrderEntity> findAllWithDetailsByStatus(@Param("status") OrderStatus status, Pageable pageable);
 
+    // --- EXPIRY ---
+
+    @Query(value = "SELECT * FROM orders WHERE status = 'PENDING'::order_status AND created_at < :threshold",
+           nativeQuery = true)
+    List<OrderEntity> findExpiredPendingOrders(@Param("threshold") OffsetDateTime threshold);
+
     // --- ANALİTİK ---
 
     @Query("SELECT COUNT(o) FROM OrderEntity o WHERE o.createdAt >= :from AND o.createdAt < :to")
