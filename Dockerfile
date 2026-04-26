@@ -10,22 +10,20 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # ====== RUNTIME STAGE ======
-FROM eclipse-temurin:21-jdk-alpine AS runtime
+FROM eclipse-temurin:21-jre-alpine AS runtime
 
 WORKDIR /app
 
 RUN addgroup -S spring && adduser -S spring -G spring
-
 RUN apk add --no-cache su-exec
-
 RUN mkdir -p assets/public/products logs
 
 COPY --from=build /app/target/*.jar app.jar
-
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN sed -i 's/\r//' /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
-ENV JAVA_OPTS="-Xms512m -Xmx900m -XX:+UseG1GC"
+# Tek makinelik test senaryosunda Java'ya 2GB ayırıyoruz
+ENV JAVA_OPTS="-Xms1536m -Xmx1536m -XX:+UseG1GC -XX:MaxGCPauseMillis=200 -XX:ParallelGCThreads=2 -XX:ConcGCThreads=1"
 ENV TZ=Europe/Istanbul
 
 EXPOSE 5353
