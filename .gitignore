@@ -43,3 +43,5 @@ docs/
 
 app
 .github/
+
+.DS_Store
