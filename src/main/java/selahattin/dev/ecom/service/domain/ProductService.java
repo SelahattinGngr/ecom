@@ -17,11 +17,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.Cursor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
@@ -54,11 +58,12 @@ public class ProductService {
     private static final long TTL_SLUG_MINUTES      = 10;
     private static final long TTL_LIST_MINUTES      = 5;
 
-    private static final String VARIANT_ALIAS   = "variants";
+    private static final String VARIANT_ALIAS    = "variants";
     private static final String DELETED_AT_FIELD = "deletedAt";
 
     private final ProductRepository productRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final ObjectMapper objectMapper;
 
     // ------------------------------------------------------------------ //
     //  Public read methods                                                  //
@@ -67,9 +72,14 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Page<ProductResponse> getProducts(ProductFilterRequest filter, Pageable pageable) {
         String cacheKey = buildListCacheKey(filter, pageable);
-        Object cached = redisTemplate.opsForValue().get(cacheKey);
-        if (cached instanceof CachedProductPage cp) {
-            return new PageImpl<>(cp.getContent(), pageable, cp.getTotalElements());
+        String cached = stringRedisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) {
+            try {
+                CachedProductPage cp = objectMapper.readValue(cached, CachedProductPage.class);
+                return new PageImpl<>(cp.getContent(), pageable, cp.getTotalElements());
+            } catch (JsonProcessingException e) {
+                log.warn("[CACHE] Ürün listesi deserialize hatası, DB'den yenileniyor.", e);
+            }
         }
 
         Specification<ProductEntity> spec =
@@ -134,11 +144,14 @@ public class ProductService {
         Page<ProductResponse> result = productRepository.findAll(spec, pageable)
                 .map(entity -> mapToResponse(entity, false));
 
-        redisTemplate.opsForValue().set(
-                cacheKey,
-                new CachedProductPage(result.getContent(), result.getTotalElements(),
-                        pageable.getPageNumber(), pageable.getPageSize()),
-                Duration.ofMinutes(TTL_LIST_MINUTES));
+        try {
+            CachedProductPage page = new CachedProductPage(result.getContent(), result.getTotalElements(),
+                    pageable.getPageNumber(), pageable.getPageSize());
+            stringRedisTemplate.opsForValue().set(cacheKey, objectMapper.writeValueAsString(page),
+                    Duration.ofMinutes(TTL_LIST_MINUTES));
+        } catch (JsonProcessingException e) {
+            log.error("[CACHE] Ürün listesi cache yazma hatası.", e);
+        }
 
         return result;
     }
@@ -146,52 +159,77 @@ public class ProductService {
     @Transactional(readOnly = true)
     public ProductResponse getProductBySlug(String slug) {
         String cacheKey = CACHE_SLUG_PREFIX + slug;
-        Object cached = redisTemplate.opsForValue().get(cacheKey);
-        if (cached instanceof ProductResponse pr) {
-            return pr;
+        String cached = stringRedisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) {
+            try {
+                return objectMapper.readValue(cached, ProductResponse.class);
+            } catch (JsonProcessingException e) {
+                log.warn("[CACHE] Ürün slug deserialize hatası, DB'den yenileniyor.", e);
+            }
         }
 
         ProductEntity product = productRepository.findBySlugAndDeletedAtIsNull(slug)
                 .orElseThrow(() -> new BusinessException(ErrorCode.PRODUCT_NOT_FOUND));
 
         ProductResponse response = mapToResponse(product, true);
-        redisTemplate.opsForValue().set(cacheKey, response, Duration.ofMinutes(TTL_SLUG_MINUTES));
+        try {
+            stringRedisTemplate.opsForValue().set(cacheKey, objectMapper.writeValueAsString(response),
+                    Duration.ofMinutes(TTL_SLUG_MINUTES));
+        } catch (JsonProcessingException e) {
+            log.error("[CACHE] Ürün slug cache yazma hatası.", e);
+        }
         return response;
     }
 
     @Transactional(readOnly = true)
     public List<ProductResponse> getShowcaseProducts() {
-        Object cached = redisTemplate.opsForValue().get(CACHE_SHOWCASE);
-        if (cached instanceof CachedProductPage cp) {
-            return cp.getContent();
+        String cached = stringRedisTemplate.opsForValue().get(CACHE_SHOWCASE);
+        if (cached != null) {
+            try {
+                CachedProductPage cp = objectMapper.readValue(cached, CachedProductPage.class);
+                return cp.getContent();
+            } catch (JsonProcessingException e) {
+                log.warn("[CACHE] Vitrin ürünleri deserialize hatası, DB'den yenileniyor.", e);
+            }
         }
 
         List<ProductResponse> result = productRepository.findShowcaseProducts().stream()
                 .map(entity -> mapToResponse(entity, false))
                 .toList();
 
-        redisTemplate.opsForValue().set(
-                CACHE_SHOWCASE,
-                new CachedProductPage(result, (long) result.size(), 0, result.size()),
-                Duration.ofHours(TTL_SHOWCASE_HOURS));
+        try {
+            CachedProductPage page = new CachedProductPage(result, (long) result.size(), 0, result.size());
+            stringRedisTemplate.opsForValue().set(CACHE_SHOWCASE, objectMapper.writeValueAsString(page),
+                    Duration.ofHours(TTL_SHOWCASE_HOURS));
+        } catch (JsonProcessingException e) {
+            log.error("[CACHE] Vitrin ürünleri cache yazma hatası.", e);
+        }
         return result;
     }
 
     @Transactional(readOnly = true)
     public List<ProductResponse> getBestSellers() {
-        Object cached = redisTemplate.opsForValue().get(CACHE_BESTSELLERS);
-        if (cached instanceof CachedProductPage cp) {
-            return cp.getContent();
+        String cached = stringRedisTemplate.opsForValue().get(CACHE_BESTSELLERS);
+        if (cached != null) {
+            try {
+                CachedProductPage cp = objectMapper.readValue(cached, CachedProductPage.class);
+                return cp.getContent();
+            } catch (JsonProcessingException e) {
+                log.warn("[CACHE] Çok satanlar deserialize hatası, DB'den yenileniyor.", e);
+            }
         }
 
         List<ProductResponse> result = productRepository.findBestSellers().stream()
                 .map(entity -> mapToResponse(entity, false))
                 .toList();
 
-        redisTemplate.opsForValue().set(
-                CACHE_BESTSELLERS,
-                new CachedProductPage(result, (long) result.size(), 0, result.size()),
-                Duration.ofHours(TTL_BESTSELLERS_HOURS));
+        try {
+            CachedProductPage page = new CachedProductPage(result, (long) result.size(), 0, result.size());
+            stringRedisTemplate.opsForValue().set(CACHE_BESTSELLERS, objectMapper.writeValueAsString(page),
+                    Duration.ofHours(TTL_BESTSELLERS_HOURS));
+        } catch (JsonProcessingException e) {
+            log.error("[CACHE] Çok satanlar cache yazma hatası.", e);
+        }
         return result;
     }
 
@@ -200,16 +238,16 @@ public class ProductService {
     // ------------------------------------------------------------------ //
 
     public void evictSlugCache(String slug) {
-        redisTemplate.delete(CACHE_SLUG_PREFIX + slug);
+        stringRedisTemplate.delete(CACHE_SLUG_PREFIX + slug);
     }
 
     public void evictShowcaseCache() {
-        redisTemplate.delete(CACHE_SHOWCASE);
+        stringRedisTemplate.delete(CACHE_SHOWCASE);
     }
 
     public void evictProductListCache() {
         List<String> keys = new ArrayList<>();
-        redisTemplate.execute((RedisConnection conn) -> {
+        stringRedisTemplate.execute((RedisConnection conn) -> {
             ScanOptions opts = ScanOptions.scanOptions()
                     .match(CACHE_LIST_PREFIX + "*")
                     .count(100)
@@ -222,7 +260,7 @@ public class ProductService {
             return null;
         });
         if (!keys.isEmpty()) {
-            redisTemplate.delete(keys);
+            stringRedisTemplate.delete(keys);
         }
     }
 
@@ -259,12 +297,14 @@ public class ProductService {
         String description = null;
         String categoryName = null;
         Integer categoryId = null;
+        String categorySlug = null;
 
         if (isDetailMode) {
             description = entity.getDescription();
             if (entity.getCategory() != null) {
                 categoryName = entity.getCategory().getName();
                 categoryId = entity.getCategory().getId();
+                categorySlug = entity.getCategory().getSlug();
             }
             variants = (entity.getVariants() == null) ? Collections.emptyList()
                     : entity.getVariants().stream()
@@ -309,6 +349,7 @@ public class ProductService {
                 .description(description)
                 .categoryName(categoryName)
                 .categoryId(categoryId)
+                .categorySlug(categorySlug)
                 .variants(variants)
                 .build();
     }

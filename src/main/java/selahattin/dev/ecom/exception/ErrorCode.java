@@ -76,7 +76,8 @@ public enum ErrorCode {
     FILE_UPLOAD_ERROR(6001, "Dosya yüklenemedi", HttpStatus.INTERNAL_SERVER_ERROR),
     DIRECTORY_CREATION_ERROR(6002, "Upload dizini oluşturulamadı", HttpStatus.INTERNAL_SERVER_ERROR),
     INVALID_FILE_NAME(6003, "Geçersiz dosya adı", HttpStatus.BAD_REQUEST),
-    EMPTY_FILE(6004, "Dosya boş olamaz", HttpStatus.BAD_REQUEST);
+    EMPTY_FILE(6004, "Dosya boş olamaz", HttpStatus.BAD_REQUEST),
+    FILE_TOO_LARGE(6005, "Dosya boyutu izin verilen limiti aşıyor (maks. 2 MB)", HttpStatus.PAYLOAD_TOO_LARGE);
 
     private final int code;
     private final String message;

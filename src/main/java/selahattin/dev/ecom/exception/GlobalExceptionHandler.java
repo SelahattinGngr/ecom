@@ -7,6 +7,8 @@ import java.util.Map;
 import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -82,6 +84,25 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(ErrorCode.RESOURCE_NOT_FOUND.getHttpStatus())
                 .body(ApiResponse.error("Endpoint bulunamadı.", ErrorCode.RESOURCE_NOT_FOUND.getCode()));
+    }
+
+    // DOSYA BOYUTU AŞILDI (2 MB limit)
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMaxUploadSize(MaxUploadSizeExceededException ex) {
+        log.warn("Dosya boyutu limiti aşıldı: {}", ex.getMessage());
+        return ResponseEntity
+                .status(ErrorCode.FILE_TOO_LARGE.getHttpStatus())
+                .body(ApiResponse.error(ErrorCode.FILE_TOO_LARGE.getMessage(), ErrorCode.FILE_TOO_LARGE.getCode()));
+    }
+
+    // MULTIPART PARSE HATASI (bozuk veya eksik form-data)
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMultipart(MultipartException ex) {
+        log.warn("Multipart istek hatası: {}", ex.getMessage());
+        return ResponseEntity
+                .status(ErrorCode.INVALID_REQUEST.getHttpStatus())
+                .body(ApiResponse.error("Geçersiz dosya isteği: " + ex.getMostSpecificCause().getMessage(),
+                        ErrorCode.INVALID_REQUEST.getCode()));
     }
 
     // İSTEMCİ BAĞLANTIYI KOPARDI (Connection reset by peer)
