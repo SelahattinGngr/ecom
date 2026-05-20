@@ -4,9 +4,13 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,21 +29,31 @@ public class CategoryService {
     private static final long TTL_CAT_TREE_HOURS = 24;
 
     private final CategoryRepository categoryRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
+    private final ObjectMapper objectMapper;
 
     @Transactional(readOnly = true)
-    @SuppressWarnings("unchecked")
     public List<CategoryResponse> getAllCategories() {
-        Object cached = redisTemplate.opsForValue().get(CACHE_CAT_TREE);
-        if (cached instanceof List<?> list) {
-            return (List<CategoryResponse>) list;
+        String cached = stringRedisTemplate.opsForValue().get(CACHE_CAT_TREE);
+        if (cached != null) {
+            try {
+                return objectMapper.readValue(cached, new TypeReference<List<CategoryResponse>>() {});
+            } catch (JsonProcessingException e) {
+                log.warn("Kategori cache deserialize hatası, DB'den yenileniyor.", e);
+            }
         }
 
         List<CategoryResponse> result = categoryRepository.findAllByParentIsNullAndDeletedAtIsNull().stream()
                 .map(this::mapToResponse)
                 .toList();
 
-        redisTemplate.opsForValue().set(CACHE_CAT_TREE, result, Duration.ofHours(TTL_CAT_TREE_HOURS));
+        try {
+            stringRedisTemplate.opsForValue().set(CACHE_CAT_TREE, objectMapper.writeValueAsString(result),
+                    Duration.ofHours(TTL_CAT_TREE_HOURS));
+        } catch (JsonProcessingException e) {
+            log.error("Kategori cache yazma hatası.", e);
+        }
+
         return result;
     }
 

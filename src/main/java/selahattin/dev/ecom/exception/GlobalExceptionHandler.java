@@ -1,9 +1,12 @@
 package selahattin.dev.ecom.exception;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -79,6 +82,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(ErrorCode.RESOURCE_NOT_FOUND.getHttpStatus())
                 .body(ApiResponse.error("Endpoint bulunamadı.", ErrorCode.RESOURCE_NOT_FOUND.getCode()));
+    }
+
+    // İSTEMCİ BAĞLANTIYI KOPARDI (Connection reset by peer)
+    // Sunucu hatası değil; istemci yanıt gelmeden bağlantıyı kapattı.
+    @ExceptionHandler(HttpMessageNotWritableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMessageNotWritable(HttpMessageNotWritableException ex) {
+        Throwable cause = ex.getCause();
+        while (cause != null) {
+            if (cause instanceof ClientAbortException || (cause instanceof IOException && cause.getMessage() != null
+                    && cause.getMessage().contains("Connection reset"))) {
+                log.debug("İstemci bağlantıyı yanıt tamamlanmadan kapattı.");
+                return null;
+            }
+            cause = cause.getCause();
+        }
+        log.error("Beklenmeyen Hata: ", ex);
+        return ResponseEntity
+                .status(ErrorCode.INTERNAL_SERVER_ERROR.getHttpStatus())
+                .body(ApiResponse.error(
+                        "Beklenmeyen bir hata oluştu. Lütfen daha sonra tekrar deneyin.",
+                        ErrorCode.INTERNAL_SERVER_ERROR.getCode()));
     }
 
     // BEKLENMEYEN HATALAR (NullPointer, DB Connection vs.)

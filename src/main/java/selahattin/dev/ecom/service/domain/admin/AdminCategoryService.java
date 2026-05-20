@@ -4,7 +4,7 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -26,7 +26,7 @@ public class AdminCategoryService {
     private static final String CACHE_CAT_TREE = "cat:tree";
 
     private final CategoryRepository categoryRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
     @Transactional(readOnly = true)
     public List<CategoryResponse> getAllCategories() {
@@ -58,7 +58,7 @@ public class AdminCategoryService {
                 .build();
 
         CategoryResponse response = mapToResponse(categoryRepository.save(category));
-        redisTemplate.delete(CACHE_CAT_TREE);
+        stringRedisTemplate.delete(CACHE_CAT_TREE);
         return response;
     }
 
@@ -93,7 +93,7 @@ public class AdminCategoryService {
 
         category.setUpdatedAt(OffsetDateTime.now());
         CategoryResponse response = mapToResponse(categoryRepository.save(category));
-        redisTemplate.delete(CACHE_CAT_TREE);
+        stringRedisTemplate.delete(CACHE_CAT_TREE);
         return response;
     }
 
@@ -104,7 +104,7 @@ public class AdminCategoryService {
 
         category.setDeletedAt(OffsetDateTime.now());
         categoryRepository.save(category);
-        redisTemplate.delete(CACHE_CAT_TREE);
+        stringRedisTemplate.delete(CACHE_CAT_TREE);
     }
 
     private CategoryResponse mapToResponse(CategoryEntity entity) {

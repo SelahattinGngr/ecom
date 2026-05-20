@@ -1,11 +1,15 @@
 package selahattin.dev.ecom.dto.response.catalog;
 
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CategoryResponse {
     private Integer id;
     private String name;

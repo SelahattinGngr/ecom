@@ -3,11 +3,15 @@ package selahattin.dev.ecom.dto.response.site;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
+@Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AssetResponse {
     private UUID id;
     private String url;
