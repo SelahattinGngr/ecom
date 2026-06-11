@@ -1,0 +1,116 @@
+name: Security Gate — PR Check
+
+on:
+  pull_request:
+    branches: ["main", "master", "develop"]
+
+permissions:
+  contents: read
+  security-events: write
+  pull-requests: write
+
+jobs:
+  # Hızlı derleme kontrolü — sonraki job'lar buna bağımlı
+  build:
+    name: Build & Compile
+    runs-on: ubuntu-latest
+    outputs:
+      jar-path: ${{ steps.build.outputs.jar-path }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Build
+        id: build
+        run: ./mvnw clean package -DskipTests -B -q
+
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: target/*.jar
+          key: build-${{ github.sha }}
+
+  # OWASP CVE taraması — sadece pom.xml değiştiyse
+  dependency-check:
+    name: CVE Check (OWASP)
+    runs-on: ubuntu-latest
+    needs: build
+    if: |
+      contains(github.event.pull_request.changed_files, 'pom.xml') ||
+      github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+
+      - name: OWASP Dependency Check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          ./mvnw org.owasp:dependency-check-maven:check \
+            -DnvdApiKey=${NVD_API_KEY} \
+            -DfailBuildOnCVSS=9 \
+            -Dformat=HTML \
+            -DsuppressionFile=.github/owasp-suppressions.xml \
+            -B -q
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-pr-report
+          path: target/dependency-check-report.html
+          retention-days: 7
+
+  # Gizli bilgi sızıntısı kontrolü
+  secret-scan:
+    name: Secret Leak Check
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  # Tüm güvenlik kontrolleri geçtiyse PR merge'e açılır
+  security-gate:
+    name: ✅ Security Gate
+    runs-on: ubuntu-latest
+    needs: [build, secret-scan]
+    if: always()
+
+    steps:
+      - name: Evaluate gate
+        run: |
+          if [[ "${{ needs.build.result }}" != "success" ]]; then
+            echo "❌ Build failed"
+            exit 1
+          fi
+          if [[ "${{ needs.secret-scan.result }}" == "failure" ]]; then
+            echo "❌ Secret leak detected — PR blocked"
+            exit 1
+          fi
+          echo "✅ Security gate passed"

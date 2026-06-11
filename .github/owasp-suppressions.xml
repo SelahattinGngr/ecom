@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+        Bilinen false-positive'leri buraya ekle.
+
+        Örnek:
+        <suppress>
+            <notes>CVE-2023-XXXXX — bu bağımlılık production'da kullanılmıyor.</notes>
+            <cve>CVE-2023-XXXXX</cve>
+        </suppress>
+
+        Test scope bağımlılıkları için:
+        <suppress>
+            <notes>Test-only dependency, production'da yer almaz.</notes>
+            <gav regex="true">.*:h2:.*</gav>
+            <cve>CVE-XXXX-XXXXX</cve>
+        </suppress>
+    -->
+</suppressions>

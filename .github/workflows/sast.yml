@@ -1,0 +1,54 @@
+name: SAST — Semgrep
+
+on:
+  push:
+    branches: ["main", "master", "develop"]
+  pull_request:
+    branches: ["main", "master", "develop"]
+  schedule:
+    # Her Pazartesi 03:00 UTC (06:00 Istanbul)
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  semgrep:
+    name: Semgrep SAST
+    runs-on: ubuntu-latest
+    # Semgrep token tanımlıysa kullan, yoksa community kurallarıyla çalış
+    env:
+      SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        uses: semgrep/semgrep-action@v1
+        with:
+          # Spring Boot + Java güvenlik kuralları
+          # p/spring     → Spring'e özgü: CSRF, open redirect, mass assignment
+          # p/java        → Genel Java: deserializasyon, XXE, path traversal
+          # p/owasp-top-ten → OWASP Top 10 (SQL injection, XSS, vb.)
+          # p/secrets     → Hardcoded credential / API key tespiti
+          config: >-
+            p/spring
+            p/java
+            p/owasp-top-ten
+            p/secrets
+          # SARIF çıktısı → GitHub Security sekmesine yükle
+          generateSarif: "1"
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
+      - name: Upload SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+        continue-on-error: true

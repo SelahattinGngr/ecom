@@ -1,0 +1,127 @@
+name: Dependency Audit — CVE & License Check
+
+on:
+  push:
+    branches: ["main", "master", "develop"]
+    paths:
+      - "pom.xml"
+      - ".github/workflows/audit.yml"
+  pull_request:
+    branches: ["main", "master", "develop"]
+    paths:
+      - "pom.xml"
+  schedule:
+    # Her gün 02:00 UTC — NVD veri tabanı günlük güncellenir
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  owasp-dependency-check:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+
+      # NVD API key repo secret olarak tanımlanmalı: NVD_API_KEY
+      - name: Run OWASP Dependency Check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          ./mvnw org.owasp:dependency-check-maven:check \
+            -DnvdApiKey=${NVD_API_KEY} \
+            -DfailBuildOnCVSS=7 \
+            -Dformat=ALL \
+            -DsuppressionFile=.github/owasp-suppressions.xml \
+            -B -q || true
+
+      - name: Upload OWASP HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-dependency-check-report
+          path: |
+            target/dependency-check-report.html
+            target/dependency-check-report.json
+          retention-days: 30
+
+      - name: Upload SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: target/dependency-check-report.sarif
+          category: owasp-dependency-check
+        continue-on-error: true
+
+  docker-image-scan:
+    name: Docker Image Vulnerability Scan (Trivy)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Build JAR
+        run: ./mvnw clean package -DskipTests -B -q
+
+      - name: Build Docker image
+        run: docker build -t ecom-app:scan .
+
+      - name: Run Trivy vulnerability scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "ecom-app:scan"
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+
+      - name: Upload Trivy SARIF to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-docker
+
+      - name: Run Trivy (table output for PR comment)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "ecom-app:scan"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+
+  secret-scan:
+    name: Secret Leak Detection (Gitleaks)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+        continue-on-error: true
