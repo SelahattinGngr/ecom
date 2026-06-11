@@ -28,7 +28,9 @@ jobs:
           cache: maven
 
       - name: Build
-        run: ./mvnw clean package -DskipTests -B -q
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests -B -q
 
       - name: Cache build artifacts
         uses: actions/cache@v5
