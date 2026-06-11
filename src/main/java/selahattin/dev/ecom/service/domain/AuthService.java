@@ -11,6 +11,8 @@ import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_KEY_TEMPLAT
 import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_RATE_KEY_TEMPLATE;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_TOKEN_DURATION_HOURS;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
@@ -329,7 +331,9 @@ public class AuthService {
 
 	private void validateRedisValue(String key, String expectedValue) {
 		Object actualValue = redisTemplate.opsForValue().get(key);
-		if (actualValue == null || !actualValue.toString().equals(expectedValue)) {
+		if (actualValue == null || !MessageDigest.isEqual(
+				actualValue.toString().getBytes(StandardCharsets.UTF_8),
+				expectedValue.getBytes(StandardCharsets.UTF_8))) {
 			throw new BusinessException(ErrorCode.INVALID_OTP);
 		}
 	}

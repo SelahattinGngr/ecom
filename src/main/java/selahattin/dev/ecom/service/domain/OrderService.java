@@ -92,14 +92,13 @@ public class OrderService {
 
         OrderSummaryResponse summary = calculateOrderSummary(selectedItems, null);
 
+        String contactName = shippingAddress.getContactName();
         OrderEntity order = OrderEntity.builder()
                 .user(user)
                 .status(OrderStatus.PENDING)
                 .totalAmount(summary.getTotalAmount())
-                .shippingRecipientFirstName(shippingAddress.getContactName().split(" ")[0])
-                .shippingRecipientLastName(shippingAddress.getContactName().contains(" ")
-                        ? shippingAddress.getContactName().substring(shippingAddress.getContactName().indexOf(" ") + 1)
-                        : "")
+                .shippingRecipientFirstName(extractFirstName(contactName))
+                .shippingRecipientLastName(extractLastName(contactName))
                 .shippingRecipientPhoneNumber(shippingAddress.getContactPhone())
                 .shippingCountry(shippingAddress.getCountry())
                 .shippingCity(shippingAddress.getCity())
@@ -121,7 +120,8 @@ public class OrderService {
         order.setItems(orderItems);
         orderRepository.save(order);
 
-        selectedItems.forEach(item -> cartService.removeCartItem(item.getId()));
+        List<UUID> cartItemIds = selectedItems.stream().map(CartItemResponse::getId).toList();
+        cartService.removeSelectedCartItems(user.getId(), cartItemIds);
 
         return OrderSummaryResponse.builder()
                 .orderId(order.getId())
@@ -337,6 +337,16 @@ public class OrderService {
                 .postalCode(address.getPostalCode())
                 .fullAddress(address.getFullAddress())
                 .build();
+    }
+
+    private String extractFirstName(String contactName) {
+        if (contactName == null || contactName.isBlank()) return "";
+        return contactName.split(" ")[0];
+    }
+
+    private String extractLastName(String contactName) {
+        if (contactName == null || !contactName.contains(" ")) return "";
+        return contactName.substring(contactName.indexOf(" ") + 1);
     }
 
     private List<CartItemResponse> filterSelectedItems(CartResponse cart, List<UUID> selectedVariantIds) {

@@ -93,7 +93,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            log.error("Auth Filter Hatası: {}", e.getMessage());
+            log.error("Auth Filter Hatası:", e);
         }
         filterChain.doFilter(request, response);
     }

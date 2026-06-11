@@ -44,4 +44,6 @@ docs/
 app
 .github/
 
+application-dev.properties
+
 .DS_Store

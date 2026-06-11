@@ -14,12 +14,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.request.admin.AdminOrderFilterRequest;
+import selahattin.dev.ecom.dto.request.admin.RejectReturnRequest;
 import selahattin.dev.ecom.dto.request.admin.ShipOrderRequest;
 import selahattin.dev.ecom.dto.request.admin.UpdateOrderStatusRequest;
 import selahattin.dev.ecom.response.ApiResponse;
@@ -80,14 +80,13 @@ public class AdminOrdersController {
         return ResponseEntity.ok(ApiResponse.success("İade onaylandı, ödeme iadesi başlatıldı."));
     }
 
-    // FIXME: reason parametresi body içerisinde olsun
     @PostMapping("/{id}/return/reject")
     @PreAuthorize("hasAuthority('order:update')")
     public ResponseEntity<ApiResponse<Void>> rejectReturn(
             @PathVariable UUID id,
-            @RequestParam(required = false) String reason) {
+            @RequestBody(required = false) RejectReturnRequest request) {
 
-        adminOrdersService.rejectReturn(id, reason);
+        adminOrdersService.rejectReturn(id, request != null ? request.getReason() : null);
         return ResponseEntity.ok(ApiResponse.success("İade talebi reddedildi."));
     }
 }

@@ -147,6 +147,12 @@ public class CartService {
     }
 
     @Transactional
+    public void removeSelectedCartItems(UUID userId, List<UUID> itemIds) {
+        cartItemRepository.deleteAllById(itemIds);
+        redisTemplate.delete(CART_CACHE_PREFIX + userId);
+    }
+
+    @Transactional
     public void clearCart() {
         UserEntity user = userService.getCurrentUser();
         CartEntity cart = getOrCreateCart(user);
