@@ -27,9 +27,6 @@ updates:
       # Spring Boot major version yükseltmelerini manuel yönet
       - dependency-name: "org.springframework.boot:spring-boot-starter-parent"
         update-types: ["version-update:semver-major"]
-    labels:
-      - "dependencies"
-      - "java"
 
   # Docker base image güncellemeleri
   - package-ecosystem: "docker"
@@ -39,9 +36,6 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Europe/Istanbul"
-    labels:
-      - "dependencies"
-      - "docker"
 
   # GitHub Actions güncellemeleri
   - package-ecosystem: "github-actions"
@@ -51,6 +45,3 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Europe/Istanbul"
-    labels:
-      - "dependencies"
-      - "github-actions"
