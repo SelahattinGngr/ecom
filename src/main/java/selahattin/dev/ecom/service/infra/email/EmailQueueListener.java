@@ -62,10 +62,24 @@ public class EmailQueueListener {
 
                 if (emailDto != null) {
                     log.info("Kuyruktan mail alındı: {}", emailDto.getTo());
-                    emailService.sendMail(
-                            emailDto.getTo(),
-                            emailDto.getSubject(),
-                            emailDto.getContent());
+                    try {
+                        emailService.sendMail(
+                                emailDto.getTo(),
+                                emailDto.getSubject(),
+                                emailDto.getContent());
+                    } catch (Exception mailEx) {
+                        int retry = emailDto.getRetryCount();
+                        if (retry < 3) {
+                            emailDto.setRetryCount(retry + 1);
+                            log.warn("[EMAIL] Mail gönderilemedi (deneme {}/3), kuyruğa geri alınıyor: {}",
+                                    retry + 1, emailDto.getTo());
+                            redisTemplate.opsForList().leftPush(RedisQueueService.EMAIL_QUEUE, emailDto);
+                        } else {
+                            log.error("[EMAIL] 3 denemede gönderilemedi, DLQ'ya alınıyor: {}",
+                                    emailDto.getTo(), mailEx);
+                            redisTemplate.opsForList().leftPush("email_dlq", emailDto);
+                        }
+                    }
                 }
             } catch (Exception e) {
                 if (active) {

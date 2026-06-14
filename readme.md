@@ -45,7 +45,7 @@ Tam kapsamlı bir e-ticaret platformunun backend API'si. Temel özellikler:
 - **Site konfigürasyonu** – Dinamik ayarlar ve asset slot yönetimi (Redis cache)
 - **E-posta servisi** – OTP, iade kodu maili (Gmail SMTP, Redis queue)
 - **Redis** – Token, OTP, RBAC cache, e-posta kuyruğu, site config cache, ürün/kategori cache
-- **Flyway** – Versiyonlu veritabanı migration yönetimi (V21 mevcut)
+- **Flyway** – Versiyonlu veritabanı migration yönetimi (V22 mevcut)
 
 ---
 
@@ -267,7 +267,8 @@ ecom/
 │               ├── V18__add_payment_events_table.sql
 │               ├── V19__add_user_activity_events_table.sql
 │               ├── V20__add_showcase_to_products.sql
-│               └── V21__add_version_to_product_variants.sql
+│               ├── V21__add_version_to_product_variants.sql
+              └── V22__partial_unique_index_users_email.sql
 │
 ├── client/
 │   ├── test.http                                  # Genel endpoint testleri
@@ -442,7 +443,8 @@ SITE CONFIGURATION
 
 ### Önemli Detaylar
 
-- **Soft Delete:** `users`, `products`, `product_variants`, `categories`, `addresses` — `deleted_at` kolonu
+- **Soft Delete:** `users`, `products`, `product_variants`, `categories`, `addresses` — `deleted_at` kolonu  
+  `users.email` UNIQUE kısıtı **partial index**'tir (`WHERE deleted_at IS NULL`). Silinmiş kullanıcının e-postasıyla yeni hesap açılabilir; yeni hesap eski veriye erişemez.
 - **UUID PK:** Tüm ana tablolarda `gen_random_uuid()`
 - **Custom PostgreSQL ENUM'lar:** `order_status`, `payment_status`, `payment_provider`, `refund_status`
   - Hibernate eşleştirmesi: `@JdbcTypeCode(SqlTypes.NAMED_ENUM)` + `@Enumerated(EnumType.STRING)`
@@ -760,6 +762,9 @@ Controller → Service (Domain) → Repository (JPA)
 | **Observer (Queue)**| Redis queue ile asenkron e-posta ve aktivite logu                 |
 | **Global Exception**| `@ControllerAdvice` merkezi hata yönetimi                         |
 | **Optimistic Lock** | `@Version` on `ProductVariantEntity` — eş zamanlı stok güvenliği |
+| **Pessimistic Lock** | `PaymentRepository.findByOrderIdAndStatusForUpdate` — çift iade (double refund) önlemi |
+| **Tx Event** | `@TransactionalEventListener(AFTER_COMMIT)` — cart cache DB commit'inden sonra temizlenir |
+| **Dead-Letter Queue** | Email 3 kez denenir, başarısızsa `email_dlq` Redis listesine alınır |
 
 ### Kritik Teknik Notlar
 
@@ -771,6 +776,10 @@ Controller → Service (Domain) → Repository (JPA)
 - **N+1 Fix:** `AdminPaymentsService` ve `AdminOrdersService` `JOIN FETCH` sorgular kullanır.
 - **Ürün listing fiyatı:** `basePrice` değil, aktif variantların minimum fiyatı döner.
 - **Vitrin / best-sellers:** Showcase 24 saatlik Redis cache; best-sellers `DELIVERED` siparişlerden hesaplanır, 1 saatlik TTL.
+- **variantSnapshot null-safety:** `OrderItemEntity.variantSnapshot` alanı `HashMap` ile doldurulur; `color`/`size` null ise key eklenmez. `Map.of()` null değerle `NullPointerException` fırlatır.
+- **Sipariş iptali ödeme kontrolü:** `cancelOrder`, ödeme varlığını `order.getStatus()` yerine gerçek `PaymentStatus.SUCCEEDED` kaydına bakarak belirler. `PENDING→PREPARING` admin hareketi ödeme olmadan gerçekleşebilir.
+- **shipOrder state machine:** Sadece `PREPARING` durumundaki siparişler kargoya verilebilir; `updateOrderStatus` ile aynı state machine kuralı uygulanır.
+- **Cart cache tutarlılığı:** `removeSelectedCartItems` ve `clearCart`, Redis silme işlemini `@TransactionalEventListener(AFTER_COMMIT)` arkasına taşır — JPA rollback olursa cache silinmez.
 
 ---
 

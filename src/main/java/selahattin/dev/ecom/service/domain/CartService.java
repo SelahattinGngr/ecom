@@ -8,11 +8,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import lombok.RequiredArgsConstructor;
+import selahattin.dev.ecom.dto.infra.CartClearedEvent;
 import selahattin.dev.ecom.dto.request.AddToCartRequest;
 import selahattin.dev.ecom.dto.request.UpdateCartItemRequest;
 import selahattin.dev.ecom.dto.response.CartItemResponse;
@@ -37,6 +41,7 @@ public class CartService {
     private final ProductVariantRepository productVariantRepository;
     private final UserService userService;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final String CART_CACHE_PREFIX = "cart:";
     private static final Duration CART_CACHE_TTL = Duration.ofDays(7);
@@ -148,7 +153,7 @@ public class CartService {
     @Transactional
     public void removeSelectedCartItems(UUID userId, List<UUID> itemIds) {
         cartItemRepository.deleteAllById(itemIds);
-        redisTemplate.delete(CART_CACHE_PREFIX + userId);
+        eventPublisher.publishEvent(new CartClearedEvent(userId));
     }
 
     @Transactional
@@ -159,7 +164,12 @@ public class CartService {
         cart.getItems().clear();
         cartRepository.save(cart);
 
-        redisTemplate.delete(CART_CACHE_PREFIX + user.getId());
+        eventPublisher.publishEvent(new CartClearedEvent(user.getId()));
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onCartCleared(CartClearedEvent event) {
+        redisTemplate.delete(CART_CACHE_PREFIX + event.userId());
     }
 
     // --- HELPERS ---

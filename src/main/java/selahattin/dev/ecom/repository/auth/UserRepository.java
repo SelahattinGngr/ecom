@@ -23,8 +23,9 @@ public interface UserRepository
     // SADECE aktif kullanıcıyı bulur. Silinmişse yok sayar.
     Optional<UserEntity> findByEmailAndDeletedAtIsNull(String email);
 
-    // Kayıt olurken de sadece aktif kullanıcı var mı diye bakmalısın.
-    // Silinmiş bir kullanıcının mailiyle yeni hesap açılmasına izin veriyoruz
+    // Kayıt sırasında sadece aktif kullanıcı var mı diye bakılır.
+    // Silinmiş kullanıcının mailiyle yeni hesap açılmasına izin verilir —
+    // V22 migration ile UNIQUE kısıtı partial index'e dönüştürüldü (WHERE deleted_at IS NULL).
     boolean existsByEmailAndDeletedAtIsNull(String email);
 
     boolean existsByPhoneNumberAndDeletedAtIsNull(String phoneNumber);

@@ -112,9 +112,9 @@ public class AdminOrdersService {
         OrderEntity order = orderRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ORDER_NOT_FOUND));
 
-        if (order.getStatus() == OrderStatus.CANCELLED || order.getStatus() == OrderStatus.RETURNED) {
+        if (order.getStatus() != OrderStatus.PREPARING) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST,
-                    "İptal edilmiş veya iade edilmiş sipariş kargolanamaz.");
+                    "Sadece PREPARING durumundaki siparişler kargolanabilir. Mevcut durum: " + order.getStatus());
         }
 
         order.setCargoFirm(request.getCargoFirm());

@@ -14,4 +14,6 @@ public class EmailMessageDto implements Serializable {
     private String to;
     private String subject;
     private String content;
+    @Builder.Default
+    private int retryCount = 0;
 }

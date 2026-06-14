@@ -261,7 +261,7 @@ public class PaymentService {
     @Transactional
     public void refundByOrderId(UUID orderId) {
         PaymentEntity payment = paymentRepository
-                .findByOrderIdAndStatus(orderId, PaymentStatus.SUCCEEDED)
+                .findByOrderIdAndStatusForUpdate(orderId, PaymentStatus.SUCCEEDED)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
                         "Bu sipariş için başarılı bir ödeme kaydı bulunamadı."));
 

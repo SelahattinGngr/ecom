@@ -2,6 +2,7 @@ package selahattin.dev.ecom.service.domain;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -41,6 +42,7 @@ import selahattin.dev.ecom.repository.order.OrderRepository;
 import selahattin.dev.ecom.repository.payment.PaymentRepository;
 import selahattin.dev.ecom.service.infra.RedisQueueService;
 import selahattin.dev.ecom.utils.enums.OrderStatus;
+import selahattin.dev.ecom.utils.enums.PaymentStatus;
 
 @Slf4j
 @Service
@@ -107,15 +109,20 @@ public class OrderService {
                 .billingAddress(convertAddressToMap(billingAddress))
                 .build();
 
-        List<OrderItemEntity> orderItems = selectedItems.stream().map(cartItem -> OrderItemEntity.builder()
-                .order(order)
-                .productVariant(productVariantRepository.getReferenceById(cartItem.getVariantId()))
-                .quantity(cartItem.getQuantity())
-                .priceAtPurchase(cartItem.getUnitPrice())
-                .productNameAtPurchase(cartItem.getProductName())
-                .skuAtPurchase(cartItem.getSku())
-                .variantSnapshot(Map.of("color", cartItem.getColor(), "size", cartItem.getSize()))
-                .build()).toList();
+        List<OrderItemEntity> orderItems = selectedItems.stream().map(cartItem -> {
+            Map<String, Object> snapshot = new HashMap<>();
+            if (cartItem.getColor() != null) snapshot.put("color", cartItem.getColor());
+            if (cartItem.getSize() != null) snapshot.put("size", cartItem.getSize());
+            return OrderItemEntity.builder()
+                    .order(order)
+                    .productVariant(productVariantRepository.getReferenceById(cartItem.getVariantId()))
+                    .quantity(cartItem.getQuantity())
+                    .priceAtPurchase(cartItem.getUnitPrice())
+                    .productNameAtPurchase(cartItem.getProductName())
+                    .skuAtPurchase(cartItem.getSku())
+                    .variantSnapshot(snapshot)
+                    .build();
+        }).toList();
 
         order.setItems(orderItems);
         orderRepository.save(order);
@@ -188,13 +195,15 @@ public class OrderService {
                     "Sadece beklemede, hazırlanıyor veya ödeme alınmış siparişler iptal edilebilir.");
         }
 
-        // Ödeme alınmışsa iade başlat. İade başarısız olursa BusinessException fırlatılır
-        // ve tüm transaction rollback olur — sipariş iptal edilmeden tutarlı kalır.
-        boolean paymentWasCollected = order.getStatus() == OrderStatus.PAID
-                || order.getStatus() == OrderStatus.PREPARING;
+        // Ödeme alınmışsa iade başlat. Durum yerine gerçek ödeme kaydına bakılır:
+        // PENDING→PREPARING admin hareketi ödeme olmadan gerçekleşebilir; status
+        // kontrolü bu senaryoda hatalı refund çağrısına yol açar.
+        boolean paymentExists = paymentRepository
+                .findByOrderIdAndStatus(orderId, PaymentStatus.SUCCEEDED)
+                .isPresent();
 
-        if (paymentWasCollected) {
-            log.info("[CANCEL] Ödeme iadesi başlatılıyor. OrderId: {}, Status: {}", orderId, order.getStatus());
+        if (paymentExists) {
+            log.info("[CANCEL] Ödeme iadesi başlatılıyor. OrderId: {}", orderId);
             paymentService.refundByOrderId(orderId);
         }
 
@@ -206,7 +215,7 @@ public class OrderService {
         }
 
         orderRepository.save(order);
-        log.info("[CANCEL] Sipariş iptal edildi. OrderId: {}, PaymentRefunded: {}", orderId, paymentWasCollected);
+        log.info("[CANCEL] Sipariş iptal edildi. OrderId: {}, PaymentRefunded: {}", orderId, paymentExists);
     }
 
     @Transactional
