@@ -15,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -126,8 +127,16 @@ public class GlobalExceptionHandler {
                         ErrorCode.INTERNAL_SERVER_ERROR.getCode()));
     }
 
+    // ASENKRON İSTEKTE İSTEMCİ BAĞLANTIYI KOPARDI
+    // (sunucu hafızasını doldurmak icin yapılan saldırıda tespit edilen hata)
+    @ExceptionHandler({ AsyncRequestNotUsableException.class, ClientAbortException.class })
+    public void handleClientAbortException(Exception ex) {
+        log.debug("İstemci yanıt tamamlanmadan bağlantıyı kesti: {}", ex.getMessage());
+    }
+
     // BEKLENMEYEN HATALAR (NullPointer, DB Connection vs.)
-    // Güvenlik gereği iç hata detayı istemciye açıklanmaz; tam stack trace sadece server log'a yazılır.
+    // Güvenlik gereği iç hata detayı istemciye açıklanmaz; tam stack trace sadece
+    // server log'a yazılır.
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
         log.error("Beklenmeyen Hata: ", ex);
