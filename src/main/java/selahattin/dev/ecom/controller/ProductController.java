@@ -1,6 +1,7 @@
 package selahattin.dev.ecom.controller;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 import selahattin.dev.ecom.dto.request.product.ProductFilterRequest;
 import selahattin.dev.ecom.dto.response.product.ProductResponse;
+import selahattin.dev.ecom.dto.response.product.ProductVariantListResponse;
 import selahattin.dev.ecom.response.ApiResponse;
 import selahattin.dev.ecom.service.domain.ProductService;
 
@@ -50,5 +52,14 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.success(
                 "En çok satanlar listelendi",
                 productService.getBestSellers()));
+    }
+
+    @GetMapping("/variants")
+    public ResponseEntity<ApiResponse<Page<ProductVariantListResponse>>> getVariants(
+            @RequestParam(required = false) UUID productId,
+            @PageableDefault(sort = "createdAt", direction = Sort.Direction.DESC, size = 50) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Varyantlar listelendi",
+                productService.getVariants(productId, pageable)));
     }
 }

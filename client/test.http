@@ -63,6 +63,12 @@ GET {{productUrl}}/showcase HTTP/1.1
 ### get-best-sellers
 GET {{productUrl}}/best-sellers HTTP/1.1
 
+### get-all-variants (tüm varyantlar, sayfalı)
+GET {{productUrl}}/variants HTTP/1.1
+
+### get-variants-by-product (belirli ürünün varyantları)
+GET {{productUrl}}/variants?productId=00000000-0000-0000-0000-000000000000 HTTP/1.1
+
 # --- CART ---
 
 ### add-to-cart

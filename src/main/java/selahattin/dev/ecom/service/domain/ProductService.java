@@ -7,9 +7,12 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -24,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.persistence.criteria.Join;
@@ -36,37 +38,40 @@ import selahattin.dev.ecom.dto.request.product.ProductFilterRequest;
 import selahattin.dev.ecom.dto.response.product.CachedProductPage;
 import selahattin.dev.ecom.dto.response.product.ImageResponse;
 import selahattin.dev.ecom.dto.response.product.ProductResponse;
+import selahattin.dev.ecom.dto.response.product.ProductVariantListResponse;
 import selahattin.dev.ecom.dto.response.product.VariantResponse;
 import selahattin.dev.ecom.entity.catalog.ProductEntity;
 import selahattin.dev.ecom.entity.catalog.ProductVariantEntity;
 import selahattin.dev.ecom.exception.BusinessException;
 import selahattin.dev.ecom.exception.ErrorCode;
 import selahattin.dev.ecom.repository.catalog.ProductRepository;
+import selahattin.dev.ecom.repository.catalog.ProductVariantRepository;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProductService {
 
-    private static final String CACHE_SHOWCASE    = "prd:showcase";
+    private static final String CACHE_SHOWCASE = "prd:showcase";
     private static final String CACHE_BESTSELLERS = "prd:bestsellers";
     private static final String CACHE_SLUG_PREFIX = "prd:slug:";
     private static final String CACHE_LIST_PREFIX = "prd:list:";
 
-    private static final long TTL_SHOWCASE_HOURS    = 24;
+    private static final long TTL_SHOWCASE_HOURS = 24;
     private static final long TTL_BESTSELLERS_HOURS = 1;
-    private static final long TTL_SLUG_MINUTES      = 10;
-    private static final long TTL_LIST_MINUTES      = 5;
+    private static final long TTL_SLUG_MINUTES = 10;
+    private static final long TTL_LIST_MINUTES = 5;
 
-    private static final String VARIANT_ALIAS    = "variants";
+    private static final String VARIANT_ALIAS = "variants";
     private static final String DELETED_AT_FIELD = "deletedAt";
 
     private final ProductRepository productRepository;
+    private final ProductVariantRepository productVariantRepository;
     private final StringRedisTemplate stringRedisTemplate;
     private final ObjectMapper objectMapper;
 
     // ------------------------------------------------------------------ //
-    //  Public read methods                                                  //
+    // Public read methods //
     // ------------------------------------------------------------------ //
 
     @Transactional(readOnly = true)
@@ -82,8 +87,7 @@ public class ProductService {
             }
         }
 
-        Specification<ProductEntity> spec =
-                Specification.where((root, q, cb) -> cb.isNull(root.get(DELETED_AT_FIELD)));
+        Specification<ProductEntity> spec = Specification.where((root, q, cb) -> cb.isNull(root.get(DELETED_AT_FIELD)));
 
         if (StringUtils.hasText(filter.getQuery())) {
             String[] keywords = filter.getQuery().trim().split("\\s+");
@@ -105,18 +109,15 @@ public class ProductService {
         }
 
         if (filter.getCategoryId() != null) {
-            spec = spec.and((root, q, cb) ->
-                    cb.equal(root.get("category").get("id"), filter.getCategoryId()));
+            spec = spec.and((root, q, cb) -> cb.equal(root.get("category").get("id"), filter.getCategoryId()));
         }
 
         if (filter.getMinPrice() != null) {
-            spec = spec.and((root, q, cb) ->
-                    cb.greaterThanOrEqualTo(root.get("basePrice"), filter.getMinPrice()));
+            spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("basePrice"), filter.getMinPrice()));
         }
 
         if (filter.getMaxPrice() != null) {
-            spec = spec.and((root, q, cb) ->
-                    cb.lessThanOrEqualTo(root.get("basePrice"), filter.getMaxPrice()));
+            spec = spec.and((root, q, cb) -> cb.lessThanOrEqualTo(root.get("basePrice"), filter.getMaxPrice()));
         }
 
         if (StringUtils.hasText(filter.getProductSize())) {
@@ -233,8 +234,33 @@ public class ProductService {
         return result;
     }
 
+    @Transactional(readOnly = true)
+    public Page<ProductVariantListResponse> getVariants(UUID productId, Pageable pageable) {
+        if (productId != null) {
+            List<ProductVariantEntity> variants = productVariantRepository.findByProductIdActiveWithProduct(productId);
+            long count = variants.size();
+            List<ProductVariantListResponse> content = variants.stream()
+                    .map(v -> mapToVariantListResponse(v, count))
+                    .toList();
+            return new PageImpl<>(content, pageable, count);
+        }
+
+        Page<ProductVariantEntity> page = productVariantRepository.findAllActiveWithProduct(pageable);
+
+        Map<UUID, Long> countByProduct = new HashMap<>();
+        page.getContent().forEach(v -> countByProduct.computeIfAbsent(
+                v.getProduct().getId(),
+                id -> productVariantRepository.countActiveByProductId(id)));
+
+        List<ProductVariantListResponse> content = page.getContent().stream()
+                .map(v -> mapToVariantListResponse(v, countByProduct.get(v.getProduct().getId())))
+                .toList();
+
+        return new PageImpl<>(content, pageable, page.getTotalElements());
+    }
+
     // ------------------------------------------------------------------ //
-    //  Cache eviction — called by admin services                           //
+    // Cache eviction — called by admin services //
     // ------------------------------------------------------------------ //
 
     public void evictSlugCache(String slug) {
@@ -265,8 +291,54 @@ public class ProductService {
     }
 
     // ------------------------------------------------------------------ //
-    //  Private helpers                                                      //
+    // Private helpers //
     // ------------------------------------------------------------------ //
+
+    private ProductVariantListResponse mapToVariantListResponse(ProductVariantEntity v, long variantCount) {
+        ProductEntity product = v.getProduct();
+
+        List<ImageResponse> images = (product.getImages() == null) ? Collections.emptyList()
+                : product.getImages().stream()
+                        .filter(img -> img.getDeletedAt() == null)
+                        .map(img -> ImageResponse.builder()
+                                .id(img.getId())
+                                .url(img.getUrl())
+                                .displayOrder(img.getDisplayOrder())
+                                .isThumbnail(img.getIsThumbnail())
+                                .build())
+                        .toList();
+
+        String categoryName = null;
+        Integer categoryId = null;
+        String categorySlug = null;
+        if (product.getCategory() != null) {
+            categoryName = product.getCategory().getName();
+            categoryId = product.getCategory().getId();
+            categorySlug = product.getCategory().getSlug();
+        }
+
+        return ProductVariantListResponse.builder()
+                .id(v.getId())
+                .sku(v.getSku())
+                .size(v.getSize())
+                .color(v.getColor())
+                .price(v.getPrice())
+                .stockQuantity(v.getStockQuantity())
+                .isActive(v.getIsActive())
+                .createdAt(v.getCreatedAt())
+                .updatedAt(v.getUpdatedAt())
+                .deletedAt(v.getDeletedAt())
+                .productId(product.getId())
+                .productName(product.getName())
+                .productSlug(product.getSlug())
+                .isShowcase(product.getIsShowcase())
+                .categoryName(categoryName)
+                .categoryId(categoryId)
+                .categorySlug(categorySlug)
+                .images(images)
+                .variantCount(variantCount)
+                .build();
+    }
 
     private String buildListCacheKey(ProductFilterRequest filter, Pageable pageable) {
         String raw = String.join("|",

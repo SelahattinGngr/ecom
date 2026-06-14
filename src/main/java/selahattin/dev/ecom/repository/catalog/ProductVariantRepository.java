@@ -1,8 +1,11 @@
 package selahattin.dev.ecom.repository.catalog;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,6 +21,26 @@ public interface ProductVariantRepository extends JpaRepository<ProductVariantEn
     long countByProductId(UUID productId);
 
     Optional<ProductVariantEntity> findBySku(String sku);
+
+    @Query(value = "SELECT v FROM ProductVariantEntity v " +
+                   "JOIN FETCH v.product p " +
+                   "LEFT JOIN FETCH p.category " +
+                   "WHERE v.deletedAt IS NULL AND v.isActive = true AND p.deletedAt IS NULL",
+           countQuery = "SELECT COUNT(v) FROM ProductVariantEntity v " +
+                        "JOIN v.product p " +
+                        "WHERE v.deletedAt IS NULL AND v.isActive = true AND p.deletedAt IS NULL")
+    Page<ProductVariantEntity> findAllActiveWithProduct(Pageable pageable);
+
+    @Query("SELECT v FROM ProductVariantEntity v " +
+           "JOIN FETCH v.product p " +
+           "LEFT JOIN FETCH p.category " +
+           "WHERE v.deletedAt IS NULL AND v.isActive = true AND p.id = :productId AND p.deletedAt IS NULL " +
+           "ORDER BY v.createdAt DESC")
+    List<ProductVariantEntity> findByProductIdActiveWithProduct(@Param("productId") UUID productId);
+
+    @Query("SELECT COUNT(v) FROM ProductVariantEntity v " +
+           "WHERE v.product.id = :productId AND v.deletedAt IS NULL AND v.isActive = true")
+    long countActiveByProductId(@Param("productId") UUID productId);
 
     @Modifying
     @Transactional

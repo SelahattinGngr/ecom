@@ -139,9 +139,8 @@ public class CartService {
         }
 
         CartEntity cart = item.getCart();
-        cart.getItems().remove(item);
-
-        cartItemRepository.delete(item);
+        cart.getItems().removeIf(i -> i.getId().equals(itemId));
+        cartRepository.save(cart);
 
         return refreshCart(user);
     }
