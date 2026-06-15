@@ -16,6 +16,9 @@ public final class AuthConstant {
     public static final String OTP_KEY_TEMPLATE = REDIS_PREFIX + SIGNIN_OTP_PREFIX;
     public static final String SIGNUP_KEY_TEMPLATE = REDIS_PREFIX + SIGNUP_VERIFY_PREFIX;
 
+    public static final String SIGNUP_LOOKUP_PREFIX = "signup_lookup:";
+    public static final String SIGNUP_LOOKUP_KEY_TEMPLATE = REDIS_PREFIX + SIGNUP_LOOKUP_PREFIX;
+
     // Süreler
     public static final int OTP_DURATION_MINUTES = 5;
     public static final int SIGNUP_TOKEN_DURATION_HOURS = 1;

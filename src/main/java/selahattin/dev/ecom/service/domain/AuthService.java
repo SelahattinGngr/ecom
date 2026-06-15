@@ -8,6 +8,7 @@ import static selahattin.dev.ecom.utils.constant.AuthConstant.OTP_DURATION_MINUT
 import static selahattin.dev.ecom.utils.constant.AuthConstant.OTP_KEY_TEMPLATE;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.RATE_LIMIT_KEY_TEMPLATE;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_KEY_TEMPLATE;
+import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_LOOKUP_KEY_TEMPLATE;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_RATE_KEY_TEMPLATE;
 import static selahattin.dev.ecom.utils.constant.AuthConstant.SIGNUP_TOKEN_DURATION_HOURS;
 
@@ -140,6 +141,7 @@ public class AuthService {
 		String token = UUID.randomUUID().toString();
 
 		saveToRedis(SIGNUP_KEY_TEMPLATE + token, user.getEmail(), SIGNUP_TOKEN_DURATION_HOURS, TimeUnit.HOURS);
+		saveToRedis(SIGNUP_LOOKUP_KEY_TEMPLATE + user.getEmail(), token, SIGNUP_TOKEN_DURATION_HOURS, TimeUnit.HOURS);
 
 		String verificationLink = clientProperties.getFrontendUrl()
 				+ clientProperties.getEmailVerificationPath() + token;
@@ -164,6 +166,7 @@ public class AuthService {
 
 		userService.activateUser(email);
 		deleteFromRedis(redisKey);
+		deleteFromRedis(SIGNUP_LOOKUP_KEY_TEMPLATE + email);
 
 		try {
 			UserEntity user = userService.findByEmail(email);
@@ -184,9 +187,17 @@ public class AuthService {
 			throw new BusinessException(ErrorCode.USER_ALREADY_VERIFIED);
 		}
 
-		String token = UUID.randomUUID().toString();
+		String existingToken = (String) getFromRedis(SIGNUP_LOOKUP_KEY_TEMPLATE + user.getEmail());
+
+		String token;
+		if (existingToken != null) {
+			token = existingToken;
+		} else {
+			token = UUID.randomUUID().toString();
+		}
 
 		saveToRedis(SIGNUP_KEY_TEMPLATE + token, user.getEmail(), SIGNUP_TOKEN_DURATION_HOURS, TimeUnit.HOURS);
+		saveToRedis(SIGNUP_LOOKUP_KEY_TEMPLATE + user.getEmail(), token, SIGNUP_TOKEN_DURATION_HOURS, TimeUnit.HOURS);
 
 		String verificationLink = clientProperties.getFrontendUrl()
 				+ clientProperties.getEmailVerificationPath() + token;

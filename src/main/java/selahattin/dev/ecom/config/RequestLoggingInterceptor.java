@@ -41,10 +41,7 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
             userId = details.getUser().getId();
         }
 
-        String ip = request.getHeader("X-Real-IP");
-        if (ip == null || ip.isBlank()) {
-            ip = request.getRemoteAddr();
-        }
+        String ip = request.getRemoteAddr();
 
         redisQueueService.enqueueActivityLog(ActivityLogDto.builder()
                 .userId(userId)
