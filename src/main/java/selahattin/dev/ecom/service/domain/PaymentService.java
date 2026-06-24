@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -57,18 +58,12 @@ public class PaymentService {
 
         PaymentProvider activeProvider = paymentProperties.getActiveProvider();
 
-        PaymentEntity payment = PaymentEntity.builder()
-                .order(order)
-                .amount(order.getTotalAmount())
-                .paymentProvider(activeProvider)
-                .status(PaymentStatus.PENDING)
-                .description("Sipariş ödemesi #" + order.getId())
-                .clientIp(request.getClientIp())
-                .build();
+        // ÖNEMLİ: Payment kaydı kendi ayrı transaction'ında (REQUIRES_NEW) hemen
+        // commit edilir. Böylece az sonra REQUIRES_NEW ile çağrılan event log,
+        // henüz var olmayan bir payment_id'ye referans vermeye çalışmaz.
+        PaymentEntity savedPayment = createPendingPayment(order, request, activeProvider);
 
-        PaymentEntity savedPayment = paymentRepository.save(payment);
         PaymentProviderStrategy strategy = paymentStrategyFactory.getStrategy(activeProvider);
-
         PaymentInitResponse response = strategy.initializePayment(savedPayment, request);
 
         paymentRepository.save(savedPayment);
@@ -81,6 +76,27 @@ public class PaymentService {
         }
 
         return response;
+    }
+
+    /**
+     * Payment kaydını kendi bağımsız transaction'ında oluşturup hemen commit eder.
+     * Bu sayede initPayment akışı sırasında çağrılan paymentEventService.log
+     * (REQUIRES_NEW) bu payment satırını veritabanında gerçekten bulabilir.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public PaymentEntity createPendingPayment(OrderEntity order, PaymentInitRequest request,
+            PaymentProvider activeProvider) {
+
+        PaymentEntity payment = PaymentEntity.builder()
+                .order(order)
+                .amount(order.getTotalAmount())
+                .paymentProvider(activeProvider)
+                .status(PaymentStatus.PENDING)
+                .description("Sipariş ödemesi #" + order.getId())
+                .clientIp(request.getClientIp())
+                .build();
+
+        return paymentRepository.save(payment);
     }
 
     public PaymentResponse getPaymentDetail(UUID id) {
